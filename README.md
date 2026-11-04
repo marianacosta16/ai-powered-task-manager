@@ -19,7 +19,7 @@ Uma empresa quer uma ferramenta, do género Jira, Azure DevOps ou Trello, onde a
 | Papel | Resumo |
 |---|---|
 | **Membro da equipa** | Gere as tarefas dos projetos de que faz parte |
-| **Gestor de projeto** | Cria projetos e forma as equipas, gere as tarefas e acompanha o progresso de todos os projetos |
+| **Gestor de projeto** | Cria projetos e forma as equipas, gere as tarefas e acompanha o progresso dos seus projetos |
 
 ## Versões
 
@@ -31,7 +31,7 @@ A entrega segue a prioridade MoSCoW: **v1 (MVP) = Must**, **v2 = Should**, **v3 
 - Tarefas com prazo obrigatório, vários responsáveis, urgência e importância em 4 níveis, e subtarefas com as suas regras de prazo e fecho.
 - Vista **Matriz** por projeto (quadrantes *Do first*, *Schedule*, *Delegate* e *Later*) e vista **Lista**.
 - Vista global do gestor com barra de progresso e estado calculado por projeto.
-- Visibilidade por papel: o membro só vê os projetos de que faz parte; o gestor vê tudo. Na v1 não há login: o utilizador escolhe quem é num seletor.
+- Visibilidade por papel: o membro só vê os projetos de que faz parte; o gestor vê só os projetos de que é gestor. Na v1 não há login: o utilizador escolhe quem é num seletor.
 - Reciclagem para recuperar projetos e tarefas apagados.
 
 ### Versões seguintes

@@ -43,7 +43,7 @@ Existem apenas dois papéis (decisão).
 | Papel | Descrição | Pode |
 |---|---|---|
 | **Membro da equipa** | Executa o trabalho | Ver os projetos de que é membro e as suas tarefas; criar, editar e apagar tarefas; mudar estados (ver P8) |
-| **Gestor de projeto** | Planeia e acompanha | Tudo o que o membro pode, mais: criar projetos e adicionar-lhes ou remover-lhes membros (formar a equipa); definir a fase e o estado do projeto; ver todos os projetos e o progresso global; apagar e recuperar projetos. Na v2: gerir contas e arquivar projetos |
+| **Gestor de projeto** | Planeia e acompanha | Tudo o que o membro pode, mais: criar projetos e adicionar-lhes ou remover-lhes membros (formar a equipa); definir a fase e o estado do projeto; ver os projetos de que é gestor e o seu progresso global; apagar e recuperar projetos. Na v2: gerir contas e arquivar projetos |
 
 O gestor de projeto também forma as equipas; não existe um papel separado de "gestor de equipas" (P2).
 
@@ -53,7 +53,7 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 
 **Utilizador:** nome e papel (membro da equipa ou gestor de projeto). O gestor também pode ter tarefas atribuídas. Na v1 os utilizadores existem previamente (P21); na v2 passam a ter conta (F10).
 
-**Projeto:** nome, descrição, datas de início e de fim (obrigatórias, R16), fase, estado, gestor (um só, R19) e membros.
+**Projeto:** nome, descrição, datas de início e de fim (obrigatórias, R16; a de fim pode ter hora), fuso horário (definido ao criar o projeto, P26), fase, estado, gestor (um só, indicado por quem cria o projeto, R19) e membros.
 - Fases: iniciação, planeamento, execução, monitorização, avaliação.
 - Estados: não iniciado, em andamento, atenção, atrasado, suspenso, concluído. "Atenção" e "atrasado" são só calculados (P5) e o gestor não os define; os restantes são definidos pelo gestor.
 
@@ -73,7 +73,7 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 ### 3.2 Vistas
 - **Matriz** (vista principal, por projeto): 4 quadrantes. Cada eixo é dividido em duas metades: níveis 1 e 2 são "baixo" e níveis 3 e 4 são "alto". Quadrantes: *Do first* (urgente e importante), *Schedule* (importante, não urgente), *Delegate* (urgente, não importante) e *Later* (nem urgente nem importante). Esconde as tarefas em estado final (P10) e mostra só tarefas principais (R18).
 - **Lista** (por projeto): todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" e mostra só tarefas principais (R15, R18).
-- **Vista global do gestor:** projetos em aberto e suspensos, com barra de progresso e estado; não mostra os concluídos.
+- **Vista global do gestor** (dos seus projetos): projetos em aberto e suspensos, com barra de progresso e estado; não mostra os concluídos.
 
 ### 3.3 Funcionalidades
 Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Could** (desejável).
@@ -129,7 +129,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R5 | Uma subtarefa cancelada ou duplicada conta como fechada (em estado final) | v1 |
 | R6 | Uma tarefa bloqueada exige motivo. Uma tarefa duplicada exige indicar a tarefa original, escolhida manualmente: tem de ser do mesmo projeto, diferente da própria e não pode estar em estado "duplicado" | v1 |
 | R7 | Cada tarefa tem um lembrete, com antecedência definida por tarefa; o alerta de atraso repete-se segundo um intervalo definido pelo utilizador | v2 |
-| R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê tudo | v1 |
+| R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê só os projetos de que é gestor | v1 |
 | R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas e subtarefas. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas | v1 |
 | R10 | Só se arquiva um projeto concluído (um projeto suspenso não se arquiva); o arquivo guarda tarefas e histórico | v2 |
 | R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). A regra não se aplica ao gestor. Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 |
@@ -137,10 +137,10 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R13 | Não é aceite um prazo no passado ao criar ou ao editar o prazo de uma tarefa ou subtarefa; o prazo igual à data atual é aceite | v1 |
 | R14 | O título tem no máximo 100 caracteres e a descrição 2000 (tarefas e projetos, P17). Contam como caracteres as letras, a pontuação, os espaços e os símbolos | v1 |
 | R15 | A Lista mostra todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" | v1 |
-| R16 | A data de início e a data de fim do projeto são obrigatórias, e a data de fim é posterior à de início (P23) | v1 |
+| R16 | A data de início e a data de fim do projeto são obrigatórias, e o instante de fim é posterior ao de início (P23, P26) | v1 |
 | R17 | O gestor pode remover um membro de um projeto em aberto, ficando o membro livre para outro projeto. Se o membro tiver tarefas por concluir nesse projeto, o gestor tem de adicionar um novo membro, que fica com essas tarefas; sem o novo membro, a remoção não é concluída (P24) | v1 |
 | R18 | A Matriz, a Lista e o cálculo do progresso consideram só as tarefas principais; as subtarefas aparecem dentro da tarefa-mãe. O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas (P25) | v1 |
-| R19 | Cada projeto tem um só gestor. O gestor pode ter tarefas atribuídas, em vários projetos | v1 |
+| R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor pode ter tarefas atribuídas, em vários projetos | v1 |
 | R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 |
 | R21 | Os responsáveis de uma tarefa ou subtarefa podem ser membros do projeto ou não | v1 |
 
@@ -210,7 +210,7 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 3 | Papéis | Que tipos de utilizador existem? | Membro da equipa e gestor de projeto | Decisão |
 | 4 | Contas | Quem cria e gere as contas? | O gestor de projeto (com o login, na v2) | Decisão |
 | 5 | Equipas e projetos | Como se relacionam? | O gestor cria o projeto e adiciona membros, e isso forma a equipa; o gestor gere vários projetos; um membro pertence a um projeto em aberto de cada vez | Decisão |
-| 6 | Visibilidade | Quem vê o quê? | O membro só vê o que a sua equipa faz; o gestor vê tudo | Decisão |
+| 6 | Visibilidade | Quem vê o quê? | O membro só vê o que a sua equipa faz; o gestor vê os projetos de que é gestor | Decisão |
 | 7 | Projeto | Que informação tem? | Nome, descrição, datas, fase e estado | Decisão |
 | 8 | Fases do projeto | Tem fases? | Iniciação, planeamento, execução, monitorização, avaliação | Decisão |
 | 9 | Estados do projeto | Que estados tem? | Não iniciado, em andamento, atenção, atrasado, suspenso, concluído | Decisão |
@@ -248,7 +248,7 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 41 | Retoma de projeto suspenso | O que acontece à equipa? | A lista de membros mantém-se; os membros que entretanto entraram noutro projeto ficam com uma etiqueta vermelha e o gestor vê um aviso. Um membro continua a estar em um só projeto em aberto de cada vez | Decisão |
 | 42 | Visibilidade e arquivo | Os membros libertados continuam a ver o projeto? A vista global mostra os suspensos? Arquiva-se um suspenso? | Sim; sim; não | Decisão |
 | 43 | Vista global e projetos concluídos | A vista global mostra os projetos concluídos? | Não | Decisão |
-| 44 | Datas do projeto | São obrigatórias? | Sim; a data de fim é posterior à de início | Pressuposto (P23) |
+| 44 | Datas do projeto | São obrigatórias? | Sim; o instante de fim é posterior ao de início | Pressuposto (P23) |
 | 45 | Remover membro | Como se remove um membro de um projeto em aberto? | O gestor remove; se o membro tiver tarefas por concluir, tem de adicionar um novo membro que fica com elas, senão a remoção não é concluída | Decisão (detalhes em P24) |
 | 46 | Prazo igual à data atual | Aceita-se na criação? | Sim | Decisão |
 | 47 | Projeto sem tarefas | Que etiqueta mostra? | "Sem tarefas", mesmo depois da data de fim | Decisão |
@@ -268,3 +268,6 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 61 | Estados "atenção" e "atrasado" | O gestor pode defini-los à mão? | Não: são só calculados | Decisão |
 | 62 | Responsáveis | Têm de ser membros do projeto? | Não: podem ser membros ou não | Decisão |
 | 63 | Mitigação do seletor | Como se reduz o risco do seletor sem autenticação? | Dados fictícios num ambiente controlado e o seletor só mostra nomes | Decisão |
+| 64 | Vários gestores | A empresa pode ter vários gestores? Quem vê o quê? | Vários, mas um só por projeto; cada gestor vê só os seus projetos | Decisão |
+| 65 | Escolha do gestor | Como se define o gestor de um projeto? | Quem cria o projeto indica o gestor | Decisão |
+| 66 | Fuso horário e hora de fim | Como se tratam? | O fuso horário é definido ao criar o projeto e a data de fim pode ter hora; sem hora, o dia de fim conta inteiro (P26) | Decisão |

@@ -89,10 +89,12 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **When** tenta criar um projeto sem data de início ou sem data de fim
 - **Then** o projeto não é criado e é indicado que as datas são obrigatórias.
 
-**Cenário 1.10: data de fim posterior à de início**
+**Cenário 1.10: data de fim não anterior à de início**
 - **Given** um gestor de projeto identificado
-- **When** tenta criar um projeto com data de início 2026-01-31 e data de fim 2026-01-31, ou com data de fim 2026-01-01
-- **Then** o projeto não é criado e é indicado que a data de fim tem de ser posterior à de início.
+- **When** tenta criar um projeto com data de início 2026-01-31 e data de fim 2026-01-01
+- **Then** o projeto não é criado e é indicado que a data de fim não pode ser anterior à de início.
+- **When** cria um projeto com data de início 2026-01-31 e data de fim 2026-01-31, ambas sem hora
+- **Then** o projeto é criado, porque o dia de fim conta inteiro.
 
 **Cenário 1.11: remover um membro**
 - **Given** a membro "Ana" na equipa do projeto "Website", que está em aberto, sem tarefas por concluir atribuídas nesse projeto
@@ -130,6 +132,11 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **Given** a gestora "Marta" com uma tarefa atribuída no projeto "Website", que está em aberto
 - **When** é atribuída à Marta uma tarefa do projeto "Intranet", que também está em aberto
 - **Then** a atribuição é aceite, porque a regra de um projeto em aberto por membro não se aplica ao gestor.
+
+**Cenário 1.19: o criador indica o gestor do projeto**
+- **Given** os gestores "Marta" e "Pedro"
+- **When** a Marta cria o projeto "Website" e indica o Pedro como gestor
+- **Then** o Pedro é o gestor do projeto "Website" e o projeto aparece na lista do Pedro.
 
 **Cenário 1.18: "atenção" e "atrasado" não são definidos pelo gestor**
 - **Given** um gestor de projeto identificado e um projeto "em andamento"
@@ -263,7 +270,7 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 
 ### US06 — Progresso e estado do projeto
 
-Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constraints.md#2-pressupostos-assumidos)): o progresso esperado é o tempo decorrido, (hoje − início) ÷ (fim − início), em dias; o desvio é o progresso esperado menos o progresso real, em pontos percentuais; o estado é calculado só para projetos "em andamento".
+Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constraints.md#2-pressupostos-assumidos)): o progresso esperado é o tempo decorrido, (agora − início) ÷ (fim − início), no fuso horário do projeto ([P26](constraints.md#2-pressupostos-assumidos)); o desvio é o progresso esperado menos o progresso real, em pontos percentuais; o estado é calculado só para projetos "em andamento".
 
 **Cenário 6.1: cálculo da barra**
 - **Given** um projeto com 10 tarefas: 4 concluídas, 2 em curso, 2 por fazer, 1 cancelada e 1 duplicada
@@ -276,17 +283,17 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **Then** o projeto mostra a etiqueta "sem tarefas" em vez de uma percentagem, e não ocorre erro.
 
 **Cenário 6.3: estado "atenção" (desvio de 15 pontos percentuais)**
-- **Given** um projeto "em andamento" com data de início 2026-01-01 e data de fim 2026-01-31, a 2026-01-16 (50% do tempo decorrido) e com 35% de progresso (desvio de 15 pontos percentuais)
+- **Given** um projeto "em andamento" com data de início 2026-01-01 e data de fim 2026-01-31, ambas sem hora (31 dias no total), a 2026-01-16 às 12:00 (50% do tempo decorrido) e com 35% de progresso (desvio de 15 pontos percentuais)
 - **When** o gestor abre a vista global
 - **Then** o projeto aparece com o estado "atenção".
 
 **Cenário 6.4: desvio abaixo do limite**
-- **Given** o mesmo projeto, a 2026-01-16, com 36% de progresso (desvio de 14 pontos percentuais)
+- **Given** o mesmo projeto, a 2026-01-16 às 12:00, com 36% de progresso (desvio de 14 pontos percentuais)
 - **When** o gestor abre a vista global
 - **Then** o projeto mantém o estado "em andamento".
 
 **Cenário 6.5: estado "atrasado" por desvio (25 pontos percentuais)**
-- **Given** o mesmo projeto, a 2026-01-16, com 25% de progresso (desvio de 25 pontos percentuais)
+- **Given** o mesmo projeto, a 2026-01-16 às 12:00, com 25% de progresso (desvio de 25 pontos percentuais)
 - **When** o gestor abre a vista global
 - **Then** o projeto aparece com o estado "atrasado".
 
@@ -298,7 +305,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 **Cenário 6.7: membro não vê a vista global**
 - **Given** um membro da equipa identificado
 - **When** abre a aplicação
-- **Then** a vista global com os projetos de todas as equipas não está disponível.
+- **Then** a vista global dos projetos não está disponível.
 
 **Cenário 6.8: projeto suspenso na vista global**
 - **Given** um projeto no estado "suspenso"
@@ -329,6 +336,18 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **Given** um projeto "não iniciado" com data de fim 2026-01-31, a 2026-02-02
 - **When** o gestor abre a vista global
 - **Then** o projeto mantém o estado "não iniciado".
+
+**Cenário 6.14: data de fim com hora**
+- **Given** um projeto "em andamento", com 90% de progresso e a data de fim 2026-01-31 às 18:00 no fuso horário do projeto
+- **When** o gestor abre a vista global às 19:00 de 2026-01-31, no fuso horário do projeto
+- **Then** o projeto aparece com o estado "atrasado".
+
+**Cenário 6.15: data de fim sem hora**
+- **Given** um projeto "em andamento", com 90% de progresso e a data de fim 2026-01-31 sem hora
+- **When** o gestor abre a vista global às 23:00 de 2026-01-31, no fuso horário do projeto
+- **Then** o projeto não aparece como "atrasado" por data de fim.
+- **When** o gestor abre a vista global às 00:00 de 2026-02-01, no fuso horário do projeto
+- **Then** o projeto aparece com o estado "atrasado".
 
 ### US07 — Recuperar apagados
 
@@ -377,10 +396,10 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** tenta abrir o projeto B
 - **Then** o acesso é recusado, com uma mensagem a indicar que não tem acesso a esse projeto, e nenhum dado do projeto é mostrado.
 
-**Cenário 8.3: gestor vê tudo**
-- **Given** um gestor de projeto identificado
-- **When** abre a lista de projetos
-- **Then** vê os projetos de todas as equipas.
+**Cenário 8.3: o gestor vê só os seus projetos**
+- **Given** os gestores "Marta", do projeto "Website", e "Pedro", do projeto "Intranet"
+- **When** a Marta abre a lista de projetos
+- **Then** vê o projeto "Website" e não vê o projeto "Intranet".
 
 ### US09 — Lista de tarefas do projeto
 
@@ -412,7 +431,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **And** a Ana cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3), e passa a primeira para "concluído"
 - **Then** a Matriz mostra "Rever texto" no quadrante "Schedule" e não mostra "Escrever relatório"
 - **And** a Lista mostra as duas tarefas, com "Rever texto" primeiro
-- **And** a Marta vê na vista global o projeto "Website" com 50% de progresso e o estado "em andamento" (30% do tempo decorrido).
+- **And** a Marta vê na vista global o projeto "Website" com 50% de progresso e o estado "em andamento" (cerca de 30% do tempo decorrido).
 
 ## 4. Situações excecionais e casos-limite
 
