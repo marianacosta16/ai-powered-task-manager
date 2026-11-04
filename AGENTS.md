@@ -17,7 +17,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 | [docs/user-stories.md](docs/user-stories.md) | User stories (US), critérios de aceitação e casos excecionais (EC) |
 | [docs/constraints.md](docs/constraints.md) | Restrições (C), pressupostos (P), segurança (S), decisões técnicas pendentes (T) |
 
-- A documentação é a fonte de verdade. Se algo no código ou no pedido a contradiz, pára e pergunta.
+- A documentação é a fonte de verdade, exceto os itens marcados como Pressuposto, que ainda não estão confirmados (ver secção 3). Se algo no código ou no pedido a contradiz, pára e pergunta.
 - Se dois documentos se contradizem, não escolhas por tua conta: assinala a contradição.
 - Cita os códigos (F, R, US, P…) dos itens em que a tua tarefa se baseia.
 
@@ -31,7 +31,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 ## 3. Não inventar
 
 - Não acrescentes funcionalidades, regras, estados, campos nem decisões que não estejam documentados.
-- Os itens marcados como **Pressuposto** podem ser usados, mas não os trates como confirmados.
+- Os itens marcados como **Pressuposto** podem ser usados, mas não os trates como confirmados: se uma tarefa depender de um pressuposto, questiona a autora do projeto.
 - Se a documentação não define algo (ver as questões em aberto em [docs/constraints.md](docs/constraints.md)), pergunta em vez de assumir.
 - Não escolhas tecnologias, bibliotecas, arquitetura nem ferramentas: são decisões pendentes (T). Podes apresentar opções com prós e contras, mas espera pela aprovação.
 

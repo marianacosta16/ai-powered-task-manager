@@ -50,8 +50,8 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | [AGENTS.md](AGENTS.md) | Instruções persistentes para agentes de desenvolvimento que trabalhem neste repositório |
 
 ### Convenções
-- Os códigos identificam os itens em todos os documentos: **F** (funcionalidade), **R** (regra de negócio), **NF** (requisito não funcional), **P** (pressuposto), **S** (segurança), **T** (decisão técnica pendente), **US** (user story) e **EC** (caso excecional).
-- Cada item está marcado como **Facto**, **Decisão** ou **Pressuposto**. As decisões foram tomadas pela autora do projeto em nome do cliente, que não está disponível, por isso os pressupostos devem ser validados com um cliente real.
+- Os códigos identificam os itens em todos os documentos: **F** (funcionalidade), **R** (regra de negócio), **NF** (requisito não funcional), **C** (restrição), **P** (pressuposto), **S** (segurança), **T** (decisão técnica pendente), **US** (user story) e **EC** (caso excecional).
+- Cada item está marcado como **Decisão** ou **Pressuposto**. As decisões foram tomadas pela autora do projeto em nome do cliente, que não está disponível, por isso os pressupostos devem ser validados com um cliente real.
 - Os documentos estão em português; a interface da aplicação é em inglês.
 - Estes documentos servem de contexto para as fases seguintes. Quando se usar IA para apoiar a escrita ou o desenvolvimento, convém rever a consistência entre eles.
 

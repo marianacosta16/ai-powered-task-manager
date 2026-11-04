@@ -25,12 +25,13 @@ Uma aplicação em que as equipas organizam projetos, gerem tarefas e acompanham
 ### Convenções dos documentos
 | Etiqueta | Significado |
 |---|---|
-| **Facto** | Vem do enunciado |
 | **Decisão** | Definição tomada pela autora do projeto em nome do cliente |
 | **Pressuposto** | Proposta aceite para preencher uma lacuna; deve ser validada com o cliente real (ver [constraints.md](constraints.md#2-pressupostos-assumidos)) |
 | **Fora de âmbito** | Excluído conscientemente (ver [constraints.md](constraints.md#5-limitações-de-âmbito)) |
+| **Fora do MVP** | Funcionalidade prevista para a v2 ou a v3, não para a v1 |
+| **Premissa** | Condição do contexto do exercício que não se decide nem se valida (por exemplo, o cliente ser fictício) |
 
-Os códigos F (funcionalidade), R (regra), NF (requisito não funcional) e P (pressuposto) são usados em todos os documentos. Os códigos US e EC identificam user stories e casos excecionais em [user-stories.md](user-stories.md).
+Os códigos F (funcionalidade), R (regra), NF (requisito não funcional), C (restrição), P (pressuposto), S (segurança) e T (decisão técnica pendente) são usados em todos os documentos. Os códigos US e EC identificam user stories e casos excecionais em [user-stories.md](user-stories.md).
 
 ### Versões
 A entrega segue a prioridade MoSCoW: **v1 (MVP) = Must**, **v2 = Should**, **v3 = Could**.
@@ -42,7 +43,7 @@ Existem apenas dois papéis (decisão).
 | Papel | Descrição | Pode |
 |---|---|---|
 | **Membro da equipa** | Executa o trabalho | Ver os projetos de que é membro e as suas tarefas; criar, editar e apagar tarefas; mudar estados (ver P8) |
-| **Gestor de projeto** | Planeia e acompanha | Tudo o que o membro pode, mais: criar projetos e adicionar-lhes membros (formar a equipa); definir a fase e o estado do projeto; ver todos os projetos e o progresso global; apagar e recuperar projetos. Na v2: gerir contas e arquivar projetos |
+| **Gestor de projeto** | Planeia e acompanha | Tudo o que o membro pode, mais: criar projetos e adicionar-lhes ou remover-lhes membros (formar a equipa); definir a fase e o estado do projeto; ver todos os projetos e o progresso global; apagar e recuperar projetos. Na v2: gerir contas e arquivar projetos |
 
 O gestor de projeto também forma as equipas; não existe um papel separado de "gestor de equipas" (P2).
 
@@ -50,9 +51,11 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 
 ### 3.1 Informação gerida
 
-**Projeto:** nome, descrição, datas de início e de fim, fase, estado e membros.
+**Utilizador:** nome e papel (membro da equipa ou gestor de projeto). O gestor também pode ter tarefas atribuídas. Na v1 os utilizadores existem previamente (P21); na v2 passam a ter conta (F10).
+
+**Projeto:** nome, descrição, datas de início e de fim (obrigatórias, R16), fase, estado, gestor (um só, R19) e membros.
 - Fases: iniciação, planeamento, execução, monitorização, avaliação.
-- Estados: não iniciado, em andamento, atenção, atrasado, suspenso, concluído. "Atenção" e "atrasado" são calculados (P5); os restantes são definidos pelo gestor.
+- Estados: não iniciado, em andamento, atenção, atrasado, suspenso, concluído. "Atenção" e "atrasado" são só calculados (P5) e o gestor não os define; os restantes são definidos pelo gestor.
 
 **Equipa:** são os membros que o gestor adiciona ao projeto. Um membro só pode estar num projeto em aberto de cada vez (R11).
 
@@ -60,11 +63,16 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 - Estados: por fazer, em curso, em revisão, bloqueado, concluído, cancelado, duplicado. Os três últimos são finais.
 - Urgência e importância têm 4 níveis cada: 1 = low, 2 = medium, 3 = high, 4 = critical.
 
-**Subtarefa:** tem estado, prazo e prioridades (urgência e importância) próprios.
+**Subtarefa:** tem estado, prazo, prioridades (urgência e importância) e responsáveis próprios. Aparece dentro da tarefa-mãe e não conta para o progresso do projeto (R18).
+
+**Termos usados**
+- *Tarefa em estado final (ou fechada):* concluída, cancelada ou duplicada. Uma tarefa *em aberto* é a que não está em estado final.
+- *Projeto em aberto:* não está concluído, suspenso nem arquivado (P4).
+- *Projeto concluído:* é o único que se pode arquivar (R10).
 
 ### 3.2 Vistas
-- **Matriz** (vista principal, por projeto): 4 quadrantes. Cada eixo é dividido em duas metades: níveis 1 e 2 são "baixo" e níveis 3 e 4 são "alto". Quadrantes: *Do first* (urgente e importante), *Schedule* (importante, não urgente), *Delegate* (urgente, não importante) e *Later* (nem urgente nem importante). Esconde as tarefas em estado final (P10).
-- **Lista** (por projeto): todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" (R15).
+- **Matriz** (vista principal, por projeto): 4 quadrantes. Cada eixo é dividido em duas metades: níveis 1 e 2 são "baixo" e níveis 3 e 4 são "alto". Quadrantes: *Do first* (urgente e importante), *Schedule* (importante, não urgente), *Delegate* (urgente, não importante) e *Later* (nem urgente nem importante). Esconde as tarefas em estado final (P10) e mostra só tarefas principais (R18).
+- **Lista** (por projeto): todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" e mostra só tarefas principais (R15, R18).
 - **Vista global do gestor:** projetos em aberto e suspensos, com barra de progresso e estado; não mostra os concluídos.
 
 ### 3.3 Funcionalidades
@@ -72,7 +80,7 @@ Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Coul
 
 | ID | Funcionalidade | Justificação | Prioridade | Versão |
 |---|---|---|---|---|
-| F01 | Gestão de projetos (nome, descrição, datas, fase, estado) e da sua equipa: o gestor cria o projeto e adiciona membros | Responde a "organizar projetos"; adicionar membros forma a equipa | Must | v1 |
+| F01 | Gestão de projetos (nome, descrição, datas, fase, estado) e da sua equipa: o gestor cria o projeto e adiciona ou remove membros | Responde a "organizar projetos"; adicionar membros forma a equipa | Must | v1 |
 | F02 | Gestão de tarefas (título, descrição, prazo, estado, vários responsáveis) | Responde a "gerir tarefas" | Must | v1 |
 | F03 | Urgência e importância em 4 níveis | Sem elas a Matriz não existe | Must | v1 |
 | F04 | Vista Matriz por projeto | Vista principal da aplicação | Must | v1 |
@@ -84,7 +92,7 @@ Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Coul
 | F10 | Login e contas criadas pelo gestor de projeto | Identifica os utilizadores e protege o acesso | Should | v2 |
 | F11 | Etiquetas por tipo de trabalho e tempo de execução | Ajuda a organizar e filtrar | Should | v2 |
 | F12 | Lembretes e alertas de atraso, configuráveis | Evita falhar prazos | Should | v2 |
-| F13 | Arquivo de projetos fechados, com histórico | Mantém o histórico sem poluir os projetos ativos | Should | v2 |
+| F13 | Arquivo de projetos concluídos, com histórico | Mantém o histórico sem poluir os projetos ativos | Should | v2 |
 | F14 | Registo de auditoria | Rastreia ações no trabalho partilhado | Should | v2 |
 | F15 | Vista Calendário | Mostra prazos no tempo | Could | v3 |
 | F16 | Anexos nas tarefas | Útil, mas aumenta o âmbito | Could | v3 |
@@ -94,25 +102,47 @@ Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Coul
 | F20 | Registo de tempo; tarefas repetidas; modelos de projeto | Funcionalidades comuns em ferramentas semelhantes, pedidas como "para já não" | Could | v3 |
 | F21 | Quadro por estados | Descartado na primeira fase | Could | v3 |
 
+### 3.4 Termos da interface
+
+A interface está em inglês (NF01). Nos outros documentos os termos aparecem em português; o rótulo real da interface é o seguinte.
+
+| Conceito | Rótulo na interface |
+|---|---|
+| Estados da tarefa | To do, In progress, In review, Blocked, Done, Cancelled, Duplicate |
+| Estados do projeto | Not started, In progress, Attention, Late, Suspended, Completed |
+| Fases do projeto | Initiation, Planning, Execution, Monitoring, Evaluation |
+| Níveis de urgência e importância | Low, Medium, High, Critical |
+| Quadrantes da Matriz | Do first, Schedule, Delegate, Later |
+| Vistas | Matrix, List |
+| Filtro "as minhas" | My tasks |
+| Projeto sem tarefas | No tasks |
+| Papéis | Team member, Project manager |
+
 ## 4. Regras de negócio
 
 | ID | Regra | Versão |
 |---|---|---|
 | R1 | O prazo de cada tarefa e subtarefa é obrigatório | v1 |
-| R2 | O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe | v1 |
+| R2 | O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe, ao criar ou ao editar o prazo de qualquer das duas | v1 |
 | R3 | Antecipar o prazo da mãe para antes do de uma subtarefa é bloqueado, com aviso para rever primeiro as subtarefas | v1 |
 | R4 | Uma tarefa-mãe não pode ser concluída nem cancelada com subtarefas em aberto | v1 |
-| R5 | Uma subtarefa cancelada ou duplicada conta como fechada | v1 |
-| R6 | Uma tarefa bloqueada exige motivo; uma tarefa duplicada exige indicar de qual | v1 |
+| R5 | Uma subtarefa cancelada ou duplicada conta como fechada (em estado final) | v1 |
+| R6 | Uma tarefa bloqueada exige motivo. Uma tarefa duplicada exige indicar a tarefa original, escolhida manualmente: tem de ser do mesmo projeto, diferente da própria e não pode estar em estado "duplicado" | v1 |
 | R7 | Cada tarefa tem um lembrete, com antecedência definida por tarefa; o alerta de atraso repete-se segundo um intervalo definido pelo utilizador | v2 |
 | R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê tudo | v1 |
-| R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas | v1 |
+| R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas e subtarefas. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas | v1 |
 | R10 | Só se arquiva um projeto concluído (um projeto suspenso não se arquiva); o arquivo guarda tarefas e histórico | v2 |
-| R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 |
-| R12 | Só o gestor altera a fase do projeto e define manualmente o seu estado; os estados "atenção" e "atrasado" são calculados (P5) | v1 |
-| R13 | Não é aceite uma tarefa com prazo no passado na criação | v1 |
-| R14 | O título tem no máximo 100 caracteres e a descrição 2000 (tarefas e projetos, P17) | v1 |
+| R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). A regra não se aplica ao gestor. Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 |
+| R12 | Só o gestor altera a fase do projeto e define o seu estado, exceto "atenção" e "atrasado", que são só calculados e que o gestor não define (P5) | v1 |
+| R13 | Não é aceite um prazo no passado ao criar ou ao editar o prazo de uma tarefa ou subtarefa; o prazo igual à data atual é aceite | v1 |
+| R14 | O título tem no máximo 100 caracteres e a descrição 2000 (tarefas e projetos, P17). Contam como caracteres as letras, a pontuação, os espaços e os símbolos | v1 |
 | R15 | A Lista mostra todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" | v1 |
+| R16 | A data de início e a data de fim do projeto são obrigatórias, e a data de fim é posterior à de início (P23) | v1 |
+| R17 | O gestor pode remover um membro de um projeto em aberto, ficando o membro livre para outro projeto. Se o membro tiver tarefas por concluir nesse projeto, o gestor tem de adicionar um novo membro, que fica com essas tarefas; sem o novo membro, a remoção não é concluída (P24) | v1 |
+| R18 | A Matriz, a Lista e o cálculo do progresso consideram só as tarefas principais; as subtarefas aparecem dentro da tarefa-mãe. O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas (P25) | v1 |
+| R19 | Cada projeto tem um só gestor. O gestor pode ter tarefas atribuídas, em vários projetos | v1 |
+| R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 |
+| R21 | Os responsáveis de uma tarefa ou subtarefa podem ser membros do projeto ou não | v1 |
 
 ## 5. Requisitos não funcionais
 
@@ -123,10 +153,14 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 | NF01 | A interface está em inglês | Decisão | v1 |
 | NF02 | A aplicação é usada em computador | Decisão | v1 |
 | NF03 | Dimensão de referência: cerca de 30 utilizadores, 3 a 5 projetos em aberto em simultâneo, cada um com uma equipa de 5 a 8 pessoas | Pressuposto (P18) | v1 |
-| NF04 | Controlo de acesso por papel e por projeto; na v1 o utilizador escolhe quem é num seletor (S7) e a autenticação chega com o login (F10) | Pressuposto (P15), regra R8 | v1 (acesso), v2 (autenticação) |
+| NF04 | Controlo de acesso por papel e por projeto; na v1 o utilizador escolhe quem é num seletor (S4) e a autenticação chega com o login (F10) | Pressuposto (P15), regra R8 | v1 (acesso), v2 (autenticação) |
 | NF05 | Rastreabilidade: ficam registados quem fez o quê e quando (criar, editar, mudar de estado, apagar) | Pressuposto (P14) | v2 |
-| NF06 | Recuperabilidade: o que é apagado vai para uma reciclagem e pode ser recuperado pelo gestor | Decisão, regra R9 | v1 |
+| NF06 | Recuperabilidade: o que é apagado vai para uma reciclagem, durante 30 dias, e pode ser recuperado pelo gestor | Decisão, regras R9 e R20 | v1 |
 | NF07 | O cálculo da barra de progresso e dos estados "atenção" e "atrasado" segue exatamente as fórmulas definidas | Pressuposto (P5, P7) | v1 |
+| NF08 | Sempre que uma ação é recusada, é mostrada uma mensagem que explica o motivo e o que fazer. Quando o utilizador não tem acesso a uma ação, o controlo simplesmente não aparece | Decisão | v1 |
+| NF09 | O texto introduzido pelos utilizadores (nomes, títulos, descrições, motivos) é sempre mostrado como texto simples, nunca interpretado como código nem como formatação | Decisão | v1 |
+
+**Como se verificam:** NF06 pelos cenários 7.1 a 7.6; NF07 pelos cenários 6.1 a 6.13; NF08 pelos cenários 1.5, 2.7 e 7.4; NF09 pelo cenário 2.8. O NF03 é uma dimensão de referência e não tem critério de aceitação.
 
 **Sem requisito definido (fora de âmbito):** desempenho, disponibilidade, compatibilidade com navegadores, acessibilidade, cópias de segurança. Ver [constraints.md](constraints.md#5-limitações-de-âmbito).
 
@@ -134,10 +168,10 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 
 **Dentro do MVP:** F01 a F09, com Matriz e Lista como vistas.
 
-**Critério de aceitação do MVP:** um gestor consegue criar projetos, formar a equipa, atribuir tarefas, e acompanhar o progresso de cada projeto e do conjunto; um membro consegue gerir as tarefas do seu projeto na Matriz e na Lista.
+**Critério de aceitação do MVP:** um gestor consegue criar projetos, formar a equipa, atribuir tarefas, e acompanhar o progresso de cada projeto e do conjunto; um membro consegue gerir as tarefas do seu projeto na Matriz e na Lista. Verifica-se pelo [cenário de aceitação do MVP](user-stories.md#cenário-de-aceitação-do-mvp).
 
 **Riscos**
-- Na v1 não há login: o utilizador escolhe quem é num seletor (S7), por isso a visibilidade por papel não impede que alguém escolha o papel de gestor.
+- Na v1 não há login: o utilizador escolhe quem é num seletor (S4), por isso a visibilidade por papel não impede que alguém escolha o papel de gestor.
 - Sem arquivo, auditoria nem lembretes na v1, não há registo de ações nem avisos de prazo.
 - Não há requisitos de segurança avançada nem de proteção de dados, o que é um risco se a aplicação for usada fora do exercício.
 
@@ -150,7 +184,7 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 | F10 | Login e contas criadas pelo gestor de projeto | v2 |
 | F11 | Etiquetas por tipo de trabalho e tempo de execução | v2 |
 | F12 | Lembretes e alertas de atraso | v2 |
-| F13 | Arquivo de projetos fechados | v2 |
+| F13 | Arquivo de projetos concluídos | v2 |
 | F14 | Registo de auditoria | v2 |
 
 **v3 (Could):** F15 a F21.
@@ -191,7 +225,7 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 18 | Vistas | Que vistas existem? | Matriz e Lista na primeira fase; Calendário depois | Decisão |
 | 19 | Avisos | Como se avisa? | Lembretes e alertas de atraso configurados pelo utilizador, dentro da aplicação (v2) | Decisão |
 | 20 | Apagar | Quem apaga e recupera? | Projetos: só o gestor. Tarefas: qualquer membro da equipa. Há reciclagem, e só o gestor recupera | Decisão |
-| 21 | Arquivo | O que é arquivar? | Só se arquiva um projeto fechado, com todas as tarefas e o histórico (v2) | Decisão |
+| 21 | Arquivo | O que é arquivar? | Só se arquiva um projeto concluído, com todas as tarefas e o histórico (v2) | Decisão |
 | 22 | Auditoria | É preciso registo de ações? | Sim (v2) | Decisão |
 | 23 | Saída de utilizador | O que acontece? | Remove-se o utilizador e coloca-se outro no seu lugar | Decisão |
 | 24 | Comentários | São necessários? | Ficam para mais tarde | Decisão |
@@ -210,7 +244,27 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 37 | Membro já noutro projeto | Pode ser adicionado a um segundo projeto em aberto? | Não: a ação é recusada com um aviso | Decisão |
 | 38 | Lista | Que tarefas mostra e por que ordem? | Todas, incluindo as de estado final, com o filtro "as minhas"; em aberto primeiro, depois fechadas | Decisão |
 | 39 | Identificação na v1 | Como sabe a aplicação quem é o utilizador, sem login? | O utilizador escolhe quem é num seletor, sem palavra-passe | Decisão |
-| 40 | Projeto suspenso | Conta como projeto em aberto? | Não: conta como fechado, porque não se vai trabalhar nele durante algum tempo; os membros são realocados a outro projeto | Decisão |
+| 40 | Projeto suspenso | Conta como projeto em aberto? | Não: um projeto suspenso não conta como em aberto, porque não se vai trabalhar nele durante algum tempo; os membros são realocados a outro projeto | Decisão |
 | 41 | Retoma de projeto suspenso | O que acontece à equipa? | A lista de membros mantém-se; os membros que entretanto entraram noutro projeto ficam com uma etiqueta vermelha e o gestor vê um aviso. Um membro continua a estar em um só projeto em aberto de cada vez | Decisão |
 | 42 | Visibilidade e arquivo | Os membros libertados continuam a ver o projeto? A vista global mostra os suspensos? Arquiva-se um suspenso? | Sim; sim; não | Decisão |
 | 43 | Vista global e projetos concluídos | A vista global mostra os projetos concluídos? | Não | Decisão |
+| 44 | Datas do projeto | São obrigatórias? | Sim; a data de fim é posterior à de início | Pressuposto (P23) |
+| 45 | Remover membro | Como se remove um membro de um projeto em aberto? | O gestor remove; se o membro tiver tarefas por concluir, tem de adicionar um novo membro que fica com elas, senão a remoção não é concluída | Decisão (detalhes em P24) |
+| 46 | Prazo igual à data atual | Aceita-se na criação? | Sim | Decisão |
+| 47 | Projeto sem tarefas | Que etiqueta mostra? | "Sem tarefas", mesmo depois da data de fim | Decisão |
+| 48 | Subtarefas nas vistas e no progresso | Aparecem na Matriz e na Lista? Contam no progresso? | Não: aparecem dentro da tarefa-mãe e só as tarefas principais contam | Decisão |
+| 49 | Tarefa duplicada | Como se sabe de qual é duplicada? | Marcação manual, escolhendo o original: do mesmo projeto, diferente da própria e não duplicado | Decisão |
+| 50 | Projeto não iniciado | Fica atrasado se passar a data de fim? | Não: só os projetos "em andamento" recebem estados calculados | Decisão |
+| 51 | Gestor | Quantos gestores por projeto? Pode ter tarefas? | Um só; pode ter tarefas atribuídas e a regra de um projeto em aberto por membro não se lhe aplica | Decisão |
+| 52 | Apagar e estados finais | Que limites há? | Não se apaga uma tarefa-mãe com subtarefas em aberto; os membros movem tarefas e subtarefas para estados finais; as subtarefas apagadas vão para a reciclagem | Decisão |
+| 53 | Prazos ao longo da vida | R2 e R13 aplicam-se quando? | Sempre que o prazo é definido ou alterado | Decisão |
+| 54 | Etiqueta vermelha e reabrir | Quando desaparece? Para que estado se reabre? | Desaparece quando o membro está em um só projeto em aberto; ao reabrir, o gestor escolhe o estado | Decisão |
+| 55 | Subtarefas | Têm responsáveis? O filtro "as minhas" considera-as? | Sim; sim | Decisão |
+| 56 | Mensagens | O que se mostra quando uma ação é recusada ou não está disponível? | Recusada: mensagem com o motivo e o que fazer. Não disponível: o controlo não aparece | Decisão |
+| 57 | Arredondamento e fuso horário | Como se arredondam os valores e que fuso tem o dia de fim? | Duas casas decimais; o dia de fim tem fuso horário (a definir em T5) | Decisão |
+| 58 | Caracteres | O que conta nos limites? | Letras, pontuação, espaços e símbolos | Decisão |
+| 59 | Reciclagem | Quanto tempo guarda? | 30 dias | Decisão |
+| 60 | Seletor sem autenticação | Aceita-se que qualquer pessoa assuma o papel de gestor e veja a lista de utilizadores? | Sim, é uma decisão consciente na v1 | Decisão |
+| 61 | Estados "atenção" e "atrasado" | O gestor pode defini-los à mão? | Não: são só calculados | Decisão |
+| 62 | Responsáveis | Têm de ser membros do projeto? | Não: podem ser membros ou não | Decisão |
+| 63 | Mitigação do seletor | Como se reduz o risco do seletor sem autenticação? | Dados fictícios num ambiente controlado e o seletor só mostra nomes | Decisão |
