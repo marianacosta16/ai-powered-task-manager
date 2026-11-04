@@ -120,29 +120,31 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 
 ## 4. Regras de negócio
 
-| ID | Regra | Versão |
-|---|---|---|
-| R1 | O prazo de cada tarefa e subtarefa é obrigatório | v1 |
-| R2 | O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe, ao criar ou ao editar o prazo de qualquer das duas | v1 |
-| R3 | Antecipar o prazo da mãe para antes do de uma subtarefa é bloqueado, com aviso para rever primeiro as subtarefas | v1 |
-| R4 | Uma tarefa-mãe não pode ser concluída nem cancelada com subtarefas em aberto | v1 |
-| R5 | Uma subtarefa cancelada ou duplicada conta como fechada (em estado final) | v1 |
-| R6 | Uma tarefa bloqueada exige motivo. Uma tarefa duplicada exige indicar a tarefa original, escolhida manualmente: tem de ser do mesmo projeto, diferente da própria e não pode estar em estado "duplicado" | v1 |
-| R7 | Cada tarefa tem um lembrete, com antecedência definida por tarefa; o alerta de atraso repete-se segundo um intervalo definido pelo utilizador | v2 |
-| R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê só os projetos de que é gestor | v1 |
-| R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas e subtarefas. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas | v1 |
-| R10 | Só se arquiva um projeto concluído (um projeto suspenso não se arquiva); o arquivo guarda tarefas e histórico | v2 |
-| R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). A regra não se aplica ao gestor. Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 |
-| R12 | Só o gestor altera a fase do projeto e define o seu estado, exceto "atenção" e "atrasado", que são só calculados e que o gestor não define (P5) | v1 |
-| R13 | Não é aceite um prazo no passado ao criar ou ao editar o prazo de uma tarefa ou subtarefa; o prazo igual à data atual é aceite | v1 |
-| R14 | O título tem no máximo 100 caracteres e a descrição 2000 (tarefas e projetos, P17). Contam como caracteres as letras, a pontuação, os espaços e os símbolos | v1 |
-| R15 | A Lista mostra todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" | v1 |
-| R16 | A data de início e a data de fim do projeto são obrigatórias, e o instante de fim é posterior ao de início (P23, P26) | v1 |
-| R17 | O gestor pode remover um membro de um projeto em aberto, ficando o membro livre para outro projeto. Se o membro tiver tarefas por concluir nesse projeto, o gestor tem de adicionar um novo membro, que fica com essas tarefas; sem o novo membro, a remoção não é concluída (P24) | v1 |
-| R18 | A Matriz, a Lista e o cálculo do progresso consideram só as tarefas principais; as subtarefas aparecem dentro da tarefa-mãe. O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas (P25) | v1 |
-| R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor que cria um projeto e indica outro gestor deixa de o ver. Um gestor pode ser responsável por tarefas do seu projeto e, depois de adicionado como membro (a regra R11 não se lhe aplica), por tarefas de outros projetos | v1 |
-| R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 |
-| R21 | Os responsáveis de uma tarefa ou subtarefa têm de ser membros do projeto (ou o seu gestor). Para atribuir uma tarefa a alguém de fora, essa pessoa é primeiro adicionada ao projeto | v1 |
+| ID | Regra | Versão | Origem |
+|---|---|---|---|
+| R1 | O prazo de cada tarefa e subtarefa é obrigatório | v1 | Decisão |
+| R2 | O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe, ao criar ou ao editar o prazo de qualquer das duas | v1 | Decisão |
+| R3 | Antecipar o prazo da mãe para antes do de uma subtarefa é bloqueado, com aviso para rever primeiro as subtarefas | v1 | Decisão |
+| R4 | Uma tarefa-mãe não pode ser concluída nem cancelada com subtarefas em aberto | v1 | Decisão |
+| R5 | Uma subtarefa cancelada ou duplicada conta como fechada (em estado final) | v1 | Decisão |
+| R6 | Uma tarefa bloqueada exige motivo. Uma tarefa duplicada exige indicar a tarefa original, escolhida manualmente: tem de ser do mesmo projeto, diferente da própria e não pode estar em estado "duplicado" | v1 | Decisão |
+| R7 | Cada tarefa tem um lembrete, com antecedência definida por tarefa; o alerta de atraso repete-se segundo um intervalo definido pelo utilizador | v2 | Decisão |
+| R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê só os projetos de que é gestor | v1 | Decisão, detalhes em P20 (confirmado) |
+| R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas e subtarefas. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas | v1 | Decisão |
+| R10 | Só se arquiva um projeto concluído (um projeto suspenso não se arquiva); o arquivo guarda tarefas e histórico | v2 | Decisão |
+| R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). A regra não se aplica ao gestor. Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 | Decisão, detalhes em P20 e P22 (confirmado) |
+| R12 | Só o gestor altera a fase do projeto e define o seu estado, exceto "atenção" e "atrasado", que são só calculados e que o gestor não define (P5) | v1 | Decisão, detalhes em P5 (confirmado) |
+| R13 | Não é aceite um prazo no passado ao criar ou ao editar o prazo de uma tarefa ou subtarefa; o prazo igual à data atual é aceite | v1 | Decisão |
+| R14 | O título tem no máximo 100 caracteres e a descrição 2000 (tarefas e projetos, P17). Contam como caracteres as letras, a pontuação, os espaços e os símbolos | v1 | Decisão, detalhes em P17 (confirmado) |
+| R15 | A Lista mostra todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" | v1 | Decisão |
+| R16 | A data de início e a data de fim do projeto são obrigatórias, e o instante de fim é posterior ao de início (P23, P26) | v1 | Pressuposto P23 e P26 (por validar) |
+| R17 | O gestor pode remover um membro de um projeto em aberto, ficando o membro livre para outro projeto. Se o membro tiver tarefas por concluir nesse projeto, o gestor tem de adicionar um novo membro, que fica com essas tarefas; sem o novo membro, a remoção não é concluída (P24) | v1 | Decisão, detalhes em P24 (confirmado) |
+| R18 | A Matriz, a Lista e o cálculo do progresso consideram só as tarefas principais; as subtarefas aparecem dentro da tarefa-mãe. O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas (P25) | v1 | Decisão, detalhes em P25 (confirmado) |
+| R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor que cria um projeto e indica outro gestor deixa de o ver. Um gestor pode ser responsável por tarefas do seu projeto e, depois de adicionado como membro (a regra R11 não se lhe aplica), por tarefas de outros projetos | v1 | Decisão |
+| R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 | Decisão |
+| R21 | Os responsáveis de uma tarefa ou subtarefa têm de ser membros do projeto (ou o seu gestor). Para atribuir uma tarefa a alguém de fora, essa pessoa é primeiro adicionada ao projeto | v1 | Decisão |
+
+**Origem das regras:** *Decisão* quer dizer que a autora decidiu tudo o que a regra diz. *Decisão, detalhes em Pn (confirmado)* quer dizer que a ideia é da autora e o pressuposto que a completa já foi aceite. *Pressuposto Pn (por validar)* quer dizer que a regra depende de algo que ainda não foi confirmado (ver [constraints.md](constraints.md#2-pressupostos-assumidos)).
 
 ## 5. Requisitos não funcionais
 

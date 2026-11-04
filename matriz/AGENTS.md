@@ -1,3 +1,7 @@
+
+
+
+
 # AGENTS.md — Instruções para agentes de desenvolvimento
 
 Estas instruções aplicam-se a qualquer agente que trabalhe neste repositório. Em caso de dúvida, pergunta antes de agir.

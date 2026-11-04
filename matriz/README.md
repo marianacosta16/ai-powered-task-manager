@@ -60,11 +60,11 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | Fase | Estado |
 |---|---|
 | Descrição do problema e perguntas de clarificação | Concluído |
-| Análise de requisitos e âmbito do MVP | Concluído |
+| Análise de requisitos e âmbito do MVP | Concluído, com pressupostos por validar |
 | User stories e critérios de aceitação da v1 | Concluído (9 stories, cobrem F01 a F09) |
 | User stories da v2 | Por fazer (F10 a F14) |
 | Base de conhecimento (esta documentação) | Concluído |
-| Decisões técnicas e desenho | Por iniciar (ver T1 a T12 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
+| Decisões técnicas e desenho | Por iniciar (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Implementação | Por iniciar |
 
 Não foi escolhida nenhuma tecnologia.

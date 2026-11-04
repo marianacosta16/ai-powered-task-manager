@@ -491,6 +491,17 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | A11 | Apagar tarefas-mãe, estados finais e subtarefas apagadas | [R9](requirements.md#4-regras-de-negócio), [P8](constraints.md#2-pressupostos-assumidos) |
 | A12 | Arredondamento do progresso | Duas casas decimais (cenário 6.12) |
 
+### Cenários que dependem de pressupostos por validar
+| Cenários | Pressuposto | O que depende dele |
+|---|---|---|
+| 1.9, 1.10 | [P23](constraints.md#2-pressupostos-assumidos) e [P26](constraints.md#2-pressupostos-assumidos) | Datas obrigatórias; um projeto de um só dia, sem hora, é válido |
+| 6.3, 6.4, 6.5 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta inteiro, o que dá 31 dias a 1-31 de janeiro |
+| 6.15 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta até ao fim desse dia |
+| MVP-1 | [P26](constraints.md#2-pressupostos-assumidos) | O tempo decorrido é cerca de 30% |
+| 1.4 a 1.8, 1.11 a 1.14, 1.17, 1.19 | [P21](constraints.md#2-pressupostos-assumidos) | Os utilizadores a adicionar já existem previamente (v1) |
+
+O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) também está por validar, mas nenhum cenário da v1 depende dele.
+
 ### Adiado por decisão da autora
 - Regras de palavra-passe e recuperação de acesso: não se estipulam para já.
 - Conteúdo, antecedência e repetição dos lembretes e alertas ([F12](requirements.md#3-requisitos-funcionais)): ficam para a user story da v2.
