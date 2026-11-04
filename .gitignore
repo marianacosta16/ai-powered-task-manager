@@ -1,0 +1,6 @@
+# Local review notes (not versioned)
+docs/review.md
+
+# OS files
+.DS_Store
+Thumbs.db
