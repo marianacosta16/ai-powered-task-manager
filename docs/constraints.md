@@ -47,7 +47,7 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | P23 | A data de início e a de fim do projeto são obrigatórias e o instante de fim é posterior ao de início. Se hoje é anterior à data de início, o tempo decorrido é 0% | O P5 divide por (fim − início) e precisa de datas válidas |
 | P24 | Ao remover um membro com tarefas por concluir (R17), o novo membro fica com todas essas tarefas, tem de ser um membro livre (R11) e não pode já estar no projeto. "Por concluir" são as tarefas que não estão em estado final | Completa a regra de remoção decidida pela autora |
 | P25 | O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas | Interpretação de "o filtro considera as subtarefas", dado que as subtarefas não aparecem sozinhas (R18) |
-| P26 | O fuso horário é definido ao criar o projeto e aplica-se a todas as datas e horas do projeto, incluindo os prazos das tarefas. A data de fim pode ter hora; sem hora, o dia de fim conta inteiro (até ao fim desse dia). A data de início sem hora conta a partir das 00:00. O tempo decorrido mede-se entre o instante de início e o de fim | O fuso e a hora de fim são decisão da autora; o dia inteiro e as 00:00 são interpretações minhas |
+| P26 | O fuso horário é definido ao criar o projeto (por defeito, o de Lisboa) e aplica-se a todas as datas e horas do projeto, incluindo os prazos das tarefas. A data de fim pode ter hora; sem hora, o dia de fim conta inteiro (até ao fim desse dia). A data de início sem hora conta a partir das 00:00. O tempo decorrido mede-se entre o instante de início e o de fim | O fuso e a hora de fim são decisão da autora; o dia inteiro e as 00:00 são interpretações minhas |
 ## 3. Requisitos de segurança e privacidade
 
 ### Definidos
@@ -95,9 +95,6 @@ Nenhuma tecnologia foi escolhida. Os pontos seguintes têm de ser decididos na f
 
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
-- O que veem os responsáveis de uma tarefa que não são membros do projeto (R8, R21).
-- Se o gestor que cria um projeto e indica outro gestor continua a vê-lo.
-- Que fuso horário se usa se não for indicado ao criar o projeto.
 - Se uma subtarefa pode ser recuperada da reciclagem quando a tarefa-mãe já foi eliminada definitivamente.
 - Se as tarefas ficam ligadas a uma fase do projeto.
 - Ordem das tarefas dentro de cada grupo da Lista (abertas e fechadas).

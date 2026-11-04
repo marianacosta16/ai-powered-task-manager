@@ -53,7 +53,7 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 
 **Utilizador:** nome e papel (membro da equipa ou gestor de projeto). O gestor também pode ter tarefas atribuídas. Na v1 os utilizadores existem previamente (P21); na v2 passam a ter conta (F10).
 
-**Projeto:** nome, descrição, datas de início e de fim (obrigatórias, R16; a de fim pode ter hora), fuso horário (definido ao criar o projeto, P26), fase, estado, gestor (um só, indicado por quem cria o projeto, R19) e membros.
+**Projeto:** nome, descrição, datas de início e de fim (obrigatórias, R16; a de fim pode ter hora), fuso horário (definido ao criar o projeto; por defeito, o de Lisboa, P26), fase, estado, gestor (um só, indicado por quem cria o projeto, R19) e membros.
 - Fases: iniciação, planeamento, execução, monitorização, avaliação.
 - Estados: não iniciado, em andamento, atenção, atrasado, suspenso, concluído. "Atenção" e "atrasado" são só calculados (P5) e o gestor não os define; os restantes são definidos pelo gestor.
 
@@ -140,9 +140,9 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R16 | A data de início e a data de fim do projeto são obrigatórias, e o instante de fim é posterior ao de início (P23, P26) | v1 |
 | R17 | O gestor pode remover um membro de um projeto em aberto, ficando o membro livre para outro projeto. Se o membro tiver tarefas por concluir nesse projeto, o gestor tem de adicionar um novo membro, que fica com essas tarefas; sem o novo membro, a remoção não é concluída (P24) | v1 |
 | R18 | A Matriz, a Lista e o cálculo do progresso consideram só as tarefas principais; as subtarefas aparecem dentro da tarefa-mãe. O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas (P25) | v1 |
-| R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor pode ter tarefas atribuídas, em vários projetos | v1 |
+| R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor que cria um projeto e indica outro gestor deixa de o ver. Um gestor pode ser responsável por tarefas do seu projeto e, depois de adicionado como membro (a regra R11 não se lhe aplica), por tarefas de outros projetos | v1 |
 | R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 |
-| R21 | Os responsáveis de uma tarefa ou subtarefa podem ser membros do projeto ou não | v1 |
+| R21 | Os responsáveis de uma tarefa ou subtarefa têm de ser membros do projeto (ou o seu gestor). Para atribuir uma tarefa a alguém de fora, essa pessoa é primeiro adicionada ao projeto | v1 |
 
 ## 5. Requisitos não funcionais
 
@@ -266,8 +266,8 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 59 | Reciclagem | Quanto tempo guarda? | 30 dias | Decisão |
 | 60 | Seletor sem autenticação | Aceita-se que qualquer pessoa assuma o papel de gestor e veja a lista de utilizadores? | Sim, é uma decisão consciente na v1 | Decisão |
 | 61 | Estados "atenção" e "atrasado" | O gestor pode defini-los à mão? | Não: são só calculados | Decisão |
-| 62 | Responsáveis | Têm de ser membros do projeto? | Não: podem ser membros ou não | Decisão |
+| 62 | Responsáveis | Têm de ser membros do projeto? | Sim; para atribuir uma tarefa a alguém de fora, adiciona-se primeiro essa pessoa ao projeto | Decisão |
 | 63 | Mitigação do seletor | Como se reduz o risco do seletor sem autenticação? | Dados fictícios num ambiente controlado e o seletor só mostra nomes | Decisão |
 | 64 | Vários gestores | A empresa pode ter vários gestores? Quem vê o quê? | Vários, mas um só por projeto; cada gestor vê só os seus projetos | Decisão |
-| 65 | Escolha do gestor | Como se define o gestor de um projeto? | Quem cria o projeto indica o gestor | Decisão |
-| 66 | Fuso horário e hora de fim | Como se tratam? | O fuso horário é definido ao criar o projeto e a data de fim pode ter hora; sem hora, o dia de fim conta inteiro (P26) | Decisão |
+| 65 | Escolha do gestor | Como se define o gestor de um projeto? | Quem cria o projeto indica o gestor; quem cria e indica outro gestor deixa de ver o projeto | Decisão |
+| 66 | Fuso horário e hora de fim | Como se tratam? | O fuso horário é definido ao criar o projeto (por defeito, o de Lisboa) e a data de fim pode ter hora; sem hora, o dia de fim conta inteiro (P26) | Decisão |

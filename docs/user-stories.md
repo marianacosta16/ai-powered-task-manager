@@ -129,14 +129,19 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **Then** a Ana passa a estar em um só projeto em aberto e a etiqueta vermelha desaparece.
 
 **Cenário 1.17: gestor com tarefas em vários projetos**
-- **Given** a gestora "Marta" com uma tarefa atribuída no projeto "Website", que está em aberto
-- **When** é atribuída à Marta uma tarefa do projeto "Intranet", que também está em aberto
+- **Given** a gestora "Marta", gestora do projeto "Website" e responsável por uma tarefa desse projeto, e o projeto "Intranet", de outro gestor, que está em aberto
+- **When** o gestor do projeto "Intranet" adiciona a Marta como membro e lhe atribui uma tarefa
 - **Then** a atribuição é aceite, porque a regra de um projeto em aberto por membro não se aplica ao gestor.
 
 **Cenário 1.19: o criador indica o gestor do projeto**
 - **Given** os gestores "Marta" e "Pedro"
 - **When** a Marta cria o projeto "Website" e indica o Pedro como gestor
-- **Then** o Pedro é o gestor do projeto "Website" e o projeto aparece na lista do Pedro.
+- **Then** o Pedro é o gestor do projeto "Website", o projeto aparece na lista do Pedro e não aparece na lista da Marta.
+
+**Cenário 1.20: fuso horário por defeito**
+- **Given** um gestor de projeto identificado
+- **When** cria um projeto sem indicar o fuso horário
+- **Then** o projeto fica com o fuso horário de Lisboa.
 
 **Cenário 1.18: "atenção" e "atrasado" não são definidos pelo gestor**
 - **Given** um gestor de projeto identificado e um projeto "em andamento"
@@ -187,10 +192,12 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **When** guarda a tarefa com o título `<b>x</b>`
 - **Then** o título aparece exatamente como `<b>x</b>`, sem formatação nem execução de código.
 
-**Cenário 2.9: responsável que não é membro do projeto**
-- **Given** uma tarefa nova num projeto e um utilizador "Pedro" que não é membro desse projeto
-- **When** o membro atribui a tarefa ao Pedro
-- **Then** a atribuição é aceite e o Pedro aparece como responsável da tarefa.
+**Cenário 2.9: atribuir a quem não é membro do projeto**
+- **Given** uma tarefa nova num projeto e um utilizador "Luís" que não é membro desse projeto
+- **When** o membro tenta atribuir a tarefa ao Luís
+- **Then** a atribuição é recusada, com uma mensagem a pedir ao gestor que adicione primeiro o Luís ao projeto, e o Luís não fica como responsável.
+- **When** o gestor adiciona o Luís ao projeto e a tarefa é depois atribuída a ele
+- **Then** a atribuição é aceite e o Luís aparece como responsável da tarefa.
 
 ### US03 — Matriz do projeto
 
@@ -464,7 +471,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC25 | Gestor com tarefas em vários projetos em aberto | Aceite (cenário 1.17) | [R11](requirements.md#4-regras-de-negócio), [R19](requirements.md#4-regras-de-negócio) |
 | EC26 | Título ou descrição com texto que parece código ou formatação | Mostrado literalmente (cenário 2.8) | [NF09](requirements.md#5-requisitos-não-funcionais) |
 | EC27 | O gestor tenta definir o estado "atenção" ou "atrasado" | Não está disponível (cenário 1.18) | [R12](requirements.md#4-regras-de-negócio) |
-| EC28 | Atribuir uma tarefa a alguém que não é membro do projeto | Aceite (cenário 2.9) | [R21](requirements.md#4-regras-de-negócio) |
+| EC28 | Atribuir uma tarefa a alguém que não é membro do projeto | Recusado, com mensagem a pedir que a pessoa seja primeiro adicionada ao projeto (cenário 2.9) | [R21](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
