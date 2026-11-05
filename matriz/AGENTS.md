@@ -20,6 +20,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 | [docs/requirements.md](docs/requirements.md) | Funcionalidades (F), regras de negócio (R), requisitos não funcionais (NF), âmbito por versão |
 | [docs/user-stories.md](docs/user-stories.md) | User stories (US), critérios de aceitação e casos excecionais (EC) |
 | [docs/constraints.md](docs/constraints.md) | Restrições (C), pressupostos (P), segurança (S), decisões técnicas pendentes (T) |
+| [docs/architecture.md](docs/architecture.md) | Estilo de arquitetura decidido (monólito modular), componentes, responsabilidades e regras de fronteira |
 
 - A documentação é a fonte de verdade, exceto os itens marcados como Pressuposto, que ainda não estão confirmados (ver secção 3). Se algo no código ou no pedido a contradiz, pára e pergunta.
 - Se dois documentos se contradizem, não escolhas por tua conta: assinala a contradição.
@@ -37,7 +38,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 - Não acrescentes funcionalidades, regras, estados, campos nem decisões que não estejam documentados.
 - Os itens marcados como **Pressuposto** podem ser usados, mas não os trates como confirmados: se uma tarefa depender de um pressuposto, questiona a autora do projeto.
 - Se a documentação não define algo (ver as questões em aberto em [docs/constraints.md](docs/constraints.md)), pergunta em vez de assumir.
-- Não escolhas tecnologias, bibliotecas, arquitetura nem ferramentas: são decisões pendentes (T). Podes apresentar opções com prós e contras, mas espera pela aprovação.
+- Não escolhas tecnologias, bibliotecas nem ferramentas: são decisões pendentes (T). Respeita a arquitetura decidida em [docs/architecture.md](docs/architecture.md) e não a alteres sem aprovação. Podes apresentar opções com prós e contras, mas espera pela aprovação.
 
 ## 4. Planear antes de alterações significativas
 

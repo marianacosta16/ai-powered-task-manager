@@ -75,7 +75,7 @@ Mitigações decididas: dados fictícios num ambiente controlado (C8) e um selet
 
 ## 4. Decisões técnicas pendentes
 
-Nenhuma tecnologia foi escolhida. Os pontos seguintes têm de ser decididos na fase de desenho.
+Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) está decidido em [architecture.md](architecture.md). Os pontos seguintes têm de ser decididos na fase de desenho.
 
 | ID | Decisão pendente | Condiciona |
 |---|---|---|
