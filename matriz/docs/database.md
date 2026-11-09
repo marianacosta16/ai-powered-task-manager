@@ -6,7 +6,7 @@
 ## 1. Âmbito e convenções
 
 - **Âmbito:** só a v1 (F01 a F09). O que a v2 e a v3 acrescentam está na secção 8 e não entra no diagrama.
-- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R21. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
+- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R22. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
 - **Nomes:** as entidades e os atributos estão em inglês, como a interface (NF01). A tabela da secção 2 faz a correspondência com os termos em português. Os valores dos domínios usam os rótulos da interface ([requirements.md](requirements.md#34-termos-da-interface)). A escolha de nomes é uma proposta.
 - **Identificadores:** cada entidade tem um identificador interno (`id`). As tabelas de associação usam como identificador o par de chaves das duas entidades que ligam (M9).
 - **Módulos:** cada entidade pertence a um módulo de [architecture.md](architecture.md#4-componentes-e-responsabilidades) e só esse módulo a altera.
@@ -182,6 +182,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R11 | **Aplicação.** Não pode ser uma restrição do modelo, porque depende do `status` do projeto e porque o P22 permite, de forma excecional, um membro em dois projetos em aberto |
 | R17 | **Aplicação:** remove a linha de `PROJECT_MEMBER` e passa as tarefas por concluir para o novo membro (`TASK_ASSIGNEE`), numa só transação |
 | R21 | **Aplicação:** cada `TASK_ASSIGNEE` tem de ser membro do projeto da tarefa ou o seu gestor |
+| R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também as suas tarefas, recuperar desfaz, e a eliminação definitiva corre ao fim de 30 dias |
 | R18, R15 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio) |
 

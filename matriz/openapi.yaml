@@ -11,7 +11,7 @@ info:
 
     Assumptions to confirm (marked "Assumption" in the descriptions):
     - A1: the current user is sent in the `X-User-Id` header, because v1 has no login (S4, P21).
-    - A2: a new task starts in status `To do`.
+    - A2 (confirmed, scenario 2.1): a new task starts in status `To do`.
     - A3: a task has at least one assignee (M6 in docs/database.md).
     - A4: only one level of subtasks (M1 in docs/database.md).
     - A5: a task deadline is a date without time (M3 in docs/database.md).
@@ -41,11 +41,11 @@ paths:
         - R2: a subtask deadline cannot be later than its parent task deadline.
         - R14: title up to 100 characters and description up to 2000.
         - R21: every assignee must be a member of the project or its manager.
+        - R22: tasks can only be created in an open project; a `Completed` or `Suspended` project refuses the creation.
         - R6 does not apply here: a task is never created as `Blocked` or `Duplicate`.
 
-        Assumption A2: the new task has status `To do`. Assumption A3: at least one assignee is required.
+        A2 (confirmed, scenario 2.1): the new task has status `To do`. Assumption A3: at least one assignee is required.
         Who can create: any member of the project and its manager (R8, S1). A project that is deleted is treated as not found.
-        Not defined in the requirements: whether tasks can be created in a `Suspended` or `Completed` project.
       requestBody:
         required: true
         content:
@@ -130,6 +130,11 @@ paths:
                   value:
                     code: ASSIGNEE_NOT_MEMBER
                     message: Every assignee must be a member of the project. Add the person to the project first.
+                projectNotOpen:
+                  summary: R22
+                  value:
+                    code: PROJECT_NOT_OPEN
+                    message: Tasks cannot be created in a completed or suspended project. Change the project status first.
                 parentIsSubtask:
                   summary: A4
                   value:

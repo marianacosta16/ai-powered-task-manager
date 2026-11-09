@@ -49,6 +49,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | [docs/constraints.md](docs/constraints.md) | Restrições, pressupostos, requisitos de segurança e privacidade, decisões técnicas pendentes e limitações de âmbito |
 | [docs/architecture.md](docs/architecture.md) | Decisão de arquitetura (monólito modular), justificação, componentes e responsabilidades |
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e diagrama ER (Mermaid) |
+| [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado: criar tarefa e listar as tarefas de um projeto |
 | [AGENTS.md](AGENTS.md) | Instruções persistentes para agentes de desenvolvimento que trabalhem neste repositório |
 
 ### Convenções
@@ -66,7 +67,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | User stories e critérios de aceitação da v1 | Concluído (9 stories, cobrem F01 a F09) |
 | User stories da v2 | Por fazer (F10 a F14) |
 | Base de conhecimento (esta documentação) | Concluído |
-| Decisões técnicas e desenho | Em curso: arquitetura decidida (monólito modular, ver [docs/architecture.md](docs/architecture.md)); modelo de dados da v1 proposto, com pontos por confirmar (ver [docs/database.md](docs/database.md)); tecnologias por decidir (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
+| Decisões técnicas e desenho | Em curso: arquitetura decidida (monólito modular, ver [docs/architecture.md](docs/architecture.md)); modelo de dados da v1 proposto, com pontos por confirmar (ver [docs/database.md](docs/database.md)); contrato OpenAPI com duas operações (ver [openapi.yaml](openapi.yaml)); tecnologias por decidir (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Implementação | Por iniciar |
 
 Não foi escolhida nenhuma tecnologia.

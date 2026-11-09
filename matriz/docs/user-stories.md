@@ -199,6 +199,15 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **When** o gestor adiciona o Luís ao projeto e a tarefa é depois atribuída a ele
 - **Then** a atribuição é aceite e o Luís aparece como responsável da tarefa.
 
+**Cenário 2.10: criar tarefa num projeto concluído ou suspenso**
+- **Given** um projeto "concluído" e um projeto "suspenso", dos quais um membro da equipa é membro
+- **When** o membro tenta criar uma tarefa no projeto concluído
+- **Then** a tarefa não é criada, com uma mensagem a explicar que não se criam tarefas num projeto concluído ou suspenso.
+- **When** o membro tenta criar uma tarefa, ou uma subtarefa de uma tarefa existente, no projeto suspenso
+- **Then** a criação é recusada, com a mesma mensagem, e o projeto fica sem a nova tarefa.
+- **When** o gestor retoma o projeto suspenso (estado "em andamento") e o membro cria uma tarefa
+- **Then** a tarefa é criada.
+
 ### US03 — Matriz do projeto
 
 **Cenário 3.1: posição na matriz**
@@ -472,6 +481,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC26 | Título ou descrição com texto que parece código ou formatação | Mostrado literalmente (cenário 2.8) | [NF09](requirements.md#5-requisitos-não-funcionais) |
 | EC27 | O gestor tenta definir o estado "atenção" ou "atrasado" | Não está disponível (cenário 1.18) | [R12](requirements.md#4-regras-de-negócio) |
 | EC28 | Atribuir uma tarefa a alguém que não é membro do projeto | Recusado, com mensagem a pedir que a pessoa seja primeiro adicionada ao projeto (cenário 2.9) | [R21](requirements.md#4-regras-de-negócio) |
+| EC29 | Criar uma tarefa ou subtarefa num projeto concluído ou suspenso | Recusado, com mensagem (cenário 2.10) | [R22](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

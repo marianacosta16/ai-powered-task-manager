@@ -143,6 +143,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor que cria um projeto e indica outro gestor deixa de o ver. Um gestor pode ser responsável por tarefas do seu projeto e, depois de adicionado como membro (a regra R11 não se lhe aplica), por tarefas de outros projetos | v1 | Decisão |
 | R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 | Decisão |
 | R21 | Os responsáveis de uma tarefa ou subtarefa têm de ser membros do projeto (ou o seu gestor). Para atribuir uma tarefa a alguém de fora, essa pessoa é primeiro adicionada ao projeto | v1 | Decisão |
+| R22 | Só se criam tarefas e subtarefas num projeto em aberto (P4): num projeto concluído ou suspenso a criação é recusada, com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
 
 **Origem das regras:** *Decisão* quer dizer que a autora decidiu tudo o que a regra diz. *Decisão, detalhes em Pn (confirmado)* quer dizer que a ideia é da autora e o pressuposto que a completa já foi aceite. *Pressuposto Pn (por validar)* quer dizer que a regra depende de algo que ainda não foi confirmado (ver [constraints.md](constraints.md#2-pressupostos-assumidos)).
 
