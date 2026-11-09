@@ -21,6 +21,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 | [docs/user-stories.md](docs/user-stories.md) | User stories (US), critérios de aceitação e casos excecionais (EC) |
 | [docs/constraints.md](docs/constraints.md) | Restrições (C), pressupostos (P), segurança (S), decisões técnicas pendentes (T) |
 | [docs/architecture.md](docs/architecture.md) | Estilo de arquitetura decidido (monólito modular), componentes, responsabilidades e regras de fronteira |
+| [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e pontos por confirmar (M) |
 
 - A documentação é a fonte de verdade, exceto os itens marcados como Pressuposto, que ainda não estão confirmados (ver secção 3). Se algo no código ou no pedido a contradiz, pára e pergunta.
 - Se dois documentos se contradizem, não escolhas por tua conta: assinala a contradição.
