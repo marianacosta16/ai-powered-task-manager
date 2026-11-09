@@ -1,0 +1,366 @@
+openapi: 3.1.0
+
+info:
+  title: Matriz API (MVP contract, simplified)
+  version: 0.1.0
+  description: |
+    Simplified contract with two operations for the MVP (v1): create a task and list the tasks of a project.
+
+    This file describes an interface only. It does not choose technologies: those decisions remain open (T1 to T13 in docs/constraints.md).
+    Field names follow the data model in docs/database.md. References such as F02, R13 or P25 point to docs/requirements.md and docs/constraints.md.
+
+    Assumptions to confirm (marked "Assumption" in the descriptions):
+    - A1: the current user is sent in the `X-User-Id` header, because v1 has no login (S4, P21).
+    - A2: a new task starts in status `To do`.
+    - A3: a task has at least one assignee (M6 in docs/database.md).
+    - A4: only one level of subtasks (M1 in docs/database.md).
+    - A5: a task deadline is a date without time (M3 in docs/database.md).
+
+tags:
+  - name: Tasks
+    description: Tasks and subtasks of a project (F02, F03, F05, F08).
+
+security:
+  - userSelector: []
+
+paths:
+  /projects/{projectId}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task or a subtask
+      description: |
+        Creates a task in the project. If `parentTaskId` is given, the new item is a subtask of that task.
+
+        Rules applied (docs/requirements.md):
+        - R1: the deadline is required.
+        - R13: the deadline cannot be in the past; today is accepted.
+        - R2: a subtask deadline cannot be later than its parent task deadline.
+        - R14: title up to 100 characters and description up to 2000.
+        - R21: every assignee must be a member of the project or its manager.
+        - R6 does not apply here: a task is never created as `Blocked` or `Duplicate`.
+
+        Assumption A2: the new task has status `To do`. Assumption A3: at least one assignee is required.
+        Who can create: any member of the project and its manager (R8, S1). A project that is deleted is treated as not found.
+        Not defined in the requirements: whether tasks can be created in a `Suspended` or `Completed` project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+            examples:
+              mainTask:
+                summary: Main task
+                value:
+                  title: Prepare kick-off meeting
+                  description: Agenda and invitations for the whole team.
+                  deadline: 2026-12-15
+                  urgency: 3
+                  importance: 4
+                  assigneeIds: [12, 15]
+              subtask:
+                summary: Subtask
+                value:
+                  title: Send invitations
+                  deadline: 2026-12-10
+                  urgency: 2
+                  importance: 2
+                  assigneeIds: [12]
+                  parentTaskId: 101
+      responses:
+        '201':
+          description: Task created. The body is the created task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid request. A required field is missing or a value is malformed, out of range or too long (R1, R14).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: VALIDATION_ERROR
+                message: The title must have at most 100 characters. Shorten it and try again.
+                details:
+                  - field: title
+                    issue: Longer than 100 characters.
+        '401':
+          description: The current user was not identified (missing or unknown `X-User-Id`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: The current user is neither a member nor the manager of the project (R8, S1).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: The project does not exist or was deleted, or `parentTaskId` does not exist in this project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: The request is well formed but breaks a business rule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                deadlineInPast:
+                  summary: R13
+                  value:
+                    code: DEADLINE_IN_PAST
+                    message: The deadline cannot be in the past. Choose today or a later date.
+                subtaskDeadlineAfterParent:
+                  summary: R2
+                  value:
+                    code: SUBTASK_DEADLINE_AFTER_PARENT
+                    message: The subtask deadline cannot be later than the parent task deadline. Choose an earlier date.
+                assigneeNotMember:
+                  summary: R21
+                  value:
+                    code: ASSIGNEE_NOT_MEMBER
+                    message: Every assignee must be a member of the project. Add the person to the project first.
+                parentIsSubtask:
+                  summary: A4
+                  value:
+                    code: PARENT_IS_SUBTASK
+                    message: A subtask cannot have subtasks. Choose a main task as parent.
+
+    get:
+      tags: [Tasks]
+      operationId: listProjectTasks
+      summary: List the tasks of a project
+      description: |
+        Returns the main tasks of the project, including those in a final status (`Done`, `Cancelled`, `Duplicate`) (R15).
+        Open tasks come first, then closed ones. The order inside each group is not defined yet (open question in docs/constraints.md).
+
+        Subtasks are not listed on their own: each appears inside `subtasks` of its parent task (R18).
+        The Matrix view hides tasks in a final status (P10), so the client can filter them out of this result.
+        Tasks and subtasks that were deleted (recycle bin, R20) are not returned.
+
+        With `mine=true` only the tasks of the current user are returned: a main task is included if the user is assignee of it or of any of its subtasks (P25).
+      parameters:
+        - name: mine
+          in: query
+          description: When `true`, return only the tasks of the current user ("My tasks", P25).
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: The list of main tasks. It is an empty array when the project has no tasks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+              example:
+                - id: 101
+                  projectId: 7
+                  parentTaskId: null
+                  title: Prepare kick-off meeting
+                  description: Agenda and invitations for the whole team.
+                  status: In progress
+                  deadline: 2026-12-15
+                  urgency: 3
+                  importance: 4
+                  blockReason: null
+                  originalTaskId: null
+                  assignees:
+                    - id: 12
+                      name: Ana Example
+                      role: Team member
+                  subtasks:
+                    - id: 102
+                      projectId: 7
+                      parentTaskId: 101
+                      title: Send invitations
+                      status: To do
+                      deadline: 2026-12-10
+                      urgency: 2
+                      importance: 2
+                      blockReason: null
+                      originalTaskId: null
+                      assignees:
+                        - id: 12
+                          name: Ana Example
+                          role: Team member
+        '401':
+          description: The current user was not identified (missing or unknown `X-User-Id`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: The current user is neither a member nor the manager of the project (R8, S1).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: The project does not exist or was deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    userSelector:
+      type: apiKey
+      in: header
+      name: X-User-Id
+      description: |
+        Assumption A1. In v1 there is no login: the person chooses who they are in a selector (S4, P21).
+        This header carries the `id` of the chosen user. It is not authentication and anyone can send any value (accepted risk, S4, C8).
+        It is replaced by real authentication in v2 (F10, S5).
+
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      description: Identifier of the project.
+      schema:
+        type: integer
+        minimum: 1
+
+  schemas:
+    TaskCreate:
+      type: object
+      description: Data to create a task or a subtask. The project comes from the path.
+      required: [title, deadline, urgency, importance, assigneeIds]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Task title (R14).
+        description:
+          type: string
+          maxLength: 2000
+          description: Optional description (R14, M7).
+        deadline:
+          type: string
+          format: date
+          description: |
+            Deadline, required (R1). Assumption A5: date only.
+            The date is read in the time zone of the project (P26).
+        urgency:
+          $ref: '#/components/schemas/Level'
+        importance:
+          $ref: '#/components/schemas/Level'
+        assigneeIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: Identifiers of the assignees. All must be members of the project or its manager (R21). Assumption A3 (M6).
+          items:
+            type: integer
+            minimum: 1
+        parentTaskId:
+          type: integer
+          minimum: 1
+          description: When given, the new item is a subtask of this main task (F08). The parent must be a main task of the same project (A4).
+
+    Task:
+      type: object
+      description: A task or a subtask.
+      required: [id, projectId, parentTaskId, title, status, deadline, urgency, importance, assignees]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        parentTaskId:
+          type: [integer, 'null']
+          description: Empty for a main task; the parent task for a subtask.
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: [string, 'null']
+          maxLength: 2000
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        deadline:
+          type: string
+          format: date
+        urgency:
+          $ref: '#/components/schemas/Level'
+        importance:
+          $ref: '#/components/schemas/Level'
+        blockReason:
+          type: [string, 'null']
+          description: Filled only when the status is `Blocked` (R6).
+        originalTaskId:
+          type: [integer, 'null']
+          description: Filled only when the status is `Duplicate`: the original task (R6).
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        subtasks:
+          type: array
+          description: Subtasks of a main task. Present only in the list result and only for main tasks (R18).
+          items:
+            $ref: '#/components/schemas/Task'
+
+    TaskStatus:
+      type: string
+      description: Task status. `Done`, `Cancelled` and `Duplicate` are final.
+      enum: [To do, In progress, In review, Blocked, Done, Cancelled, Duplicate]
+
+    Level:
+      type: integer
+      description: Urgency or importance level. 1 = Low, 2 = Medium, 3 = High, 4 = Critical (F03).
+      minimum: 1
+      maximum: 4
+
+    User:
+      type: object
+      required: [id, name, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Team member, Project manager]
+
+    Error:
+      type: object
+      description: Error body. The message says why the action was refused and what to do (NF08).
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Stable code for the client, for example `VALIDATION_ERROR` or `DEADLINE_IN_PAST`.
+        message:
+          type: string
+          description: Text shown to the user, in English (NF01).
+        details:
+          type: array
+          description: Fields that failed validation, when applicable.
+          items:
+            type: object
+            required: [field, issue]
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
