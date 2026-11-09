@@ -147,7 +147,7 @@ paths:
       summary: List the tasks of a project
       description: |
         Returns the main tasks of the project, including those in a final status (`Done`, `Cancelled`, `Duplicate`) (R15).
-        Open tasks come first, then closed ones. The order inside each group is not defined yet (open question in docs/constraints.md).
+        Open tasks come first, then closed ones. Inside each group, tasks are ordered by deadline, earliest first; with the same deadline, by urgency and then importance, highest first (R23).
 
         Subtasks are not listed on their own: each appears inside `subtasks` of its parent task (R18).
         The Matrix view hides tasks in a final status (P10), so the client can filter them out of this result.

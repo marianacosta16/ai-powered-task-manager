@@ -143,7 +143,8 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R19 | Cada projeto tem um só gestor, indicado por quem cria o projeto. A empresa pode ter vários gestores, e cada um vê só os seus projetos. O gestor que cria um projeto e indica outro gestor deixa de o ver. Um gestor pode ser responsável por tarefas do seu projeto e, depois de adicionado como membro (a regra R11 não se lhe aplica), por tarefas de outros projetos | v1 | Decisão |
 | R20 | Os projetos, tarefas e subtarefas apagados ficam 30 dias na reciclagem e são depois eliminados definitivamente | v1 | Decisão |
 | R21 | Os responsáveis de uma tarefa ou subtarefa têm de ser membros do projeto (ou o seu gestor). Para atribuir uma tarefa a alguém de fora, essa pessoa é primeiro adicionada ao projeto | v1 | Decisão |
-| R22 | Só se criam tarefas e subtarefas num projeto em aberto (P4): num projeto concluído ou suspenso a criação é recusada, com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
+| R22 | Só se criam tarefas e subtarefas num projeto em aberto (P4): num projeto concluído ou suspenso o controlo de criar não aparece e, se a criação for pedida por outra via, é recusada com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
+| R23 | Dentro de cada quadrante da Matriz, e dentro de cada grupo da Lista (em aberto e fechadas), as tarefas ordenam-se por prazo, do mais próximo (mais antigo) para o mais distante. Em caso de prazo igual, ordenam-se pela urgência e depois pela importância, do nível mais alto para o mais baixo | v1 | Decisão |
 
 **Origem das regras:** *Decisão* quer dizer que a autora decidiu tudo o que a regra diz. *Decisão, detalhes em Pn (confirmado)* quer dizer que a ideia é da autora e o pressuposto que a completa já foi aceite. *Pressuposto Pn (por validar)* quer dizer que a regra depende de algo que ainda não foi confirmado (ver [constraints.md](constraints.md#2-pressupostos-assumidos)).
 
@@ -245,7 +246,7 @@ Excluído de forma consciente, sem funcionalidade associada: estado "adiantado" 
 | 35 | Login | Entra no MVP? | Não: passa para a v2 | Decisão |
 | 36 | Equipa | Há uma entidade equipa? | Não: o gestor cria o projeto e adiciona membros, e isso forma a equipa | Decisão |
 | 37 | Membro já noutro projeto | Pode ser adicionado a um segundo projeto em aberto? | Não: a ação é recusada com um aviso | Decisão |
-| 38 | Lista | Que tarefas mostra e por que ordem? | Todas, incluindo as de estado final, com o filtro "as minhas"; em aberto primeiro, depois fechadas | Decisão |
+| 38 | Lista | Que tarefas mostra e por que ordem? | Todas, incluindo as de estado final, com o filtro "as minhas"; em aberto primeiro, depois fechadas; dentro de cada grupo, pelo prazo mais próximo (R23) | Decisão |
 | 39 | Identificação na v1 | Como sabe a aplicação quem é o utilizador, sem login? | O utilizador escolhe quem é num seletor, sem palavra-passe | Decisão |
 | 40 | Projeto suspenso | Conta como projeto em aberto? | Não: um projeto suspenso não conta como em aberto, porque não se vai trabalhar nele durante algum tempo; os membros são realocados a outro projeto | Decisão |
 | 41 | Retoma de projeto suspenso | O que acontece à equipa? | A lista de membros mantém-se; os membros que entretanto entraram noutro projeto ficam com uma etiqueta vermelha e o gestor vê um aviso. Um membro continua a estar em um só projeto em aberto de cada vez | Decisão |

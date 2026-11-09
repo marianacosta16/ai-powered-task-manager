@@ -97,7 +97,6 @@ Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) es
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
 - Se uma subtarefa pode ser recuperada da reciclagem quando a tarefa-mãe já foi eliminada definitivamente.
 - Se as tarefas ficam ligadas a uma fase do projeto.
-- Ordem das tarefas dentro de cada grupo da Lista (abertas e fechadas).
 - Que integrações, se alguma, o cliente quer (F19).
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
 

@@ -201,12 +201,12 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 
 **Cenário 2.10: criar tarefa num projeto concluído ou suspenso**
 - **Given** um projeto "concluído" e um projeto "suspenso", dos quais um membro da equipa é membro
-- **When** o membro tenta criar uma tarefa no projeto concluído
-- **Then** a tarefa não é criada, com uma mensagem a explicar que não se criam tarefas num projeto concluído ou suspenso.
-- **When** o membro tenta criar uma tarefa, ou uma subtarefa de uma tarefa existente, no projeto suspenso
-- **Then** a criação é recusada, com a mesma mensagem, e o projeto fica sem a nova tarefa.
-- **When** o gestor retoma o projeto suspenso (estado "em andamento") e o membro cria uma tarefa
-- **Then** a tarefa é criada.
+- **When** o membro abre o projeto concluído, ou o projeto suspenso
+- **Then** não aparece o controlo para criar uma tarefa nem para criar uma subtarefa.
+- **When** é pedida a criação de uma tarefa, ou de uma subtarefa de uma tarefa existente, num desses projetos por outra via (por exemplo, por ligação direta)
+- **Then** a criação é recusada, com uma mensagem a explicar que não se criam tarefas num projeto concluído ou suspenso, e o projeto fica sem a nova tarefa.
+- **When** o gestor retoma o projeto suspenso (estado "em andamento") e o membro o abre
+- **Then** o controlo para criar tarefas aparece e a tarefa pode ser criada.
 
 ### US03 — Matriz do projeto
 
@@ -234,6 +234,11 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **Given** uma tarefa A com responsável Rui, e uma subtarefa a1 da tarefa A com responsável Ana
 - **When** a Ana ativa o filtro "as minhas" na Matriz
 - **Then** aparece a tarefa A, porque a Ana é responsável por uma das suas subtarefas.
+
+**Cenário 3.6: ordem das tarefas no quadrante**
+- **Given** no quadrante "urgente e importante" as tarefas A (prazo 2026-12-20, urgência 4, importância 4), B (prazo 2026-12-10, urgência 3, importância 3), C (prazo 2026-12-10, urgência 4, importância 3) e D (prazo 2026-12-10, urgência 4, importância 4)
+- **When** o membro abre a Matriz do projeto
+- **Then** as tarefas aparecem pela ordem D, C, B, A: primeiro as de prazo mais próximo e, com o mesmo prazo, a de urgência mais alta e depois a de importância mais alta.
 
 ### US04 — Subtarefas e prazos
 
@@ -439,6 +444,11 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** o membro abre a Lista do projeto
 - **Then** aparecem as 2 tarefas principais e não aparecem as 3 subtarefas.
 
+**Cenário 9.5: ordem das tarefas na Lista**
+- **Given** um projeto com as tarefas em aberto T1 (prazo 2026-12-20) e T2 (prazo 2026-12-05), e as tarefas fechadas T3 "concluído" (prazo 2026-11-20) e T4 "cancelado" (prazo 2026-11-01)
+- **When** o membro abre a Lista do projeto
+- **Then** as tarefas aparecem pela ordem T2, T1, T4, T3: primeiro as em aberto e depois as fechadas, e dentro de cada grupo pelo prazo mais próximo.
+
 ### Cenário de aceitação do MVP
 
 **Cenário MVP-1: do projeto ao progresso**
@@ -481,7 +491,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC26 | Título ou descrição com texto que parece código ou formatação | Mostrado literalmente (cenário 2.8) | [NF09](requirements.md#5-requisitos-não-funcionais) |
 | EC27 | O gestor tenta definir o estado "atenção" ou "atrasado" | Não está disponível (cenário 1.18) | [R12](requirements.md#4-regras-de-negócio) |
 | EC28 | Atribuir uma tarefa a alguém que não é membro do projeto | Recusado, com mensagem a pedir que a pessoa seja primeiro adicionada ao projeto (cenário 2.9) | [R21](requirements.md#4-regras-de-negócio) |
-| EC29 | Criar uma tarefa ou subtarefa num projeto concluído ou suspenso | Recusado, com mensagem (cenário 2.10) | [R22](requirements.md#4-regras-de-negócio) |
+| EC29 | Criar uma tarefa ou subtarefa num projeto concluído ou suspenso | O controlo de criar não aparece; um pedido por outra via é recusado, com mensagem (cenário 2.10) | [R22](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
@@ -520,7 +530,6 @@ O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) també
 - Anexos, comentários, Calendário e avisos por email ou SMS: v3.
 
 ### Por definir
-- Ordem das tarefas dentro de cada grupo da Lista (abertas e fechadas): por definir.
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: incoerência de nomenclatura a confirmar com o cliente.
 
 A lista completa de questões em aberto está em [constraints.md](constraints.md#4-decisões-técnicas-pendentes).

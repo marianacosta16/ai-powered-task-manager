@@ -6,7 +6,7 @@
 ## 1. Âmbito e convenções
 
 - **Âmbito:** só a v1 (F01 a F09). O que a v2 e a v3 acrescentam está na secção 8 e não entra no diagrama.
-- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R22. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
+- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R23. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
 - **Nomes:** as entidades e os atributos estão em inglês, como a interface (NF01). A tabela da secção 2 faz a correspondência com os termos em português. Os valores dos domínios usam os rótulos da interface ([requirements.md](requirements.md#34-termos-da-interface)). A escolha de nomes é uma proposta.
 - **Identificadores:** cada entidade tem um identificador interno (`id`). As tabelas de associação usam como identificador o par de chaves das duas entidades que ligam (M9).
 - **Módulos:** cada entidade pertence a um módulo de [architecture.md](architecture.md#4-componentes-e-responsabilidades) e só esse módulo a altera.
@@ -184,7 +184,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R21 | **Aplicação:** cada `TASK_ASSIGNEE` tem de ser membro do projeto da tarefa ou o seu gestor |
 | R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também as suas tarefas, recuperar desfaz, e a eliminação definitiva corre ao fim de 30 dias |
-| R18, R15 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio) |
+| R18, R15, R23 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance` |
 
 R7 e R10 pertencem à v2 (secção 8).
 
@@ -221,7 +221,7 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 
 **Dependem também de pressupostos por validar:** P21 (utilizadores pré-existentes na v1, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto).
 
-**Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto e ordem das tarefas dentro da Lista (ambas questões em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)).
+**Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 
 ## 8. Evolução prevista (v2 e v3)
 

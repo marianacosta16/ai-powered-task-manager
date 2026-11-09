@@ -45,7 +45,7 @@
 |---|---|---|
 | **Projetos e Equipas** | Guarda os projetos (nome, descrição, datas, fuso, fase, estado manual) e o seu gestor. Gere os membros de cada projeto: adicionar, remover e a regra de um projeto em aberto por membro. Valida as datas do projeto | F01; R11, R12 (parte manual), R16, R17, R19 |
 | **Tarefas** | Guarda tarefas e subtarefas: estado, prazo, urgência, importância e responsáveis. Valida os prazos (R1, R2, R3, R13), os fechos (R4, R5), os motivos de bloqueio e a tarefa original de um duplicado (R6), os limites de texto (R14) e que os responsáveis são membros do projeto (R21) | F02, F03, F08; R1 a R6, R13, R14, R21; P8 |
-| **Vistas e Progresso** | Responde a consultas de leitura: a Matriz por projeto, a Lista (com "as minhas") e a vista global do gestor. Calcula o progresso e os estados "atenção" e "atrasado" | F04, F05, F07; R15, R18; P5, P7, P16, P25, P26 |
+| **Vistas e Progresso** | Responde a consultas de leitura: a Matriz por projeto, a Lista (com "as minhas") e a vista global do gestor. Calcula o progresso e os estados "atenção" e "atrasado" | F04, F05, F07; R15, R18, R23; P5, P7, P16, P25, P26 |
 | **Acesso e Visibilidade** | Sabe quem é o utilizador atual (na v1, escolhido num seletor) e o seu papel. Decide o que cada pessoa pode ver e fazer. Fornece esta resposta aos outros componentes | F06; R8, R9 (permissões), R19 (visibilidade do gestor); S1 a S4 |
 | **Reciclagem** | Guarda projetos, tarefas e subtarefas apagados, deixa o gestor recuperá-los e elimina-os definitivamente ao fim de 30 dias | F09; R9, R20 |
 
