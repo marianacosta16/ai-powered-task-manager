@@ -5,8 +5,8 @@
 
 ## 1. Âmbito e convenções
 
-- **Âmbito:** só a v1 (F01 a F09). O que a v2 e a v3 acrescentam está na secção 8 e não entra no diagrama.
-- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R23. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
+- **Âmbito:** só a v1 (F01 a F10, F17 e F22). O que a v2 e a v3 acrescentam está na secção 8 e não entra no diagrama.
+- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R26. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
 - **Nomes:** as entidades e os atributos estão em inglês, como a interface (NF01). A tabela da secção 2 faz a correspondência com os termos em português. Os valores dos domínios usam os rótulos da interface ([requirements.md](requirements.md#34-termos-da-interface)). A escolha de nomes é uma proposta.
 - **Identificadores:** cada entidade tem um identificador interno (`id`). As tabelas de associação usam como identificador o par de chaves das duas entidades que ligam (M9).
 - **Módulos:** cada entidade pertence a um módulo de [architecture.md](architecture.md#4-componentes-e-responsabilidades) e só esse módulo a altera.
@@ -20,8 +20,9 @@
 | `PROJECT_MEMBER` | Equipa | Associação entre um projeto e cada um dos seus membros. Não existe entidade "equipa" (P2) | Projetos e Equipas | F01, R11 |
 | `TASK` | Tarefa e subtarefa | Tarefa principal ou subtarefa. Uma subtarefa é uma tarefa com tarefa-mãe (M1) | Tarefas | F02, F03, F08 |
 | `TASK_ASSIGNEE` | Responsáveis | Associação entre uma tarefa (ou subtarefa) e cada um dos seus responsáveis | Tarefas | F02, R21 |
+| `COMMENT` | Comentário | Texto escrito por um utilizador numa tarefa, com autor e data de criação | Tarefas | F17, R24 |
 
-A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `deleted_at` (M4). O seletor de utilizador da v1 (S4) não tem dados próprios: lê `APP_USER`.
+A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `deleted_at` (M4). A sessão do utilizador (F10) não se guarda neste modelo: o mecanismo é decisão técnica (T3). Os comentários não têm marca de apagado própria: seguem a da tarefa (R24).
 
 ## 3. Atributos
 
@@ -32,7 +33,9 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | Atributo | Tipo | Obr. | Notas |
 |---|---|---|---|
 | `id` | inteiro | Sim | Identificador |
-| `name` | texto | Sim | Só o nome é mostrado no seletor (P21) |
+| `name` | texto | Sim | Nome do utilizador |
+| `username` | texto | Sim | Identificador de início de sessão; único (M11) |
+| `password` | texto | Sim | Credencial da conta de demonstração, guardada de forma protegida; o mecanismo é decisão técnica (T3, M11) |
 | `role` | texto | Sim | `Team member` ou `Project manager`. Atributo do utilizador, não do projeto (secção 3.1 de requirements) |
 
 ### 3.2 `PROJECT`
@@ -85,7 +88,17 @@ A linha mantém-se quando o projeto é concluído ou suspenso (P20, P22). O gest
 | `task_id` | inteiro | Sim | Chave para `TASK`; parte do identificador |
 | `user_id` | inteiro | Sim | Chave para `APP_USER`; parte do identificador |
 
-Uma tarefa pode ter vários responsáveis, e uma subtarefa tem os seus próprios (F02, secção 3.1).
+Uma tarefa pode ter vários responsáveis, e uma subtarefa tem os seus próprios (F02, secção 3.1). Há sempre pelo menos um (R26).
+
+### 3.6 `COMMENT`
+
+| Atributo | Tipo | Obr. | Notas |
+|---|---|---|---|
+| `id` | inteiro | Sim | Identificador |
+| `task_id` | inteiro | Sim | Chave para `TASK` |
+| `author_id` | inteiro | Sim | Chave para `APP_USER`: quem escreveu, atribuído pela aplicação (R24) |
+| `content` | texto | Sim | Máximo 2000 caracteres, texto simples (R24, P28, NF09) |
+| `created_at` | data e hora | Sim | Atribuída pela aplicação; não se altera (R24) |
 
 ## 4. Relacionamentos e cardinalidades
 
@@ -97,8 +110,10 @@ Uma tarefa pode ter vários responsáveis, e uma subtarefa tem os seus próprios
 | 4 | `PROJECT` contém `TASK` | 1 : N | Uma tarefa pertence a exatamente um projeto; um projeto tem zero ou mais tarefas | F02 |
 | 5 | `TASK` tem subtarefas (`TASK`) | 0..1 : N | Uma subtarefa tem uma só tarefa-mãe; uma tarefa tem zero ou mais subtarefas | F08 |
 | 6 | `TASK` é original de `TASK` | 0..1 : N | Uma tarefa duplicada indica uma só original; uma tarefa pode ser a original de várias duplicadas | R6 |
-| 7 | `TASK` tem `TASK_ASSIGNEE` | 1 : 1..N | Uma tarefa tem um ou mais responsáveis (o "pelo menos um" é uma proposta, M6; a aplicação valida-o) | F02 |
+| 7 | `TASK` tem `TASK_ASSIGNEE` | 1 : 1..N | Uma tarefa tem um ou mais responsáveis (a aplicação garante o "pelo menos um", R26) | F02, R26 |
 | 8 | `APP_USER` aparece em `TASK_ASSIGNEE` | 1 : N | Um utilizador pode ser responsável por várias tarefas | F02, P25 |
+| 9 | `TASK` tem `COMMENT` | 1 : N | Uma tarefa tem zero ou mais comentários; cada comentário pertence a uma só tarefa | F17 |
+| 10 | `APP_USER` escreve `COMMENT` | 1 : N | Um utilizador escreve zero ou mais comentários; cada comentário tem exatamente um autor | F17, R24 |
 
 **Relações muitos-para-muitos:** utilizador ↔ projeto (membros) e utilizador ↔ tarefa (responsáveis). Resolvem-se com `PROJECT_MEMBER` e `TASK_ASSIGNEE`.
 
@@ -116,11 +131,15 @@ erDiagram
     TASK |o--o{ TASK : "is original of"
     TASK ||--|{ TASK_ASSIGNEE : "is assigned to"
     APP_USER ||--o{ TASK_ASSIGNEE : "is responsible for"
+    TASK ||--o{ COMMENT : has
+    APP_USER ||--o{ COMMENT : writes
 
     APP_USER {
         int id PK
         string name
         string role
+        string username
+        string password
     }
 
     PROJECT {
@@ -162,6 +181,14 @@ erDiagram
         int task_id PK, FK
         int user_id PK, FK
     }
+
+    COMMENT {
+        int id PK
+        int task_id FK
+        int author_id FK
+        string content
+        datetime created_at
+    }
 ```
 
 > **Note:** "has subtasks" and "is original of" link `TASK` to itself. They are stored in `parent_task_id` (parent task) and `original_task_id` (original task).
@@ -183,8 +210,10 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R17 | **Aplicação:** remove a linha de `PROJECT_MEMBER` e passa as tarefas por concluir para o novo membro (`TASK_ASSIGNEE`), numa só transação |
 | R21 | **Aplicação:** cada `TASK_ASSIGNEE` tem de ser membro do projeto da tarefa ou o seu gestor |
 | R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
+| R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, não há edição nem eliminação, e os comentários seguem o `deleted_at` da tarefa |
+| R26 | **Aplicação:** cada tarefa mantém pelo menos uma linha em `TASK_ASSIGNEE`; remover a última é recusado |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também as suas tarefas, recuperar desfaz, e a eliminação definitiva corre ao fim de 30 dias |
-| R18, R15, R23 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance` |
+| R18, R15, R23, R25 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance`; filtros por `status` e por quadrante; pesquisa de projetos por `name` |
 
 R7 e R10 pertencem à v2 (secção 8).
 
@@ -201,6 +230,8 @@ Calculam-se sempre a partir dos dados acima, para nunca ficarem desatualizados.
 | Tarefa em estado final | `status` em `Done`, `Cancelled` ou `Duplicate` | Secção 3.1 |
 | Quadrante da Matriz | `urgency` e `importance` (1 e 2 = baixo; 3 e 4 = alto) | Secção 3.2 |
 | Data de eliminação definitiva | `deleted_at` + 30 dias | R20 |
+| Contagens de tarefas por estado no painel inicial | `status` das tarefas principais de cada projeto acessível | F07, R18, P27 |
+| "Prioridade" usada nos filtros | Quadrante, a partir de `urgency` e `importance` | R25 |
 
 ## 7. Pontos por confirmar
 
@@ -213,13 +244,15 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M3 | O prazo da tarefa tem hora? | Só data. R13 fala em "prazo igual à data atual", e P26 só dá hora à data de fim do projeto | Por confirmar |
 | M4 | Como se guarda a reciclagem | Uma marca `deleted_at` em `PROJECT` e `TASK`, em vez de uma entidade própria. Fica em aberto: se uma tarefa apagada à mão antes do projeto volta quando o projeto é recuperado, e se uma subtarefa se recupera depois de a tarefa-mãe ser eliminada (já é questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)) | Por confirmar |
 | M5 | O gestor é membro do seu projeto? | Não precisa de linha em `PROJECT_MEMBER` no seu projeto: é referido por `manager_id` (R21 diz "membros do projeto ou o seu gestor"). Em projetos de outros gestores, é adicionado como membro (R19) | Por confirmar |
-| M6 | Uma tarefa tem de ter pelo menos um responsável? | Sim. A documentação diz "um ou mais responsáveis" (secção 3.1), mas não diz o que acontece sem nenhum | Por confirmar |
+| M6 | Uma tarefa tem de ter pelo menos um responsável? | Sim, sempre pelo menos um (R26) | Decisão |
 | M7 | Que campos de texto são obrigatórios? | Só são obrigatórios o nome do projeto e o título da tarefa. As descrições são opcionais. Os requisitos só tornam obrigatórios o prazo (R1) e as datas do projeto (R16) | Por confirmar |
 | M8 | Limite do motivo de bloqueio | Não está definido. R14 só limita título e descrição | Por confirmar |
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Proposta |
 | M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Por confirmar |
+| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Por confirmar |
+| M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa) e sem edição | Por validar (P28) |
 
-**Dependem também de pressupostos por validar:** P21 (utilizadores pré-existentes na v1, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto).
+**Dependem também de pressupostos por validar:** P21 (contas de demonstração por seed, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto), P27 (painel), P28 (comentários) e P29 (pesquisa e filtros).
 
 **Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 
@@ -229,19 +262,19 @@ Fora do diagrama. Indicam-se só as alterações previsíveis, sem as modelar.
 
 | Versão | Funcionalidade | Impacto no modelo |
 |---|---|---|
-| v2 | Login e contas (F10), P13 | `APP_USER` ganha os dados de autenticação. O seletor deixa de ser usado |
+| v2 | Criação de contas pelo gestor (F23), P13 | `APP_USER` deixa de vir só de seed. A saída de utilizadores segue o P13 |
 | v2 | Etiquetas (F11) | Nova entidade ligada a `TASK` |
 | v2 | Lembretes e alertas (F12), R7 | Dados de lembrete por tarefa e configuração de alertas |
 | v2 | Arquivo (F13), R10 | Novo valor em `PROJECT` (arquivado) e histórico guardado |
 | v2 | Auditoria (F14), P14 | Nova entidade de registo: quem, o quê e quando |
-| v3 | Anexos (F16), comentários (F17) | Novas entidades ligadas a `TASK` |
+| v3 | Anexos (F16) | Nova entidade ligada a `TASK` |
 | v3 | Registo de tempo, tarefas repetidas, modelos (F20) | Fora de âmbito por agora |
 
 ## 9. Revisão de coerência
 
 | Verificação | Resultado |
 |---|---|
-| Cada funcionalidade da v1 usa entidades do modelo: F01 (`PROJECT`, `PROJECT_MEMBER`), F02 e F03 (`TASK`, `TASK_ASSIGNEE`), F04, F05 e F07 (consultas sobre `TASK` e `PROJECT`), F06 (`APP_USER`, `PROJECT.manager_id`, `PROJECT_MEMBER`), F08 (`TASK.parent_task_id`), F09 (`deleted_at`) | Coberto |
+| Cada funcionalidade da v1 usa entidades do modelo: F01 (`PROJECT`, `PROJECT_MEMBER`), F02 e F03 (`TASK`, `TASK_ASSIGNEE`), F04, F05 e F07 (consultas sobre `TASK` e `PROJECT`), F06 (`APP_USER`, `PROJECT.manager_id`, `PROJECT_MEMBER`), F08 (`TASK.parent_task_id`), F09 (`deleted_at`), F10 (`APP_USER.username` e `password`), F17 (`COMMENT`), F22 (consultas por `name`, `status`, `urgency` e `importance`) | Coberto |
 | Cada atributo do projeto e da tarefa descritos em [requirements.md](requirements.md#31-informação-gerida) existe no modelo, exceto etiquetas e lembrete (v2) | Coberto |
 | Estados e fases do projeto e da tarefa coincidem com a secção 3.4 de requirements; `Attention` e `Late` não são guardados | Coerente com P5 e R12 |
 | Cada relacionamento tem cardinalidade e leitura (secção 4), e as duas relações muitos-para-muitos estão resolvidas | Coberto |

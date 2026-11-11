@@ -7,7 +7,7 @@
 
 - **Papéis:** gestor de projeto e membro da equipa ([requirements.md](requirements.md#2-tipos-de-utilizadores)).
 - **Formato das stories:** *Como [tipo de utilizador], quero [funcionalidade], para [benefício].*
-- **"Identificado":** na v1 não há login; um utilizador "identificado" é o que foi escolhido no seletor de utilizador ([S4](constraints.md#3-requisitos-de-segurança-e-privacidade)).
+- **"Identificado":** um utilizador "identificado" é o que iniciou sessão com uma conta de demonstração ([F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade)).
 - **"Recusada" e "não disponível":** quando uma ação é recusada, é mostrada uma mensagem que explica o motivo e o que fazer ([NF08](requirements.md#5-requisitos-não-funcionais)). Quando o utilizador não tem acesso à ação, o controlo não aparece e não há mensagem.
 - **Rótulos da interface:** os estados, níveis e rótulos entre aspas nos cenários estão em português; o rótulo real da interface, em inglês, está na [tabela de termos](requirements.md#34-termos-da-interface).
 - **Critérios de aceitação:** formato *Given / When / Then*, com valores concretos para poderem ser verificados sem interpretação.
@@ -27,6 +27,10 @@
 | US07 | Gestor de projeto | recuperar projetos e tarefas apagados | corrigir remoções acidentais | [F09](requirements.md#3-requisitos-funcionais), [R9](requirements.md#4-regras-de-negócio), [R20](requirements.md#4-regras-de-negócio) |
 | US08 | Membro da equipa | ver apenas os projetos de que sou membro e as suas tarefas | trabalhar sem ver informação de outras equipas | [F06](requirements.md#3-requisitos-funcionais), [R8](requirements.md#4-regras-de-negócio) |
 | US09 | Membro da equipa | ver todas as tarefas de um projeto numa lista, com as abertas primeiro e o filtro "as minhas" | ter uma visão completa do trabalho do projeto | [F05](requirements.md#3-requisitos-funcionais), [R15](requirements.md#4-regras-de-negócio), [R18](requirements.md#4-regras-de-negócio) |
+| US10 | Membro da equipa ou gestor de projeto | iniciar e terminar sessão e consultar quem sou | aceder à aplicação com a minha conta | [F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade), [P21](constraints.md#2-pressupostos-assumidos) |
+| US11 | Membro da equipa | adicionar comentários a uma tarefa e ler os dos colegas | discutir o trabalho com a equipa | [F17](requirements.md#3-requisitos-funcionais), [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
+| US12 | Membro da equipa ou gestor de projeto | pesquisar projetos pelo nome e filtrar as tarefas por estado e por quadrante | encontrar depressa o que procuro | [F22](requirements.md#3-requisitos-funcionais), [R25](requirements.md#4-regras-de-negócio), [P29](constraints.md#2-pressupostos-assumidos) |
+| US13 | Membro da equipa ou gestor de projeto | ver ao entrar os meus projetos com as contagens de tarefas por estado e ir ao detalhe | saber onde está o trabalho | [F07](requirements.md#3-requisitos-funcionais), [R8](requirements.md#4-regras-de-negócio), [R18](requirements.md#4-regras-de-negócio), [P27](constraints.md#2-pressupostos-assumidos) |
 
 ### Prioridades
 
@@ -34,11 +38,11 @@ A prioridade de cada story é a da funcionalidade principal em que se baseia (Mo
 
 | Prioridade | Versão | Stories | Funcionalidades |
 |---|---|---|---|
-| **Must** | v1 | US01 a US09 | F01 a F09 |
+| **Must** | v1 | US01 a US13 | F01 a F10, F17 e F22 |
 
-Todas as funcionalidades da v1 têm pelo menos uma user story: F01 (US01), F02 e F03 (US02), F04 (US03), F05 (US09), F06 (US08), F07 (US06), F08 (US04 e US05) e F09 (US07).
+Todas as funcionalidades da v1 têm pelo menos uma user story: F01 (US01), F02 e F03 (US02), F04 (US03), F05 (US09), F06 (US08), F07 (US06 e US13), F08 (US04 e US05), F09 (US07), F10 (US10), F17 (US11) e F22 (US12).
 
-As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (etiquetas), F12 (lembretes), F13 (arquivo) e F14 (auditoria). Ficam para a ronda seguinte.
+As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F12 (lembretes), F13 (arquivo), F14 (auditoria) e F23 (criação de contas). Ficam para a ronda seguinte.
 
 ## 3. Critérios de aceitação
 
@@ -208,6 +212,13 @@ As funcionalidades da v2 (Should) ainda não têm user story: F10 (login), F11 (
 - **When** o gestor retoma o projeto suspenso (estado "em andamento") e o membro o abre
 - **Then** o controlo para criar tarefas aparece e a tarefa pode ser criada.
 
+**Cenário 2.11: remover responsáveis**
+- **Given** uma tarefa com os responsáveis Ana e Rui
+- **When** o membro remove a atribuição da Ana
+- **Then** a tarefa fica só com o Rui como responsável.
+- **When** o membro tenta remover a atribuição do Rui, que é o último responsável
+- **Then** a remoção é recusada, com uma mensagem a pedir que se atribua primeiro outra pessoa, e o Rui continua responsável.
+
 ### US03 — Matriz do projeto
 
 **Cenário 3.1: posição na matriz**
@@ -295,79 +306,79 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 
 **Cenário 6.1: cálculo da barra**
 - **Given** um projeto com 10 tarefas: 4 concluídas, 2 em curso, 2 por fazer, 1 cancelada e 1 duplicada
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** a barra de progresso desse projeto mostra 50% (4 de 8, sem contar canceladas e duplicadas).
 
 **Cenário 6.2: projeto sem tarefas contáveis**
 - **Given** um projeto sem tarefas, ou só com tarefas canceladas e duplicadas
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto mostra a etiqueta "sem tarefas" em vez de uma percentagem, e não ocorre erro.
 
 **Cenário 6.3: estado "atenção" (desvio de 15 pontos percentuais)**
 - **Given** um projeto "em andamento" com data de início 2026-01-01 e data de fim 2026-01-31, ambas sem hora (31 dias no total), a 2026-01-16 às 12:00 (50% do tempo decorrido) e com 35% de progresso (desvio de 15 pontos percentuais)
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto aparece com o estado "atenção".
 
 **Cenário 6.4: desvio abaixo do limite**
 - **Given** o mesmo projeto, a 2026-01-16 às 12:00, com 36% de progresso (desvio de 14 pontos percentuais)
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto mantém o estado "em andamento".
 
 **Cenário 6.5: estado "atrasado" por desvio (25 pontos percentuais)**
 - **Given** o mesmo projeto, a 2026-01-16 às 12:00, com 25% de progresso (desvio de 25 pontos percentuais)
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto aparece com o estado "atrasado".
 
 **Cenário 6.6: estado "atrasado" por data de fim ultrapassada**
 - **Given** um projeto "em andamento" com data de fim 2026-01-31, a 2026-02-02, com 80% de progresso
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto aparece com o estado "atrasado".
 
-**Cenário 6.7: membro não vê a vista global**
-- **Given** um membro da equipa identificado
-- **When** abre a aplicação
-- **Then** a vista global dos projetos não está disponível.
+**Cenário 6.7: membro não vê a barra de progresso nem o estado calculado**
+- **Given** um membro da equipa identificado, num projeto com tarefas
+- **When** abre o painel inicial
+- **Then** vê o projeto com as contagens de tarefas por estado, mas sem a barra de progresso nem o estado calculado.
 
-**Cenário 6.8: projeto suspenso na vista global**
+**Cenário 6.8: projeto suspenso no painel inicial**
 - **Given** um projeto no estado "suspenso"
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto aparece com o estado "suspenso" e a sua barra de progresso, e os estados "atenção" e "atrasado" não lhe são atribuídos por cálculo.
 
-**Cenário 6.9: projeto concluído fora da vista global**
+**Cenário 6.9: projeto concluído fora do painel inicial do gestor**
 - **Given** um projeto no estado "concluído"
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto não aparece.
 
 **Cenário 6.10: projeto sem tarefas depois da data de fim**
 - **Given** um projeto "em andamento" sem tarefas, com data de fim 2026-01-31, a 2026-02-02
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto mostra a etiqueta "sem tarefas" e não lhe é atribuído o estado "atrasado" por cálculo.
 
 **Cenário 6.11: as subtarefas não contam no progresso**
 - **Given** um projeto com 2 tarefas principais: uma "concluído" e outra "em curso", com 3 subtarefas das quais 2 estão "concluído"
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** a barra de progresso mostra 50% (1 de 2 tarefas principais).
 
 **Cenário 6.12: arredondamento do progresso**
 - **Given** um projeto com 3 tarefas principais, uma delas "concluído"
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** a barra de progresso mostra 33,33%.
 
 **Cenário 6.13: projeto não iniciado fora do prazo**
 - **Given** um projeto "não iniciado" com data de fim 2026-01-31, a 2026-02-02
-- **When** o gestor abre a vista global
+- **When** o gestor abre o painel inicial
 - **Then** o projeto mantém o estado "não iniciado".
 
 **Cenário 6.14: data de fim com hora**
 - **Given** um projeto "em andamento", com 90% de progresso e a data de fim 2026-01-31 às 18:00 no fuso horário do projeto
-- **When** o gestor abre a vista global às 19:00 de 2026-01-31, no fuso horário do projeto
+- **When** o gestor abre o painel inicial às 19:00 de 2026-01-31, no fuso horário do projeto
 - **Then** o projeto aparece com o estado "atrasado".
 
 **Cenário 6.15: data de fim sem hora**
 - **Given** um projeto "em andamento", com 90% de progresso e a data de fim 2026-01-31 sem hora
-- **When** o gestor abre a vista global às 23:00 de 2026-01-31, no fuso horário do projeto
+- **When** o gestor abre o painel inicial às 23:00 de 2026-01-31, no fuso horário do projeto
 - **Then** o projeto não aparece como "atrasado" por data de fim.
-- **When** o gestor abre a vista global às 00:00 de 2026-02-01, no fuso horário do projeto
+- **When** o gestor abre o painel inicial às 00:00 de 2026-02-01, no fuso horário do projeto
 - **Then** o projeto aparece com o estado "atrasado".
 
 ### US07 — Recuperar apagados
@@ -449,6 +460,135 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** o membro abre a Lista do projeto
 - **Then** as tarefas aparecem pela ordem T2, T1, T4, T3: primeiro as em aberto e depois as fechadas, e dentro de cada grupo pelo prazo mais próximo.
 
+### US10 — Iniciar e terminar sessão
+
+**Cenário 10.1: início de sessão com sucesso**
+- **Given** a conta de demonstração da Ana, membro da equipa, e o ecrã de início de sessão
+- **When** a Ana inicia sessão com as credenciais corretas
+- **Then** entra na aplicação e vê o painel inicial com o seu nome e o papel "membro da equipa".
+
+**Cenário 10.2: credenciais incorretas**
+- **Given** o ecrã de início de sessão
+- **When** alguém tenta iniciar sessão com uma palavra-passe incorreta
+- **Then** não entra e é mostrada uma mensagem a dizer que as credenciais não estão corretas, sem indicar qual dos dois dados falhou.
+
+**Cenário 10.3: consultar o utilizador autenticado**
+- **Given** a Ana com sessão iniciada
+- **When** consulta o utilizador autenticado
+- **Then** vê o seu nome e o seu papel.
+
+**Cenário 10.4: terminar sessão**
+- **Given** a Ana com sessão iniciada
+- **When** termina a sessão
+- **Then** volta ao ecrã de início de sessão e já não consegue abrir projetos.
+
+**Cenário 10.5: acesso sem sessão**
+- **Given** ninguém com sessão iniciada
+- **When** é aberta uma ligação direta para um projeto
+- **Then** é pedido o início de sessão e o projeto não é mostrado.
+
+### US11 — Comentários nas tarefas
+
+**Cenário 11.1: adicionar um comentário**
+- **Given** a Ana, membro de um projeto, e a tarefa "Escrever relatório" desse projeto
+- **When** a Ana adiciona o comentário "Falta rever o capítulo 2"
+- **Then** o comentário fica na tarefa, com a Ana como autora e a data e hora em que foi criado.
+
+**Cenário 11.2: listar os comentários**
+- **Given** uma tarefa com três comentários, escritos às 09:00, às 10:00 e às 11:00 por pessoas diferentes
+- **When** um membro do projeto abre os comentários da tarefa
+- **Then** aparecem do das 09:00 para o das 11:00, cada um com autor e data.
+
+**Cenário 11.3: só quem tem acesso ao projeto**
+- **Given** um utilizador "Luís" que não é membro do projeto
+- **When** tenta ver ou adicionar um comentário a uma tarefa desse projeto, por ligação direta
+- **Then** o acesso é recusado e o comentário não é criado.
+
+**Cenário 11.4: texto mostrado literalmente**
+- **Given** um membro a adicionar um comentário
+- **When** guarda o comentário `<b>x</b>`
+- **Then** o comentário aparece exatamente como `<b>x</b>`, sem formatação nem execução de código.
+
+**Cenário 11.5: tamanho máximo**
+- **Given** um membro a adicionar um comentário
+- **When** guarda um comentário com 2000 caracteres
+- **Then** o comentário é criado.
+- **When** tenta guardar um comentário com 2001 caracteres
+- **Then** o comentário não é criado e é indicado o limite excedido.
+
+**Cenário 11.6: comentários não se editam nem se apagam**
+- **Given** um comentário já guardado numa tarefa
+- **When** o autor abre a tarefa
+- **Then** não estão disponíveis as ações de editar nem de apagar o comentário.
+
+**Cenário 11.7: os comentários seguem a tarefa**
+- **Given** uma tarefa com dois comentários
+- **When** a tarefa é apagada e, depois, recuperada da reciclagem pelo gestor
+- **Then** os comentários deixam de aparecer quando a tarefa é apagada e voltam a aparecer quando é recuperada.
+
+### US12 — Pesquisa e filtros
+
+**Cenário 12.1: pesquisar projetos pelo nome**
+- **Given** a Ana, membro dos projetos "Website" e "Intranet"
+- **When** pesquisa "web"
+- **Then** aparece o projeto "Website" e não aparece o "Intranet".
+
+**Cenário 12.2: a pesquisa só devolve projetos acessíveis**
+- **Given** um projeto "Website Novo" de que o Luís não é membro
+- **When** o Luís pesquisa "website"
+- **Then** o projeto "Website Novo" não aparece.
+
+**Cenário 12.3: pesquisa sem resultados**
+- **Given** a Ana a pesquisar projetos
+- **When** pesquisa um texto que não consta do nome de nenhum dos seus projetos
+- **Then** não aparece nenhum projeto e é indicado que não há resultados.
+
+**Cenário 12.4: filtrar tarefas por estado**
+- **Given** a Lista de um projeto com as tarefas T1 "por fazer", T2 "em curso" e T3 "por fazer"
+- **When** o membro filtra por "por fazer"
+- **Then** aparecem T1 e T3 e não aparece T2.
+
+**Cenário 12.5: filtrar tarefas por quadrante**
+- **Given** a Lista de um projeto com as tarefas A (urgência 4, importância 4), B (urgência 1, importância 3) e C (urgência 3, importância 2)
+- **When** o membro filtra pelo quadrante "Do first"
+- **Then** aparece só a tarefa A.
+
+**Cenário 12.6: combinar filtros**
+- **Given** a Lista de um projeto com as tarefas T1 (Ana, "por fazer", urgência 4, importância 4), T2 (Ana, "em curso", urgência 4, importância 4) e T3 (Rui, "por fazer", urgência 4, importância 4)
+- **When** a Ana ativa "as minhas", filtra por "por fazer" e pelo quadrante "Do first"
+- **Then** aparece só a tarefa T1.
+
+### US13 — Painel inicial
+
+**Cenário 13.1: contagens por estado**
+- **Given** a Ana, membro do projeto "Website", com 5 tarefas principais: 2 "por fazer", 1 "em curso", 1 "concluído" e 1 "cancelado"
+- **When** abre o painel inicial
+- **Then** vê o projeto "Website" com as contagens: por fazer 2, em curso 1, em revisão 0, bloqueado 0, concluído 1, cancelado 1 e duplicado 0.
+
+**Cenário 13.2: só os projetos acessíveis**
+- **Given** a Ana, membro do projeto "Website" e não membro do projeto "Intranet"
+- **When** abre o painel inicial
+- **Then** vê o projeto "Website" e não vê o projeto "Intranet".
+
+**Cenário 13.3: navegar para o detalhe**
+- **Given** o painel inicial da Ana com o projeto "Website"
+- **When** a Ana seleciona o projeto "Website"
+- **Then** abre o detalhe desse projeto, na vista Matriz.
+
+**Cenário 13.4: subtarefas não contam**
+- **Given** um projeto com 2 tarefas principais, uma delas com 3 subtarefas
+- **When** um membro abre o painel inicial
+- **Then** as contagens por estado somam 2 tarefas.
+
+**Cenário 13.5: projeto concluído para o gestor e para o membro**
+- **Given** o projeto "Website" no estado "concluído", a gestora "Marta" e a membro "Ana"
+- **When** a Marta abre o painel inicial
+- **Then** o projeto "Website" não aparece.
+- **When** a Marta pesquisa "Website"
+- **Then** o projeto "Website" aparece.
+- **When** a Ana abre o painel inicial
+- **Then** o projeto "Website" aparece, com o estado "concluído".
+
 ### Cenário de aceitação do MVP
 
 **Cenário MVP-1: do projeto ao progresso**
@@ -457,7 +597,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **And** a Ana cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3), e passa a primeira para "concluído"
 - **Then** a Matriz mostra "Rever texto" no quadrante "Schedule" e não mostra "Escrever relatório"
 - **And** a Lista mostra as duas tarefas, com "Rever texto" primeiro
-- **And** a Marta vê na vista global o projeto "Website" com 50% de progresso e o estado "em andamento" (cerca de 30% do tempo decorrido).
+- **And** a Marta vê no painel inicial o projeto "Website" com 50% de progresso e o estado "em andamento" (cerca de 30% do tempo decorrido).
 
 ## 4. Situações excecionais e casos-limite
 
@@ -492,6 +632,10 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC27 | O gestor tenta definir o estado "atenção" ou "atrasado" | Não está disponível (cenário 1.18) | [R12](requirements.md#4-regras-de-negócio) |
 | EC28 | Atribuir uma tarefa a alguém que não é membro do projeto | Recusado, com mensagem a pedir que a pessoa seja primeiro adicionada ao projeto (cenário 2.9) | [R21](requirements.md#4-regras-de-negócio) |
 | EC29 | Criar uma tarefa ou subtarefa num projeto concluído ou suspenso | O controlo de criar não aparece; um pedido por outra via é recusado, com mensagem (cenário 2.10) | [R22](requirements.md#4-regras-de-negócio) |
+| EC30 | Remover o último responsável de uma tarefa | Recusado, com mensagem a pedir que se atribua primeiro outra pessoa (cenário 2.11) | [R26](requirements.md#4-regras-de-negócio) |
+| EC31 | Abrir uma ligação direta sem ter iniciado sessão | É pedido o início de sessão e o conteúdo não é mostrado (cenário 10.5) | [F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
+| EC32 | Comentário com mais de 2000 caracteres | Não é criado, com indicação do limite (cenário 11.5) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
+| EC33 | Pesquisar um projeto cujo nome não corresponde a nenhum acessível | Sem resultados, com indicação (cenários 12.2 e 12.3) | [R25](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
@@ -518,16 +662,20 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | 6.3, 6.4, 6.5 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta inteiro, o que dá 31 dias a 1-31 de janeiro |
 | 6.15 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta até ao fim desse dia |
 | MVP-1 | [P26](constraints.md#2-pressupostos-assumidos) | O tempo decorrido é cerca de 30% |
-| 1.4 a 1.8, 1.11 a 1.14, 1.17, 1.19 | [P21](constraints.md#2-pressupostos-assumidos) | Os utilizadores a adicionar já existem previamente (v1) |
+| 1.4 a 1.8, 1.11 a 1.14, 1.17, 1.19 | [P21](constraints.md#2-pressupostos-assumidos) | Os utilizadores a adicionar já existem previamente (contas de demonstração por seed) |
+| 10.1 a 10.5 | [P21](constraints.md#2-pressupostos-assumidos) | As contas existem por seed, sem registo nem recuperação de palavra-passe |
+| 11.2, 11.5 a 11.7 | [P28](constraints.md#2-pressupostos-assumidos) | Ordem dos comentários, limite de 2000 caracteres, sem editar nem apagar, e seguem a tarefa |
+| 12.1 a 12.6 | [P29](constraints.md#2-pressupostos-assumidos) | A pesquisa procura em qualquer parte do nome; os filtros aplicam-se na Lista e combinam-se |
+| 13.4, 13.5, 6.7, 6.9 | [P27](constraints.md#2-pressupostos-assumidos) | Só tarefas principais nas contagens; o gestor não vê os concluídos no painel e encontra-os pela pesquisa |
 
 O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) também está por validar, mas nenhum cenário da v1 depende dele.
 
 ### Adiado por decisão da autora
-- Regras de palavra-passe e recuperação de acesso: não se estipulam para já.
+- Regras de palavra-passe, recuperação de acesso e registo público: não se estipulam para já (extensões opcionais).
 - Conteúdo, antecedência e repetição dos lembretes e alertas ([F12](requirements.md#3-requisitos-funcionais)): ficam para a user story da v2.
 - Conteúdo do registo de auditoria ([F14](requirements.md#3-requisitos-funcionais)), além de [P14](constraints.md#2-pressupostos-assumidos): fica para a user story da v2.
-- Login, etiquetas e arquivo (F10, F11 e F13): ficam para a v2.
-- Anexos, comentários, Calendário e avisos por email ou SMS: v3.
+- Criação de contas, etiquetas e arquivo (F23, F11 e F13): ficam para a v2.
+- Anexos, Calendário e avisos por email ou SMS: v3.
 
 ### Por definir
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: incoerência de nomenclatura a confirmar com o cliente.

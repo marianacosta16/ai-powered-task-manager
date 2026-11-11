@@ -30,13 +30,15 @@ A entrega segue a prioridade MoSCoW: **v1 (MVP) = Must**, **v2 = Should**, **v3 
 - Projetos (nome, descrição, datas, fase e estado) e respetiva equipa: o gestor cria o projeto e adiciona membros.
 - Tarefas com prazo obrigatório, vários responsáveis, urgência e importância em 4 níveis, e subtarefas com as suas regras de prazo e fecho.
 - Vista **Matriz** por projeto (quadrantes *Do first*, *Schedule*, *Delegate* e *Later*) e vista **Lista**.
-- Vista global do gestor com barra de progresso e estado calculado por projeto.
-- Visibilidade por papel: o membro só vê os projetos de que faz parte; o gestor vê só os projetos de que é gestor. Na v1 não há login: o utilizador escolhe quem é num seletor.
+- **Painel inicial** com os projetos acessíveis e as contagens de tarefas por estado; para o gestor, também a barra de progresso e o estado calculado por projeto.
+- Visibilidade por papel: o membro só vê os projetos de que faz parte; o gestor vê só os projetos de que é gestor. O utilizador inicia e termina sessão com uma conta de demonstração criada por seed.
 - Reciclagem para recuperar projetos e tarefas apagados.
+- Comentários nas tarefas (adicionar e listar, com autor e data).
+- Pesquisa de projetos pelo nome e filtros de tarefas por estado e por quadrante.
 
 ### Versões seguintes
-- **v2 (Should):** login e contas, etiquetas, lembretes e alertas de atraso, arquivo de projetos e registo de auditoria.
-- **v3 (Could):** Calendário, anexos, comentários, avisos por email ou SMS, importação e exportação, registo de tempo, tarefas repetidas, modelos de projeto e quadro por estados.
+- **v2 (Should):** criação de contas pelo gestor, etiquetas, lembretes e alertas de atraso, arquivo de projetos e registo de auditoria.
+- **v3 (Could):** Calendário, anexos, avisos por email ou SMS, importação e exportação, registo de tempo, tarefas repetidas, modelos de projeto e quadro por estados.
 
 A lista completa, com justificações, está em [docs/requirements.md](docs/requirements.md).
 
@@ -65,8 +67,9 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 |---|---|
 | Descrição do problema e perguntas de clarificação | Concluído |
 | Análise de requisitos e âmbito do MVP | Concluído, com pressupostos por validar |
-| User stories e critérios de aceitação da v1 | Concluído (9 stories, cobrem F01 a F09) |
-| User stories da v2 | Por fazer (F10 a F14) |
+| User stories e critérios de aceitação da v1 | Concluído (13 stories, cobrem F01 a F10, F17 e F22) |
+| User stories da v2 | Por fazer (F11 a F14 e F23) |
+| Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 por validar |
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Em curso: arquitetura decidida (monólito modular, ver [docs/architecture.md](docs/architecture.md)); modelo de dados da v1 proposto, com pontos por confirmar (ver [docs/database.md](docs/database.md)); contrato OpenAPI com duas operações (ver [openapi.yaml](openapi.yaml)); tecnologias por decidir (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Implementação | Por iniciar |

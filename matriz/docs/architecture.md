@@ -16,7 +16,7 @@
 
 | Alternativa | Porque não foi escolhida |
 |---|---|
-| **Monólito simples** | Funcionaria no MVP, mas a v2 e a v3 acrescentam login, lembretes, arquivo, auditoria, anexos e avisos externos. Sem fronteiras, a aplicação mistura-se à medida que cresce |
+| **Monólito simples** | Funcionaria no MVP, mas a v2 e a v3 acrescentam criação de contas, lembretes, arquivo, auditoria, anexos e avisos externos. Sem fronteiras, a aplicação mistura-se à medida que cresce |
 | **Microservices** | O ganho principal (escalar partes separadas, equipas independentes) não existe aqui. O custo cai sobre regras que precisam de consistência forte entre entidades (R3, R4, R11, R17 e R20) |
 
 ## 3. Justificação
@@ -44,9 +44,9 @@
 | Módulo | Responsabilidades | Funcionalidades e regras |
 |---|---|---|
 | **Projetos e Equipas** | Guarda os projetos (nome, descrição, datas, fuso, fase, estado manual) e o seu gestor. Gere os membros de cada projeto: adicionar, remover e a regra de um projeto em aberto por membro. Valida as datas do projeto | F01; R11, R12 (parte manual), R16, R17, R19 |
-| **Tarefas** | Guarda tarefas e subtarefas: estado, prazo, urgência, importância e responsáveis. Valida os prazos (R1, R2, R3, R13), os fechos (R4, R5), os motivos de bloqueio e a tarefa original de um duplicado (R6), os limites de texto (R14) e que os responsáveis são membros do projeto (R21) | F02, F03, F08; R1 a R6, R13, R14, R21; P8 |
-| **Vistas e Progresso** | Responde a consultas de leitura: a Matriz por projeto, a Lista (com "as minhas") e a vista global do gestor. Calcula o progresso e os estados "atenção" e "atrasado" | F04, F05, F07; R15, R18, R23; P5, P7, P16, P25, P26 |
-| **Acesso e Visibilidade** | Sabe quem é o utilizador atual (na v1, escolhido num seletor) e o seu papel. Decide o que cada pessoa pode ver e fazer. Fornece esta resposta aos outros componentes | F06; R8, R9 (permissões), R19 (visibilidade do gestor); S1 a S4 |
+| **Tarefas** | Guarda tarefas e subtarefas: estado, prazo, urgência, importância, responsáveis e comentários. Valida os prazos (R1, R2, R3, R13), os fechos (R4, R5), os motivos de bloqueio e a tarefa original de um duplicado (R6), os limites de texto (R14) que os responsáveis são membros do projeto (R21) e que há sempre pelo menos um (R26), e os limites e a ordem dos comentários (R24) | F02, F03, F08, F17; R1 a R6, R13, R14, R21, R24, R26; P8, P28 |
+| **Vistas e Progresso** | Responde a consultas de leitura: a Matriz por projeto, a Lista (com "as minhas" e os filtros por estado e quadrante), o painel inicial (contagens de tarefas por estado e, para o gestor, o progresso) e a pesquisa de projetos. Calcula o progresso e os estados "atenção" e "atrasado" | F04, F05, F07, F22; R15, R18, R23, R25; P5, P7, P16, P25, P26, P27, P29 |
+| **Acesso e Visibilidade** | Autentica o utilizador (iniciar e terminar sessão, com contas de demonstração por seed) e sabe o seu papel. Decide o que cada pessoa pode ver e fazer. Fornece esta resposta aos outros componentes | F06, F10; R8, R9 (permissões), R19 (visibilidade do gestor); S1, S2, S5 |
 | **Reciclagem** | Guarda projetos, tarefas e subtarefas apagados, deixa o gestor recuperá-los e elimina-os definitivamente ao fim de 30 dias | F09; R9, R20 |
 
 ### 4.2 Componentes transversais
@@ -66,7 +66,7 @@ Estas regras mantêm o monólito modular e não um monólito comum.
 2. **Um módulo não lê nem escreve nos dados de outro.** Quando precisa de informação de outro módulo, usa a sua interface pública.
 3. **As dependências vão num só sentido.** Os módulos de negócio não dependem uns dos outros em círculo; quando duas regras cruzam módulos (por exemplo, o R17 envolve membros e tarefas), a coordenação fica nos **casos de uso**.
 4. **As regras de negócio vivem nos módulos**, não na interface nem nos casos de uso, que só as combinam.
-5. **A decisão sobre o que o utilizador vê ou pode fazer vem sempre do módulo Acesso e Visibilidade**, para a v2 (login) mudar só esse módulo.
+5. **A decisão sobre o que o utilizador vê ou pode fazer vem sempre do módulo Acesso e Visibilidade**, para uma mudança futura na autenticação (por exemplo, a criação de contas na v2) mudar só esse módulo.
 
 ### Dependências entre componentes
 
@@ -89,13 +89,13 @@ Todos os módulos ──► Persistência (cada um só aos seus dados)
 
 | Versão | Funcionalidade | Onde entra |
 |---|---|---|
-| v2 | Login e contas (F10) | Módulo **Acesso e Visibilidade**, que passa a autenticar; o seletor da v1 deixa de existir |
+| v2 | Criação de contas pelo gestor (F23) | Módulo **Acesso e Visibilidade**, que já autentica na v1 (F10); passa a criar contas em vez de as receber por seed |
 | v2 | Etiquetas (F11) | Módulo **Tarefas** |
 | v2 | Lembretes e alertas de atraso (F12) | Novo módulo **Notificações** |
 | v2 | Arquivo de projetos (F13) | Módulo **Projetos e Equipas**, ou um módulo próprio se crescer |
 | v2 | Registo de auditoria (F14) | Novo módulo **Auditoria**, alimentado pelos casos de uso |
 | v3 | Calendário (F15) | Módulo **Vistas e Progresso** |
-| v3 | Anexos (F16), comentários (F17) | Módulo **Tarefas**, ou módulos próprios |
+| v3 | Anexos (F16) | Módulo **Tarefas**, ou um módulo próprio. Os comentários (F17) já estão no módulo Tarefas desde a v1 |
 | v3 | Avisos por email ou SMS (F18) | Módulo **Notificações** (candidato a extração, ver secção 3) |
 | v3 | Importação e exportação (F19) | Novo módulo |
 

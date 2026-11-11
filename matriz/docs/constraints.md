@@ -14,7 +14,7 @@
 | C5 | A IA é usada como apoio ao desenvolvimento; a aplicação não tem funcionalidades de IA | Decisão |
 | C6 | Não há indicadores de sucesso, orçamento nem prazo definidos pelo cliente, que é fictício | Contexto do exercício (C1) |
 | C7 | Os documentos estão em português; os termos da interface (por exemplo, os nomes dos quadrantes como "Do first") estão em inglês | Convenção |
-| C8 | Na v1 usam-se só dados fictícios, num ambiente controlado, porque o seletor não autentica ninguém (S4) | Decisão |
+| C8 | Na v1 usam-se só dados fictícios e contas de demonstração criadas por seed, num ambiente controlado, porque não se definiram regras de palavra-passe nem segurança avançada (S5) | Decisão |
 
 ## 2. Pressupostos assumidos
 
@@ -36,18 +36,22 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | P12 | Os projetos e tarefas apagados ficam numa reciclagem; arquivar é diferente de apagar | Separa remoção de encerramento | Confirmado |
 | P13 | (v2, com a gestão de contas) Quando um utilizador sai, as suas tarefas em aberto passam para quem o substitui; o nome mantém-se no histórico e nas tarefas arquivadas ou em estado final | Evita tarefas sem responsável e preserva o histórico | Confirmado |
 | P14 | O registo de auditoria guarda quem fez o quê e quando (criar, editar, mudar de estado, apagar) | A resposta foi só "sim" | Por validar |
-| P15 | A aplicação precisa de controlo de acesso por papel desde a v1; o login (F10) chega na v2 e, na v1, o utilizador é escolhido num seletor (S4) | Necessário para cumprir as regras de visibilidade e de apagar | Confirmado |
+| P15 | A aplicação precisa de controlo de acesso por papel desde a v1; o utilizador inicia sessão (F10, S5) | Necessário para cumprir as regras de visibilidade e de apagar | Confirmado |
 | P16 | Se não houver tarefas contáveis, o projeto mostra a etiqueta "sem tarefas" em vez de percentagem, mesmo que a data de fim tenha passado, e os estados "atenção" e "atrasado" não lhe são atribuídos por cálculo | Evita confundir "sem tarefas" com "tarefas por fazer"; confirmado pela autora | Confirmado |
 | P17 | Os limites de 100 caracteres (título) e 2000 (descrição) aplicam-se também ao nome e à descrição do projeto | A autora aceitou os limites para "títulos e descrições" e confirmou que valem para tarefas e projetos | Confirmado |
 | P18 | Dimensão de referência: cerca de 30 utilizadores, 3 a 5 projetos em aberto em simultâneo, cada um com uma equipa de 5 a 8 pessoas | Foi preciso um tamanho para o dimensionamento; aceite pela autora | Confirmado |
 | P19 | A empresa não tem hoje nenhuma aplicação deste tipo | Premissa do exercício | Premissa |
 | P20 | Ao concluir ou suspender um projeto, os seus membros ficam livres para serem adicionados a outro; a lista de membros do projeto mantém-se e eles continuam a vê-lo | Num projeto suspenso não se vai trabalhar durante algum tempo, por isso os membros têm de ser realocados; sem isto a regra de um projeto em aberto por membro (R11) não seria aplicável | Confirmado |
-| P21 | Na v1 os utilizadores disponíveis no seletor existem previamente (não são criados na aplicação) e o seletor mostra apenas os nomes; a criação de contas pelo gestor chega com o login (F10, v2) | Sem contas na v1, tem de haver uma lista de utilizadores de onde o gestor escolhe os membros | Por validar |
+| P21 | Na v1 os utilizadores são contas de demonstração criadas por seed (não são criadas na aplicação); o gestor escolhe os membros entre essas contas; a criação de contas pelo gestor chega na v2 (F23) | O novo âmbito aceita contas de demonstração por seed; sem criação de contas, tem de haver utilizadores pré-existentes de onde o gestor escolhe os membros | Por validar |
 | P22 | Ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto continuam na lista de membros, sinalizados com uma etiqueta vermelha, e o gestor vê um aviso; as suas tarefas mantêm-se atribuídas. A etiqueta desaparece quando o membro passa a estar em um só projeto em aberto. É a única exceção à regra R11 | Evita perder a equipa original e obriga o gestor a decidir a realocação | Confirmado |
 | P23 | A data de início e a de fim do projeto são obrigatórias e o instante de fim é posterior ao de início. Se hoje é anterior à data de início, o tempo decorrido é 0% | O P5 divide por (fim − início) e precisa de datas válidas | Por validar |
 | P24 | Ao remover um membro com tarefas por concluir (R17), o novo membro fica com todas essas tarefas, tem de ser um membro livre (R11) e não pode já estar no projeto. "Por concluir" são as tarefas que não estão em estado final | Completa a regra de remoção decidida pela autora | Confirmado |
 | P25 | O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas | Interpretação de "o filtro considera as subtarefas", dado que as subtarefas não aparecem sozinhas (R18) | Confirmado |
 | P26 | O fuso horário é definido ao criar o projeto (por defeito, o de Lisboa) e aplica-se a todas as datas e horas do projeto, incluindo os prazos das tarefas. A data de fim pode ter hora; sem hora, o dia de fim conta inteiro (até ao fim desse dia). A data de início sem hora conta a partir das 00:00. O tempo decorrido mede-se entre o instante de início e o de fim | O fuso e a hora de fim são decisão da autora; o dia inteiro e as 00:00 são interpretações minhas | Por validar |
+| P27 | O painel inicial conta só as tarefas principais (R18). O painel do gestor continua a não mostrar os projetos concluídos (decisão anterior sobre a vista global) e o gestor encontra-os pela pesquisa de projetos (F22). O painel do membro mostra todos os seus projetos, incluindo concluídos e suspensos (R8) | Concilia o painel inicial novo com a vista global do gestor (F07) | Por validar |
+| P28 | Os comentários têm no máximo 2000 caracteres, não se editam nem se apagam, são listados do mais antigo para o mais recente e seguem a tarefa (apagar ou recuperar a tarefa faz o mesmo aos comentários). O novo âmbito pede só adicionar e listar | O novo âmbito não define limites nem o que acontece aos comentários | Por validar |
+| P29 | A pesquisa de projetos procura o texto em qualquer parte do nome, sem distinguir maiúsculas de minúsculas. Os filtros por estado e por quadrante aplicam-se na Lista, sobre as tarefas principais, e podem combinar-se com "as minhas" | O novo âmbito diz "pesquisar pelo nome" e "filtrar por estado e prioridade" sem mais detalhe | Por validar |
+
 ## 3. Requisitos de segurança e privacidade
 
 ### Definidos
@@ -56,21 +60,20 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | S1 | Um membro só acede aos projetos de que é membro e às suas tarefas, também por ligação direta; o gestor acede só aos projetos de que é gestor | R8, F06 | v1 |
 | S2 | Só o gestor apaga projetos, recupera apagados e reabre tarefas finais | R9, P8 | v1 |
 | S3 | Os dados apagados ficam numa reciclagem recuperável | P12, F09 | v1 |
-| S4 | Na v1 o utilizador escolhe quem é num seletor, sem palavra-passe. Isto não é autenticação: qualquer pessoa pode escolher o papel de gestor | Decisão, P15 | v1 |
-| S5 | Todos os utilizadores se autenticam para aceder à aplicação | P15, F10 | v2 |
-| S6 | As contas são criadas pelo gestor de projeto; não há registo livre | Decisão, F10 | v2 |
+| S4 | **Substituído por S5.** Antes, o utilizador escolhia quem era num seletor, sem palavra-passe | Decisão, P15 | Substituído |
+| S5 | Todos os utilizadores iniciam sessão para aceder à aplicação, com contas de demonstração criadas por seed. Não há registo público nem recuperação de palavra-passe (extensões opcionais) | P15, F10 | v1 |
+| S6 | As contas passam a ser criadas pelo gestor de projeto; não há registo livre | Decisão, F23 | v2 |
 | S7 | As ações relevantes ficam registadas (quem, o quê, quando) | P14, F14 | v2 |
 
 ### Riscos aceites de forma consciente na v1
-- Qualquer pessoa pode escolher o papel de gestor no seletor e apagar ou recuperar projetos (S4).
+- As contas de demonstração e as regras de palavra-passe não estão definidas para segurança real (S5, C8).
 - Sem registo de auditoria na v1, não fica registado quem apagou o quê.
-- O seletor mostra a todos a lista de utilizadores (P21).
 
-Mitigações decididas: dados fictícios num ambiente controlado (C8) e um seletor que mostra apenas nomes (P21). Se a aplicação passar a usar dados reais, o login (F10) deve ser antecipado.
+Mitigação decidida: só dados fictícios num ambiente controlado (C8). Se a aplicação passar a usar dados reais, é preciso definir primeiro as regras de autenticação e de proteção de dados.
 
 ### Excluídos ou adiados
 - **RGPD e segurança avançada:** fora de âmbito por decisão da autora. É um risco se a aplicação for usada com dados reais.
-- **Regras de palavra-passe e recuperação de acesso:** não se estipulam para já.
+- **Regras de palavra-passe, recuperação de acesso e registo público:** não se estipulam para já (extensões opcionais).
 - **Conteúdo do registo de auditoria** (além de P14): fica para a user story da v2.
 
 ## 4. Decisões técnicas pendentes
@@ -90,13 +93,15 @@ Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) es
 | T9 | Estratégia de testes, incluindo como automatizar os cenários Given / When / Then | [user-stories.md](user-stories.md) |
 | T10 | Navegadores ou sistemas suportados, e requisitos de acessibilidade | NF02 |
 | T11 | Cópias de segurança e recuperação de dados | T2 |
-| T12 | Como se implementa o seletor de utilizador da v1 e a lista de utilizadores disponíveis (decisão funcional já tomada: S4, P21) | F06, S1, S2 |
+| T12 | Como se criam as contas de demonstração por seed e como se guardam as credenciais (decisão funcional já tomada: S5, P21) | F10, F06, S1, S2 |
 | T13 | Como se tratam as edições simultâneas da mesma tarefa por vários utilizadores | F02, F08 |
 
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
 - Se uma subtarefa pode ser recuperada da reciclagem quando a tarefa-mãe já foi eliminada definitivamente.
 - Se as tarefas ficam ligadas a uma fase do projeto.
+- Se as subtarefas também têm comentários, e se se pode comentar nas tarefas de um projeto concluído ou suspenso (F17).
+- Quantas contas de demonstração existem e com que papéis (F10, P21).
 - Que integrações, se alguma, o cliente quer (F19).
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
 
@@ -108,6 +113,6 @@ Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) es
 - Sem utilizadores externos à empresa.
 - Sem estado "adiantado" do projeto.
 - Sem funcionalidades de IA na aplicação.
-- Fora do MVP, na v2: login e contas, etiquetas, lembretes e alertas de atraso, arquivo de projetos e registo de auditoria.
-- Fora do MVP, na v3: Calendário, anexos, comentários, avisos por email ou SMS, importação e exportação, registo de tempo, tarefas repetidas, modelos de projeto e quadro por estados (ver [requirements.md](requirements.md#7-funcionalidades-fora-do-âmbito-inicial)).
+- Fora do MVP, na v2: criação de contas pelo gestor, etiquetas, lembretes e alertas de atraso, arquivo de projetos e registo de auditoria.
+- Fora do MVP, na v3: Calendário, anexos, avisos por email ou SMS, importação e exportação, registo de tempo, tarefas repetidas, modelos de projeto e quadro por estados (ver [requirements.md](requirements.md#7-funcionalidades-fora-do-âmbito-inicial)).
 - Os avisos só funcionam com a aplicação aberta (P11).

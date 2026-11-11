@@ -10,18 +10,19 @@ info:
     Field names follow the data model in docs/database.md. References such as F02, R13 or P25 point to docs/requirements.md and docs/constraints.md.
 
     Assumptions to confirm (marked "Assumption" in the descriptions):
-    - A1: the current user is sent in the `X-User-Id` header, because v1 has no login (S4, P21).
+    - A1: the current user is identified by the session started with sign in (F10, S5). The session mechanism is not decided (T3).
     - A2 (confirmed, scenario 2.1): a new task starts in status `To do`.
     - A3: a task has at least one assignee (M6 in docs/database.md).
     - A4: only one level of subtasks (M1 in docs/database.md).
     - A5: a task deadline is a date without time (M3 in docs/database.md).
+    - A6: the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
 
 tags:
   - name: Tasks
     description: Tasks and subtasks of a project (F02, F03, F05, F08).
 
 security:
-  - userSelector: []
+  - session: []
 
 paths:
   /projects/{projectId}/tasks:
@@ -91,7 +92,7 @@ paths:
                   - field: title
                     issue: Longer than 100 characters.
         '401':
-          description: The current user was not identified (missing or unknown `X-User-Id`).
+          description: There is no valid session: the user has not signed in or the session ended (F10).
           content:
             application/json:
               schema:
@@ -154,6 +155,7 @@ paths:
         Tasks and subtasks that were deleted (recycle bin, R20) are not returned.
 
         With `mine=true` only the tasks of the current user are returned: a main task is included if the user is assignee of it or of any of its subtasks (P25).
+        The filters `mine`, `status` and `quadrant` can be combined (R25, A6).
       parameters:
         - name: mine
           in: query
@@ -162,6 +164,18 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: status
+          in: query
+          description: Only tasks with this status (F22, R25).
+          required: false
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: quadrant
+          in: query
+          description: Only tasks in this Matrix quadrant, calculated from urgency and importance. This is the "priority" filter (F22, R25).
+          required: false
+          schema:
+            $ref: '#/components/schemas/Quadrant'
       responses:
         '200':
           description: The list of main tasks. It is an empty array when the project has no tasks.
@@ -203,7 +217,7 @@ paths:
                           name: Ana Example
                           role: Team member
         '401':
-          description: The current user was not identified (missing or unknown `X-User-Id`).
+          description: There is no valid session: the user has not signed in or the session ended (F10).
           content:
             application/json:
               schema:
@@ -223,14 +237,12 @@ paths:
 
 components:
   securitySchemes:
-    userSelector:
-      type: apiKey
-      in: header
-      name: X-User-Id
+    session:
+      type: http
+      scheme: bearer
       description: |
-        Assumption A1. In v1 there is no login: the person chooses who they are in a selector (S4, P21).
-        This header carries the `id` of the chosen user. It is not authentication and anyone can send any value (accepted risk, S4, C8).
-        It is replaced by real authentication in v2 (F10, S5).
+        Assumption A1. The user signs in with a demonstration account (F10, S5, P21) and the session identifies them in later requests.
+        "Bearer" is only a placeholder for this contract: the real mechanism is not decided (T3).
 
   parameters:
     ProjectId:
@@ -328,6 +340,11 @@ components:
       type: string
       description: Task status. `Done`, `Cancelled` and `Duplicate` are final.
       enum: [To do, In progress, In review, Blocked, Done, Cancelled, Duplicate]
+
+    Quadrant:
+      type: string
+      description: Matrix quadrant. Levels 1 and 2 count as low and levels 3 and 4 as high (F04, R25).
+      enum: [Do first, Schedule, Delegate, Later]
 
     Level:
       type: integer
