@@ -686,9 +686,6 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | 6.3, 6.4, 6.5 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta inteiro, o que dá 31 dias a 1-31 de janeiro |
 | 6.15 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta até ao fim desse dia |
 | MVP-1 | [P26](constraints.md#2-pressupostos-assumidos) | O tempo decorrido é cerca de 30% |
-| 1.4 a 1.8, 1.11 a 1.14, 1.17, 1.19 | [P21](constraints.md#2-pressupostos-assumidos) | Os utilizadores a adicionar já existem previamente (contas de demonstração por seed) |
-| 10.1 a 10.5 | [P21](constraints.md#2-pressupostos-assumidos) | As contas existem por seed, sem registo nem recuperação de palavra-passe |
-| 11.6 | [P28](constraints.md#2-pressupostos-assumidos) | Apagar um comentário elimina-o de vez, sem reciclagem, e a edição não guarda histórico |
 
 O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) também está por validar, mas nenhum cenário da v1 depende dele.
 

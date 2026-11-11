@@ -15,7 +15,7 @@
 
 | Entidade | Termo em português | O que representa | Módulo | Origem |
 |---|---|---|---|---|
-| `APP_USER` | Utilizador | Pessoa que usa a aplicação: membro da equipa ou gestor de projeto | Acesso e Visibilidade | Secção 3.1, P21 (por validar) |
+| `APP_USER` | Utilizador | Pessoa que usa a aplicação: membro da equipa ou gestor de projeto | Acesso e Visibilidade | Secção 3.1, P21 |
 | `PROJECT` | Projeto | Projeto com datas, fase e estado, e o seu gestor | Projetos e Equipas | F01, R16, R19 |
 | `PROJECT_MEMBER` | Equipa | Associação entre um projeto e cada um dos seus membros. Não existe entidade "equipa" (P2) | Projetos e Equipas | F01, R11 |
 | `TASK` | Tarefa e subtarefa | Tarefa principal ou subtarefa. Uma subtarefa é uma tarefa com tarefa-mãe (M1) | Tarefas | F02, F03, F08 |
@@ -250,9 +250,9 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Proposta |
 | M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Por confirmar |
 | M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Por confirmar |
-| M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Por validar (P28) |
+| M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
 
-**Dependem também de pressupostos por validar:** P21 (contas de demonstração por seed, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto) e P28 (apagar comentários sem reciclagem e sem histórico de edições).
+**Dependem também de pressupostos por validar:** P23 e P26 (datas do projeto).
 
 **Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 

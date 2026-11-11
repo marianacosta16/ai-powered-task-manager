@@ -69,7 +69,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | Análise de requisitos e âmbito do MVP | Concluído, com pressupostos por validar |
 | User stories e critérios de aceitação da v1 | Concluído (13 stories, cobrem F01 a F10, F17 e F22) |
 | User stories da v2 | Por fazer (F11 a F14 e F23) |
-| Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 e P29 confirmados; P28 (comentários) com um ponto por validar |
+| Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 confirmados |
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Em curso: arquitetura decidida (monólito modular, ver [docs/architecture.md](docs/architecture.md)); modelo de dados da v1 proposto, com pontos por confirmar (ver [docs/database.md](docs/database.md)); contrato OpenAPI com duas operações (ver [openapi.yaml](openapi.yaml)); tecnologias por decidir (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Implementação | Por iniciar |

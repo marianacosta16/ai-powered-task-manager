@@ -84,7 +84,7 @@ O código **W** é local a este documento. W1 a W5 foram confirmados pela autora
 | W4 | Ordem dos cartões dentro de cada quadrante | Por prazo, do mais próximo para o mais distante; com o mesmo prazo, por urgência e depois por importância (R23, cenário 3.6). A mesma regra vale para a Lista | Decisão |
 | W5 | *+ New task* num projeto concluído ou suspenso | O botão não aparece (R22, cenário 2.10). Um pedido de criação por outra via é recusado com mensagem | Decisão |
 
-**Dependem de pressupostos por validar:** P21 (contas de demonstração, elemento 3).
+Nenhum ponto deste wireframe depende de pressupostos por validar.
 
 ## 7. Fora deste wireframe
 
