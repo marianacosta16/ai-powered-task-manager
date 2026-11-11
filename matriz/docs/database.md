@@ -98,7 +98,7 @@ Uma tarefa pode ter vários responsáveis, e uma subtarefa tem os seus próprios
 | `task_id` | inteiro | Sim | Chave para `TASK` |
 | `author_id` | inteiro | Sim | Chave para `APP_USER`: quem escreveu, atribuído pela aplicação (R24) |
 | `content` | texto | Sim | Máximo 2000 caracteres, texto simples (R24, P28, NF09) |
-| `created_at` | data e hora | Sim | Atribuída pela aplicação; não se altera (R24) |
+| `created_at` | data e hora | Sim | Atribuída pela aplicação; mantém-se quando o comentário é editado (R24) |
 
 ## 4. Relacionamentos e cardinalidades
 
@@ -210,7 +210,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R17 | **Aplicação:** remove a linha de `PROJECT_MEMBER` e passa as tarefas por concluir para o novo membro (`TASK_ASSIGNEE`), numa só transação |
 | R21 | **Aplicação:** cada `TASK_ASSIGNEE` tem de ser membro do projeto da tarefa ou o seu gestor |
 | R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
-| R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, não há edição nem eliminação, e os comentários seguem o `deleted_at` da tarefa |
+| R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, só o autor edita ou apaga (apagar elimina a linha), nada disto num projeto `Completed`, e os comentários seguem o `deleted_at` da tarefa |
 | R26 | **Aplicação:** cada tarefa mantém pelo menos uma linha em `TASK_ASSIGNEE`; remover a última é recusado |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também as suas tarefas, recuperar desfaz, e a eliminação definitiva corre ao fim de 30 dias |
 | R18, R15, R23, R25 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance`; filtros por `status` e por quadrante; pesquisa de projetos por `name` |
@@ -250,9 +250,9 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Proposta |
 | M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Por confirmar |
 | M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Por confirmar |
-| M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa) e sem edição | Por validar (P28) |
+| M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Por validar (P28) |
 
-**Dependem também de pressupostos por validar:** P21 (contas de demonstração por seed, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto), P27 (painel), P28 (comentários) e P29 (pesquisa e filtros).
+**Dependem também de pressupostos por validar:** P21 (contas de demonstração por seed, `APP_USER` preenchido de antemão), P23 e P26 (datas do projeto) e P28 (apagar comentários sem reciclagem e sem histórico de edições).
 
 **Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 

@@ -28,7 +28,7 @@
 | US08 | Membro da equipa | ver apenas os projetos de que sou membro e as suas tarefas | trabalhar sem ver informação de outras equipas | [F06](requirements.md#3-requisitos-funcionais), [R8](requirements.md#4-regras-de-negócio) |
 | US09 | Membro da equipa | ver todas as tarefas de um projeto numa lista, com as abertas primeiro e o filtro "as minhas" | ter uma visão completa do trabalho do projeto | [F05](requirements.md#3-requisitos-funcionais), [R15](requirements.md#4-regras-de-negócio), [R18](requirements.md#4-regras-de-negócio) |
 | US10 | Membro da equipa ou gestor de projeto | iniciar e terminar sessão e consultar quem sou | aceder à aplicação com a minha conta | [F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade), [P21](constraints.md#2-pressupostos-assumidos) |
-| US11 | Membro da equipa | adicionar comentários a uma tarefa e ler os dos colegas | discutir o trabalho com a equipa | [F17](requirements.md#3-requisitos-funcionais), [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
+| US11 | Membro da equipa | adicionar, editar e apagar os meus comentários numa tarefa e ler os dos colegas | discutir o trabalho com a equipa | [F17](requirements.md#3-requisitos-funcionais), [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 | US12 | Membro da equipa ou gestor de projeto | pesquisar projetos pelo nome e filtrar as tarefas por estado e por quadrante | encontrar depressa o que procuro | [F22](requirements.md#3-requisitos-funcionais), [R25](requirements.md#4-regras-de-negócio), [P29](constraints.md#2-pressupostos-assumidos) |
 | US13 | Membro da equipa ou gestor de projeto | ver ao entrar os meus projetos com as contagens de tarefas por estado e ir ao detalhe | saber onde está o trabalho | [F07](requirements.md#3-requisitos-funcionais), [R8](requirements.md#4-regras-de-negócio), [R18](requirements.md#4-regras-de-negócio), [P27](constraints.md#2-pressupostos-assumidos) |
 
@@ -516,15 +516,38 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** tenta guardar um comentário com 2001 caracteres
 - **Then** o comentário não é criado e é indicado o limite excedido.
 
-**Cenário 11.6: comentários não se editam nem se apagam**
-- **Given** um comentário já guardado numa tarefa
-- **When** o autor abre a tarefa
-- **Then** não estão disponíveis as ações de editar nem de apagar o comentário.
+**Cenário 11.6: editar e apagar o próprio comentário**
+- **Given** uma tarefa com um comentário da Ana e um comentário do Rui
+- **When** a Ana edita o seu comentário para "Capítulo 2 revisto"
+- **Then** o comentário passa a mostrar esse texto e mantém a Ana como autora e a data de criação original.
+- **When** a Ana tenta guardar uma edição com 2001 caracteres
+- **Then** a edição é recusada, com indicação do limite, e o texto anterior mantém-se.
+- **When** a Ana abre o comentário do Rui
+- **Then** não estão disponíveis as ações de editar nem de apagar.
+- **When** a Ana apaga o seu comentário
+- **Then** o comentário deixa de aparecer na tarefa e não se recupera.
 
 **Cenário 11.7: os comentários seguem a tarefa**
 - **Given** uma tarefa com dois comentários
 - **When** a tarefa é apagada e, depois, recuperada da reciclagem pelo gestor
 - **Then** os comentários deixam de aparecer quando a tarefa é apagada e voltam a aparecer quando é recuperada.
+
+**Cenário 11.8: comentários em subtarefas**
+- **Given** uma tarefa com uma subtarefa "Enviar convites", num projeto em aberto
+- **When** a Ana adiciona o comentário "Enviado" à subtarefa
+- **Then** o comentário fica na subtarefa, com as mesmas regras dos comentários das tarefas (autor, data, edição e eliminação pelo autor).
+
+**Cenário 11.9: comentários num projeto suspenso**
+- **Given** um projeto "suspenso" com uma tarefa
+- **When** a Ana adiciona um comentário, edita o seu comentário e apaga outro comentário seu
+- **Then** as três ações são aceites.
+
+**Cenário 11.10: comentários num projeto concluído**
+- **Given** um projeto "concluído" com uma tarefa que já tem um comentário da Ana
+- **When** a Ana abre a tarefa
+- **Then** vê o comentário, mas não estão disponíveis as ações de adicionar, editar nem apagar comentários.
+- **When** é pedida a criação, a edição ou a eliminação de um comentário desse projeto por outra via
+- **Then** a ação é recusada, com uma mensagem a explicar que o projeto está concluído, e o comentário não muda.
 
 ### US12 — Pesquisa e filtros
 
@@ -636,6 +659,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC31 | Abrir uma ligação direta sem ter iniciado sessão | É pedido o início de sessão e o conteúdo não é mostrado (cenário 10.5) | [F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
 | EC32 | Comentário com mais de 2000 caracteres | Não é criado, com indicação do limite (cenário 11.5) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 | EC33 | Pesquisar um projeto cujo nome não corresponde a nenhum acessível | Sem resultados, com indicação (cenários 12.2 e 12.3) | [R25](requirements.md#4-regras-de-negócio) |
+| EC34 | Adicionar, editar ou apagar um comentário num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 11.10) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
@@ -664,9 +688,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | MVP-1 | [P26](constraints.md#2-pressupostos-assumidos) | O tempo decorrido é cerca de 30% |
 | 1.4 a 1.8, 1.11 a 1.14, 1.17, 1.19 | [P21](constraints.md#2-pressupostos-assumidos) | Os utilizadores a adicionar já existem previamente (contas de demonstração por seed) |
 | 10.1 a 10.5 | [P21](constraints.md#2-pressupostos-assumidos) | As contas existem por seed, sem registo nem recuperação de palavra-passe |
-| 11.2, 11.5 a 11.7 | [P28](constraints.md#2-pressupostos-assumidos) | Ordem dos comentários, limite de 2000 caracteres, sem editar nem apagar, e seguem a tarefa |
-| 12.1 a 12.6 | [P29](constraints.md#2-pressupostos-assumidos) | A pesquisa procura em qualquer parte do nome; os filtros aplicam-se na Lista e combinam-se |
-| 13.4, 13.5, 6.7, 6.9 | [P27](constraints.md#2-pressupostos-assumidos) | Só tarefas principais nas contagens; o gestor não vê os concluídos no painel e encontra-os pela pesquisa |
+| 11.6 | [P28](constraints.md#2-pressupostos-assumidos) | Apagar um comentário elimina-o de vez, sem reciclagem, e a edição não guarda histórico |
 
 O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) também está por validar, mas nenhum cenário da v1 depende dele.
 
