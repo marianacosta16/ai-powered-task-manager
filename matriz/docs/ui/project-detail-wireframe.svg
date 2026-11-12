@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
+  <title>Matriz - wireframe of the Project detail screen (low fidelity)</title>
+  <desc>Low-fidelity wireframe of the Project detail screen (F01, F02, F05, F22, US01, US02, US09, US12): project data, task list with filters and the new task form. All data is fictitious.</desc>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#333}
+    .g{fill:#777}.b{font-weight:bold}.s{font-size:11px}.m{text-anchor:middle}.w{fill:#fff}.l{font-size:20px;font-weight:bold}.u{text-decoration:underline}
+    .box{fill:#fff;stroke:#333}.bar{fill:#eee;stroke:#333}.sel{fill:#ddd;stroke:#333}.dash{fill:#fff;stroke:#666;stroke-dasharray:5 4}
+    .hd{fill:#ddd;stroke:#999}.row{fill:#fff;stroke:#bbb}.done{fill:#f3f3f3;stroke:#bbb}.dark{fill:#333;stroke:#333}.err{fill:#fff;stroke:#333;stroke-width:2}
+    .c{fill:#333;stroke:#fff;stroke-width:1.5}.n{font-size:12px;font-weight:bold;fill:#fff;text-anchor:middle}
+  </style>
+
+  <rect x="0" y="0" width="1200" height="780" fill="#ffffff"/>
+  <rect x="10" y="10" width="1180" height="710" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+
+  <!-- Top bar -->
+  <rect class="bar" x="10" y="10" width="1180" height="56"/>
+  <text x="30" y="45" style="font-size:22px;font-weight:bold">Matriz</text>
+  <rect class="box" x="150" y="24" width="100" height="30"/>
+  <text x="200" y="44" class="m">Dashboard</text>
+  <rect class="sel" x="260" y="24" width="100" height="30"/>
+  <text x="310" y="44" class="m b">Projects</text>
+  <rect class="box" x="900" y="22" width="190" height="32" rx="4"/>
+  <text x="912" y="43">Ana Example (Team member)</text>
+  <rect class="box" x="1100" y="22" width="70" height="32" rx="4"/>
+  <text x="1135" y="43" class="m">Sign out</text>
+
+  <text x="30" y="92" class="s g">Projects / Website Redesign</text>
+
+  <!-- Project data -->
+  <rect class="box" x="30" y="102" width="1140" height="112" fill="#fafafa"/>
+  <text x="44" y="132" class="l">Website Redesign</text>
+  <text x="44" y="154" class="g">Redesign of the company website.</text>
+  <text x="44" y="178" class="s">Phase: Execution     Status: In progress     2026-01-01 to 2026-01-31 (Lisbon)     Manager: Marta</text>
+  <text x="44" y="198" class="s">Team: Ana, Rui, Luis, Sofia, Carla</text>
+  <rect class="dash" x="870" y="118" width="95" height="30" rx="3"/><text x="917" y="138" class="m s" style="fill:#666">Edit project</text>
+  <rect class="dash" x="975" y="118" width="60" height="30" rx="3"/><text x="1005" y="138" class="m s" style="fill:#666">Team</text>
+  <rect class="dash" x="1045" y="118" width="110" height="30" rx="3"/><text x="1100" y="138" class="m s" style="fill:#666">Delete project</text>
+
+  <!-- Tabs -->
+  <rect class="box" x="30" y="228" width="100" height="32"/>
+  <text x="80" y="249" class="m">Matrix</text>
+  <rect class="sel" x="130" y="228" width="100" height="32"/>
+  <text x="180" y="249" class="m b">List</text>
+
+  <!-- Filters -->
+  <rect class="box" x="30" y="274" width="170" height="30" rx="3"/><text x="42" y="294">Status: All</text><text x="180" y="294">▼</text>
+  <rect class="box" x="210" y="274" width="190" height="30" rx="3"/><text x="222" y="294">Quadrant: All</text><text x="380" y="294">▼</text>
+  <rect class="box" x="410" y="274" width="120" height="30" rx="3"/><rect class="box" x="420" y="283" width="12" height="12"/><text x="440" y="294">My tasks</text>
+  <rect class="dark" x="640" y="274" width="120" height="30" rx="4"/><text x="700" y="294" class="m w b">+ New task</text>
+
+  <!-- Task table -->
+  <rect class="hd" x="30" y="316" width="730" height="30"/>
+  <text x="42" y="336" class="b s">Title</text>
+  <text x="300" y="336" class="b s">Status</text>
+  <text x="390" y="336" class="b s">Deadline</text>
+  <text x="480" y="336" class="b s">Urg.</text>
+  <text x="525" y="336" class="b s">Imp.</text>
+  <text x="575" y="336" class="b s">Assignees</text>
+
+  <rect class="row" x="30" y="346" width="730" height="38"/>
+  <text x="42" y="369" class="u b">Prepare client demo</text><text x="300" y="369" class="s">Blocked</text><text x="390" y="369" class="s">2026-11-18</text><text x="484" y="369" class="s">4</text><text x="529" y="369" class="s">3</text><text x="575" y="369" class="s">Rui</text>
+  <rect class="row" x="30" y="384" width="730" height="38"/>
+  <text x="42" y="407" class="u b">Fix payment bug</text><text x="150" y="407" class="s g">2 subtasks</text><text x="300" y="407" class="s">In progress</text><text x="390" y="407" class="s">2026-11-20</text><text x="484" y="407" class="s">4</text><text x="529" y="407" class="s">4</text><text x="575" y="407" class="s">Ana, Rui</text>
+  <rect class="row" x="30" y="422" width="730" height="38"/>
+  <text x="42" y="445" class="u b">Plan next sprint</text><text x="150" y="445" class="s g">1 subtask</text><text x="300" y="445" class="s">To do</text><text x="390" y="445" class="s">2026-12-05</text><text x="484" y="445" class="s">1</text><text x="529" y="445" class="s">3</text><text x="575" y="445" class="s">Ana</text>
+  <rect class="row" x="30" y="460" width="730" height="38"/>
+  <text x="42" y="483" class="u b">Write user guide</text><text x="300" y="483" class="s">In review</text><text x="390" y="483" class="s">2026-12-15</text><text x="484" y="483" class="s">3</text><text x="529" y="483" class="s">2</text><text x="575" y="483" class="s">Sofia</text>
+  <rect class="done" x="30" y="498" width="730" height="38"/>
+  <text x="42" y="521" class="u b g">Set up repository</text><text x="300" y="521" class="s g">Done</text><text x="390" y="521" class="s g">2026-11-01</text><text x="484" y="521" class="s g">2</text><text x="529" y="521" class="s g">3</text><text x="575" y="521" class="s g">Rui</text>
+
+  <text x="30" y="562" class="s g">Open tasks come first, then closed ones, each group by earliest deadline. Levels: 1 Low, 2 Medium, 3 High, 4 Critical.</text>
+  <text x="30" y="580" class="s g">Only main tasks are listed; subtasks appear inside the task. The Matrix tab shows the same tasks by quadrant.</text>
+  <text x="30" y="598" class="s g">In a Suspended project the + New task button and the form do not appear (tasks can still be edited).</text>
+  <text x="30" y="616" class="s g">In a Completed project nothing can be created, edited or deleted.</text>
+
+  <!-- New task form -->
+  <rect class="box" x="790" y="262" width="380" height="408" fill="#fafafa"/>
+  <text x="806" y="288" class="b" style="font-size:15px">New task</text>
+  <text x="806" y="312" class="s b">Title *</text>
+  <rect class="box" x="806" y="318" width="348" height="30" rx="3"/><text x="816" y="338" class="g">max 100 characters</text>
+  <text x="806" y="366" class="s b">Description</text>
+  <rect class="box" x="806" y="372" width="348" height="40" rx="3"/><text x="816" y="392" class="g">max 2000 characters</text>
+  <text x="806" y="430" class="s b">Deadline *</text>
+  <rect class="err" x="806" y="436" width="348" height="30" rx="3"/><text x="816" y="456">2026-11-01</text>
+  <text x="806" y="484" class="s">The deadline cannot be in the past. Choose today or a later date.</text>
+  <text x="806" y="506" class="s b">Urgency *</text>
+  <rect class="box" x="806" y="512" width="168" height="30" rx="3"/><text x="816" y="532">3 - High</text><text x="954" y="532">▼</text>
+  <text x="986" y="506" class="s b">Importance *</text>
+  <rect class="box" x="986" y="512" width="168" height="30" rx="3"/><text x="996" y="532">4 - Critical</text><text x="1134" y="532">▼</text>
+  <text x="806" y="560" class="s b">Assignees * (project members)</text>
+  <rect class="box" x="806" y="566" width="348" height="30" rx="3"/><text x="816" y="586" class="s">Ana x   Rui x   + add</text>
+  <rect class="dark" x="806" y="614" width="120" height="34" rx="3"/><text x="866" y="636" class="m w b">Create task</text>
+  <rect class="box" x="936" y="614" width="100" height="34" rx="3"/><text x="986" y="636" class="m">Cancel</text>
+
+  <!-- Callouts -->
+  <circle class="c" cx="30" cy="92" r="11"/><text class="n" x="30" y="96">1</text>
+  <circle class="c" cx="30" cy="102" r="11" transform="translate(0 20)"/><text class="n" x="30" y="126">2</text>
+  <circle class="c" cx="870" cy="118" r="11"/><text class="n" x="870" y="122">3</text>
+  <circle class="c" cx="30" cy="228" r="11"/><text class="n" x="30" y="232">4</text>
+  <circle class="c" cx="30" cy="274" r="11"/><text class="n" x="30" y="278">5</text>
+  <circle class="c" cx="640" cy="274" r="11"/><text class="n" x="640" y="278">6</text>
+  <circle class="c" cx="30" cy="346" r="11"/><text class="n" x="30" y="350">7</text>
+  <circle class="c" cx="790" cy="262" r="11"/><text class="n" x="790" y="266">8</text>
+  <circle class="c" cx="792" cy="480" r="11"/><text class="n" x="792" y="484">9</text>
+
+  <text x="10" y="745">Dashed outline = shown only to the project manager. A thick outline marks a field with an error message. Numbers refer to docs/ui/wireframes.md.</text>
+  <text x="10" y="763" class="g">Low-fidelity wireframe. All names and tasks are fictitious.</text>
+</svg>

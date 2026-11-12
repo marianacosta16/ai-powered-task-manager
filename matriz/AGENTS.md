@@ -24,6 +24,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e pontos por confirmar (M) |
 | [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado com duas operações da v1 (criar tarefa e listar tarefas do projeto) e pressupostos por confirmar (A) |
 | [docs/ui/matrix-wireframe.md](docs/ui/matrix-wireframe.md) | Wireframe do ecrã Matrix: elementos, navegação e pontos por confirmar (W) |
+| [docs/ui/wireframes.md](docs/ui/wireframes.md) | Wireframes dos restantes ecrãs da v1: elementos, navegação e pontos por confirmar (W) |
 | [docs/plan.md](docs/plan.md) | Lacunas, decisões técnicas pendentes e plano incremental proposto (não aprovado) |
 
 - A documentação é a fonte de verdade, exceto os itens marcados como Pressuposto, que ainda não estão confirmados (ver secção 3). Se algo no código ou no pedido a contradiz, pára e pergunta.

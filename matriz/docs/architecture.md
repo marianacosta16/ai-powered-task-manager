@@ -53,7 +53,7 @@
 
 | Componente | Responsabilidades |
 |---|---|
-| **Casos de uso** | Coordenam as operações que atravessam mais do que um módulo, para que cada uma seja uma só transação: remover um membro com substituto (R17), retomar um projeto suspenso (P22), apagar um projeto com as suas tarefas (R9, R20), atribuir uma tarefa só a quem é membro (R21), criar tarefas só num projeto em aberto (R22). Verificam as permissões junto do módulo Acesso e Visibilidade |
+| **Casos de uso** | Coordenam as operações que atravessam mais do que um módulo, para que cada uma seja uma só transação: remover um membro com substituto (R17), retomar um projeto suspenso (P22), apagar um projeto com as suas tarefas (R9, R20), atribuir uma tarefa só a quem é membro (R21), criar tarefas só num projeto em aberto (R22) e limitar as ações sobre tarefas conforme o estado do projeto (R27). Verificam as permissões junto do módulo Acesso e Visibilidade |
 | **Núcleo partilhado** | Funcionalidades usadas por todos os módulos: datas, horas e fuso horário (P26), validação de texto e mensagens de recusa (NF08, NF09), termos da interface em inglês ([requirements.md](requirements.md#34-termos-da-interface)) |
 | **Interface** | Os ecrãs em inglês (NF01), para computador (NF02). Mostra os dados, recolhe as ações e apresenta as mensagens. Não contém regras de negócio |
 | **Persistência** | O acesso aos dados, numa só base de dados partilhada pela aplicação. Cada módulo só acede aos seus próprios dados (T2) |

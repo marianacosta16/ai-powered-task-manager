@@ -226,6 +226,15 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o membro tenta passá-la para "bloqueado" com um motivo de 101 caracteres
 - **Then** a mudança é recusada, com indicação do limite, e a tarefa mantém o estado anterior.
 
+**Cenário 2.13: alterar tarefas num projeto suspenso ou concluído**
+- **Given** um projeto "suspenso" e um projeto "concluído", com tarefas, dos quais um membro da equipa é membro
+- **When** o membro edita o título de uma tarefa, muda o estado de outra e apaga uma terceira no projeto suspenso
+- **Then** as três ações são aceites.
+- **When** o membro abre uma tarefa do projeto concluído
+- **Then** vê os dados da tarefa, mas não estão disponíveis as ações de editar, mudar de estado, atribuir ou remover responsáveis, nem apagar.
+- **When** é pedida uma dessas ações por outra via
+- **Then** a ação é recusada, com uma mensagem a explicar que o projeto está concluído, e a tarefa não muda.
+
 ### US03 — Matriz do projeto
 
 **Cenário 3.1: posição na matriz**
@@ -635,12 +644,16 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 ### Cenário de aceitação do MVP
 
 **Cenário MVP-1: do projeto ao progresso**
-- **Given** a data atual 2026-01-10, a gestora "Marta" e a membro "Ana", que não está em nenhum projeto em aberto
-- **When** a Marta cria o projeto "Website" (início 2026-01-01, fim 2026-01-31, fase "iniciação", estado "não iniciado"), adiciona a Ana e passa o estado para "em andamento"
-- **And** a Ana cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3), e passa a primeira para "concluído"
+- **Given** a data atual 2026-01-10, as contas de demonstração da gestora "Marta" e da membro "Ana", que não está em nenhum projeto em aberto
+- **When** a Marta inicia sessão, cria o projeto "Website" (início 2026-01-01, fim 2026-01-31, fase "iniciação", estado "não iniciado"), adiciona a Ana e passa o estado para "em andamento"
+- **And** a Ana inicia sessão e cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3), e passa a primeira para "concluído"
+- **And** a Ana adiciona à tarefa "Rever texto" o comentário "Falta o capítulo 2"
 - **Then** a Matriz mostra "Rever texto" no quadrante "Schedule" e não mostra "Escrever relatório"
-- **And** a Lista mostra as duas tarefas, com "Rever texto" primeiro
-- **And** a Marta vê no painel inicial o projeto "Website" com 50% de progresso e o estado "em andamento" (cerca de 30% do tempo decorrido).
+- **And** a Lista mostra as duas tarefas, com "Rever texto" primeiro, e ao filtrar a Lista pelo estado "por fazer" aparece só "Rever texto"
+- **And** a pesquisa de projetos pelo nome "web" mostra o projeto "Website"
+- **And** a Marta vê no painel inicial o projeto "Website" com 50% de progresso e o estado "em andamento" (cerca de 30% do tempo decorrido)
+- **And** a Ana vê no painel inicial o projeto "Website" com as contagens por estado: por fazer 1, em curso 0, em revisão 0, bloqueado 0, concluído 1, cancelado 0 e duplicado 0
+- **And** a tarefa "Rever texto" mostra o comentário "Falta o capítulo 2", com a Ana como autora e a data de criação.
 
 ## 4. Situações excecionais e casos-limite
 
@@ -680,6 +693,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC32 | Comentário com mais de 2000 caracteres | Não é criado, com indicação do limite (cenário 11.5) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 | EC33 | Pesquisar um projeto cujo nome não corresponde a nenhum acessível | Sem resultados, com indicação (cenários 12.2 e 12.3) | [R25](requirements.md#4-regras-de-negócio) |
 | EC34 | Adicionar, editar ou apagar um comentário num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 11.10) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
+| EC35 | Editar, mudar de estado ou apagar uma tarefa num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem. Num projeto suspenso estas ações são aceites (cenário 2.13) | [R27](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
