@@ -48,7 +48,7 @@
   <text x="270" y="232">Execution</text>
   <text x="370" y="232">In progress</text>
   <text x="470" y="232">Marta</text>
-  <rect class="box" x="575" y="215" width="42" height="24" rx="3"/><text x="596" y="231" class="m s">Open</text>
+  <rect class="box" x="575" y="215" width="42" height="24" rx="3"/><text x="596" y="231" class="m s">View</text>
   <rect class="dash" x="622" y="215" width="40" height="24" rx="3"/><text x="642" y="231" class="m s" style="fill:#666">Edit</text>
   <rect class="dash" x="666" y="215" width="40" height="24" rx="3"/><text x="686" y="231" class="m s" style="fill:#666">Delete</text>
 
@@ -57,7 +57,7 @@
   <text x="270" y="272" class="g">Planning</text>
   <text x="370" y="272" class="g">Completed</text>
   <text x="470" y="272" class="g">Marta</text>
-  <rect class="box" x="575" y="255" width="42" height="24" rx="3"/><text x="596" y="271" class="m s">Open</text>
+  <rect class="box" x="575" y="255" width="42" height="24" rx="3"/><text x="596" y="271" class="m s">View</text>
 
   <text x="30" y="312" class="s g">Search finds the text anywhere in the name and includes completed projects. With no match: "No projects found."</text>
   <text x="30" y="330" class="s g">A completed project is frozen: it has no Edit or Delete.</text>

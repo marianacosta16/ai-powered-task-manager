@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 810" width="1200" height="810">
   <title>Matriz - wireframe of the Team screen (low fidelity)</title>
-  <desc>Low-fidelity wireframe of the Team screen of a project (F01, US01): members, add member, remove member with a replacement. Manager only. All data is fictitious.</desc>
+  <desc>Low-fidelity wireframe of the Team screen of a project (F01, US01): members, add member, remove member with substitutes. Manager only. All data is fictitious.</desc>
   <style>
     text{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#333}
     .g{fill:#777}.b{font-weight:bold}.s{font-size:11px}.m{text-anchor:middle}.w{fill:#fff}.l{font-size:20px;font-weight:bold}
@@ -10,8 +10,8 @@
     .c{fill:#333;stroke:#fff;stroke-width:1.5}.n{font-size:12px;font-weight:bold;fill:#fff;text-anchor:middle}
   </style>
 
-  <rect x="0" y="0" width="1200" height="780" fill="#ffffff"/>
-  <rect x="10" y="10" width="1180" height="710" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+  <rect x="0" y="0" width="1200" height="810" fill="#ffffff"/>
+  <rect x="10" y="10" width="1180" height="740" fill="#ffffff" stroke="#333333" stroke-width="2"/>
 
   <!-- Top bar -->
   <rect class="bar" x="10" y="10" width="1180" height="56"/>
@@ -45,19 +45,19 @@
   <text x="44" y="269">Ana</text><text x="170" y="269" class="s">Team member</text><text x="320" y="269">2</text>
   <rect class="box" x="620" y="251" width="80" height="26" rx="3"/><text x="660" y="268" class="m s">Remove</text>
   <rect class="row" x="30" y="284" width="690" height="40"/>
-  <text x="44" y="309">Rui</text><text x="170" y="309" class="s">Team member</text><text x="320" y="309">1</text>
+  <text x="44" y="309">Rui</text><text x="170" y="309" class="s">Team member</text><text x="320" y="309">2</text>
   <rect class="box" x="620" y="291" width="80" height="26" rx="3"/><text x="660" y="308" class="m s">Remove</text>
   <rect class="row" x="30" y="324" width="690" height="40"/>
   <text x="44" y="349">Luis</text><text x="170" y="349" class="s">Team member</text><text x="320" y="349">0</text>
   <rect class="box" x="620" y="331" width="80" height="26" rx="3"/><text x="660" y="348" class="m s">Remove</text>
   <rect class="row" x="30" y="364" width="690" height="40"/>
-  <text x="44" y="389">Sofia</text><text x="170" y="389" class="s">Team member</text><text x="320" y="389">3</text>
+  <text x="44" y="389">Sofia</text><text x="170" y="389" class="s">Team member</text><text x="320" y="389">5</text>
   <rect class="dark" x="400" y="371" width="200" height="24" rx="12"/><text x="500" y="387" class="m s w b">Also in another open project</text>
   <rect class="box" x="620" y="371" width="80" height="26" rx="3"/><text x="660" y="388" class="m s">Remove</text>
   <rect class="row" x="30" y="404" width="690" height="40"/>
   <text x="44" y="429">Carla</text><text x="170" y="429" class="s">Team member</text><text x="320" y="429">0</text>
   <rect class="box" x="620" y="411" width="80" height="26" rx="3"/><text x="660" y="428" class="m s">Remove</text>
-  <text x="30" y="470" class="s g">The manager (Marta) is not listed here. Removing a member with open tasks asks for a replacement.</text>
+  <text x="30" y="470" class="s g">The manager (Marta) is not listed here. Removing a member with open tasks asks who takes each task.</text>
   <text x="30" y="488" class="s g">In a Completed project this screen is not available: the team stays as it was.</text>
 
   <!-- Add member panel -->
@@ -74,14 +74,21 @@
 
   <!-- Remove dialog -->
   <text x="120" y="512" class="s g">Dialog shown after Remove on a member with open tasks (here: Rui)</text>
-  <rect x="120" y="520" width="700" height="180" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+  <rect x="120" y="520" width="900" height="220" fill="#ffffff" stroke="#333333" stroke-width="2"/>
   <text x="140" y="548" class="b">Remove Rui?</text>
-  <text x="140" y="570" class="s">Rui has 1 open task. Choose a new member to take over his open tasks.</text>
-  <text x="140" y="594" class="s b">Replacement</text>
-  <rect class="box" x="140" y="600" width="400" height="30" rx="3"/><text x="152" y="620" class="g">Select a member</text><text x="520" y="620">▼</text>
-  <text x="140" y="648" class="s g">Only people who are free (not in another open project) and not already in this project.</text>
-  <rect class="dark" x="140" y="658" width="190" height="34" rx="3"/><text x="235" y="680" class="m w b">Remove and reassign</text>
-  <rect class="box" x="340" y="658" width="100" height="34" rx="3"/><text x="390" y="680" class="m">Cancel</text>
+  <text x="140" y="568" class="s">Rui has 2 open tasks. Choose who takes each one. Nobody can end up with more than 5 open tasks.</text>
+  <text x="140" y="596" class="s b">Task</text><text x="520" y="596" class="s b">Who takes it</text>
+  <rect class="row" x="140" y="604" width="860" height="38"/>
+  <text x="152" y="628" class="s">Prepare client demo</text>
+  <rect class="box" x="520" y="610" width="300" height="26" rx="3"/><text x="530" y="627" class="s">Ana - 2 open tasks</text><text x="800" y="627">▼</text>
+  <rect class="row" x="140" y="642" width="860" height="38"/>
+  <text x="152" y="666" class="s">Fix payment bug</text>
+  <rect class="box" x="520" y="648" width="300" height="26" rx="3"/><text x="530" y="665" class="s">Luis - 0 open tasks</text><text x="800" y="665">▼</text>
+  <text x="840" y="627" class="s g">Choices: people in the project and new free</text>
+  <text x="840" y="643" class="s g">members (Ines, Diana). Sofia is not offered:</text>
+  <text x="840" y="659" class="s g">she already has 5 open tasks.</text>
+  <rect class="dark" x="140" y="694" width="190" height="34" rx="3"/><text x="235" y="716" class="m w b">Remove and reassign</text>
+  <rect class="box" x="340" y="694" width="100" height="34" rx="3"/><text x="390" y="716" class="m">Cancel</text>
 
   <!-- Callouts -->
   <circle class="c" cx="30" cy="158" r="11"/><text class="n" x="30" y="162">1</text>
@@ -89,9 +96,9 @@
   <circle class="c" cx="400" cy="371" r="11"/><text class="n" x="400" y="375">3</text>
   <circle class="c" cx="620" cy="251" r="11"/><text class="n" x="620" y="255">4</text>
   <circle class="c" cx="750" cy="214" r="11"/><text class="n" x="750" y="218">5</text>
-  <circle class="c" cx="766" cy="396" r="11" transform="translate(-14 -2)"/><text class="n" x="752" y="398">6</text>
+  <circle class="c" cx="752" cy="394" r="11"/><text class="n" x="752" y="398">6</text>
   <circle class="c" cx="120" cy="520" r="11"/><text class="n" x="120" y="524">7</text>
 
-  <text x="10" y="745">Numbers refer to docs/ui/wireframes.md. This screen is only available to the project manager. A thick outline marks an open field.</text>
-  <text x="10" y="763" class="g">Low-fidelity wireframe. All names are fictitious.</text>
+  <text x="10" y="775">Numbers refer to docs/ui/wireframes.md. This screen is only available to the project manager. A thick outline marks an open field.</text>
+  <text x="10" y="793" class="g">Low-fidelity wireframe. All names are fictitious.</text>
 </svg>

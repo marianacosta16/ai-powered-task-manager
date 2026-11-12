@@ -75,7 +75,7 @@ Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "w
 |---|---|---|---|
 | 1 | Pesquisa | Campo e botão *Search*. Procura em qualquer parte do nome, sem distinguir maiúsculas, e inclui os concluídos. Sem resultados: "No projects found." | F22, R25, P29, cenários 12.1 a 12.3 |
 | 2 | Lista | Nome, fase, estado e gestor dos projetos acessíveis | R8, R19 |
-| 3 | *Open* | Abre o detalhe do projeto | US13 |
+| 3 | *View* | Abre o detalhe do projeto para consultar. Num projeto concluído continua a poder ver-se tudo, mas nada se altera (R28) | US13, R28 |
 | 4 | *Edit* e *Delete* (só gestor) | Editar abre o formulário; eliminar abre a confirmação. Num projeto concluído não aparecem | F01, R9, R28 |
 | 5 | *+ New project* (só gestor) | Abre o formulário de criação | F01 |
 | 6 | Formulário (só gestor) | Nome (máx. 100), descrição (máx. 2000), datas de início e de fim com hora opcional, fuso horário (por defeito Lisboa), fase, estado e gestor. É o mesmo para criar e editar | F01, R14, R16, R19, P26 |
@@ -86,7 +86,7 @@ Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "w
 
 | De | Ação | Para |
 |---|---|---|
-| Projetos | *Open* ou nome do projeto | Detalhe do projeto |
+| Projetos | *View* ou nome do projeto | Detalhe do projeto |
 | Projetos (gestor) | *Save* | Lista, com o projeto criado ou alterado |
 | Projetos (gestor) | *Delete* confirmado | Lista, sem o projeto; o projeto fica na reciclagem |
 | Projetos (gestor) | *Complete project* confirmado | Lista, com o projeto concluído e sem *Edit* nem *Delete* |
@@ -158,16 +158,16 @@ Ficheiro: [team-wireframe.svg](team-wireframe.svg). Só o gestor do projeto cheg
 | 1 | Aviso de projeto retomado | Quando um projeto suspenso é retomado e há membros que entretanto entraram noutro projeto em aberto, o gestor vê um aviso | P22, cenário 1.8 |
 | 2 | Lista de membros | Nome, papel e número de tarefas em aberto de cada membro. O gestor do projeto não aparece | F01, R19 |
 | 3 | Etiqueta *Also in another open project* | A etiqueta vermelha: o membro está também noutro projeto em aberto. Desaparece quando passa a estar num só | P22, cenário 1.16 |
-| 4 | *Remove* | Remove o membro. Se tiver tarefas por concluir, abre o diálogo de substituição (7) | F01, R17, cenários 1.11 a 1.13 |
+| 4 | *Remove* | Remove o membro. Se tiver tarefas por concluir, abre o diálogo de substituição (7) | F01, R17, cenários 1.11 a 1.13, 1.24 a 1.26 |
 | 5 | *Add member* | Escolher uma pessoa e adicioná-la ao projeto | F01, cenário 1.4 |
 | 6 | Pessoa indisponível | Quem já está noutro projeto em aberto aparece desativado, com o motivo; adicioná-lo é recusado com mensagem | R11, cenário 1.5 |
-| 7 | Diálogo de remoção com substituto | Pede um novo membro, que fica com as tarefas por concluir. Só aparecem pessoas livres e que ainda não estão no projeto. Sem substituto a remoção não se conclui | R17, P24, cenários 1.12 a 1.14 |
+| 7 | Diálogo de remoção com substitutos | Lista as tarefas por concluir e, para cada uma, o gestor escolhe quem a leva, repartindo-as se quiser. Os substitutos podem ser membros já no projeto, com o número das suas tarefas em aberto, ou novos membros livres. Quem ficaria com mais de 5 tarefas em aberto não é oferecido. Sem substituto para todas as tarefas a remoção não se conclui | R17, P24, cenários 1.12 a 1.14 e 1.24 a 1.26 |
 
 | De | Ação | Para |
 |---|---|---|
 | Detalhe do projeto (gestor) | *Team* | Equipa |
 | Equipa | *Add member* | Lista, com o novo membro; ele passa a ver o projeto |
-| Equipa | *Remove and reassign* | Lista, sem o membro; as tarefas passam ao substituto |
+| Equipa | *Remove and reassign* | Lista, sem o membro; as tarefas passam aos substitutos escolhidos |
 
 ## 7. Reciclagem (F09, US07)
 
@@ -223,6 +223,6 @@ O código **W** é local aos wireframes e continua a numeração de [matrix-wire
 | W10 | Detalhe da tarefa | Um só ecrã, com "Task:" no caminho e o rótulo *Task title* para se perceber que é uma tarefa | Confirmado |
 | W11 | Equipa e reciclagem | Wireframes feitos. A reciclagem é acessível a todos pelo painel | Confirmado |
 | W12 | Wireframe Matrix | Passou a ser o separador *Matrix* do detalhe do projeto, com a mesma barra, caminho e cabeçalho | Aplicado, a rever |
-| W13 | Regras do calendário | Prazos e início de projeto a partir de hoje; fim do projeto não anterior ao início; prazo de subtarefa não posterior ao da mãe (R2); prazo da mãe não anterior ao de uma subtarefa (R3). Os campos só se preenchem pelo calendário | Proposta |
+| W13 | Regras do calendário | Prazos e início de projeto a partir de hoje; fim do projeto não anterior ao início; prazo de subtarefa não posterior ao da mãe (R2); prazo da mãe não anterior ao de uma subtarefa (R3). Os campos só se preenchem pelo calendário | Confirmado |
 | W14 | Tarefa cujo projeto está na reciclagem | Só se recupera depois de o projeto ser recuperado ("Cannot restore: restore the project first.") | Confirmado |
-| W15 | Equipa: pessoas indisponíveis e substituto | Quem já está noutro projeto em aberto aparece desativado, com o motivo; o substituto só lista pessoas livres. O aviso de projeto retomado fica no topo do ecrã | Proposta |
+| W15 | Equipa: pessoas indisponíveis e substituição | Quem já está noutro projeto em aberto aparece desativado ao adicionar, com o motivo. Na remoção, as tarefas podem ser repartidas por substitutos já no projeto ou novos, até 5 tarefas em aberto cada (R17). O aviso de projeto retomado fica no topo | Confirmado |

@@ -110,10 +110,10 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor remove a Ana e adiciona o Rui como novo membro
 - **Then** a Ana deixa de fazer parte da equipa, o Rui passa a fazer parte dela e fica com a tarefa que era da Ana.
 
-**Cenário 1.13: remoção sem novo membro**
+**Cenário 1.13: remoção sem substituto**
 - **Given** a membro "Ana" na equipa do projeto "Website", com uma tarefa "por fazer" atribuída nesse projeto
-- **When** o gestor remove a Ana sem adicionar um novo membro
-- **Then** a remoção não é concluída, é mostrado um aviso a pedir um novo membro, e a Ana continua na equipa com a tarefa.
+- **When** o gestor remove a Ana sem indicar um substituto para a tarefa
+- **Then** a remoção não é concluída, é mostrado um aviso a pedir um substituto, e a Ana continua na equipa com a tarefa.
 
 **Cenário 1.14: novo membro já está noutro projeto**
 - **Given** o cenário anterior, e o membro "Rui" na equipa do projeto "Intranet", que está em aberto
@@ -174,6 +174,21 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **Then** o projeto não é criado e é indicado que a data de início não pode estar no passado.
 - **When** cria um projeto com data de início 2026-01-10
 - **Then** o projeto é criado.
+
+**Cenário 1.24: substituto já no projeto**
+- **Given** a membro "Ana" com 2 tarefas em aberto no projeto "Website", e o membro "Rui", também do projeto, com 1 tarefa em aberto
+- **When** o gestor remove a Ana e passa as 2 tarefas dela para o Rui
+- **Then** a Ana deixa de fazer parte da equipa e o Rui fica com 3 tarefas em aberto.
+
+**Cenário 1.25: substituto com mais de 5 tarefas em aberto**
+- **Given** a membro "Ana" com 3 tarefas em aberto no projeto "Website", e o membro "Rui", também do projeto, com 3 tarefas em aberto
+- **When** o gestor tenta remover a Ana e passar as 3 tarefas dela para o Rui
+- **Then** a remoção é recusada, com uma mensagem a explicar que o Rui ficaria com mais de 5 tarefas em aberto, e a Ana continua na equipa com as suas tarefas.
+
+**Cenário 1.26: repartir as tarefas por vários substitutos**
+- **Given** a membro "Ana" com 4 tarefas em aberto no projeto "Website", e os membros "Rui" e "Sofia", também do projeto, cada um com 3 tarefas em aberto
+- **When** o gestor remove a Ana e passa 2 tarefas dela para o Rui e 2 para a Sofia
+- **Then** a Ana deixa de fazer parte da equipa e o Rui e a Sofia ficam com 5 tarefas em aberto cada.
 
 ### US02 — Criar tarefa
 
@@ -706,10 +721,10 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC12 | Adicionar a um projeto um membro que já está noutro projeto em aberto | Ação recusada com aviso (cenário 1.5) | [R11](requirements.md#4-regras-de-negócio) |
 | EC13 | Adicionar a um projeto um membro cujo projeto anterior foi concluído ou suspenso | Aceite, porque esses projetos não estão em aberto (cenário 1.7) | [R11](requirements.md#4-regras-de-negócio), [P20](constraints.md#2-pressupostos-assumidos) |
 | EC14 | Retomar um projeto suspenso cujos membros já estão noutro projeto em aberto | Retoma aceite, com etiqueta vermelha nesses membros e aviso ao gestor (cenário 1.8) | [P22](constraints.md#2-pressupostos-assumidos) |
-| EC15 | Remover um membro que ainda tem tarefas por concluir atribuídas | A remoção só é concluída se o gestor adicionar um novo membro, que fica com as tarefas (cenários 1.12 e 1.13) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
+| EC15 | Remover um membro que ainda tem tarefas por concluir atribuídas | A remoção só é concluída se todas as tarefas em aberto passarem para substitutos (cenários 1.12, 1.13 e 1.24 a 1.26) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC16 | Projeto sem tarefas com a data de fim ultrapassada | Mantém a etiqueta "sem tarefas", sem estado calculado (cenário 6.10) | [P16](constraints.md#2-pressupostos-assumidos) |
 | EC17 | Criar um projeto com data de fim igual ou anterior à data de início | Projeto não criado, com indicação (cenário 1.10) | [R16](requirements.md#4-regras-de-negócio), [P23](constraints.md#2-pressupostos-assumidos) |
-| EC18 | O novo membro de uma remoção já está noutro projeto em aberto, ou já está no projeto | Ação recusada; a remoção não é concluída (cenário 1.14) | [R11](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
+| EC18 | O substituto novo de uma remoção já está noutro projeto em aberto | Ação recusada; a remoção não é concluída (cenário 1.14) | [R11](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC19 | Marcar uma tarefa como "duplicado" indicando um original de outro projeto, a própria tarefa ou uma tarefa já "duplicado" | Mudança recusada até ser indicado um original válido | [R6](requirements.md#4-regras-de-negócio) |
 | EC20 | Projeto cujas tarefas principais têm subtarefas concluídas | As subtarefas não contam no progresso (cenário 6.11) | [R18](requirements.md#4-regras-de-negócio) |
 | EC21 | Apagar uma tarefa-mãe com subtarefas em aberto | Ação recusada, com mensagem (cenário 7.4) | [R9](requirements.md#4-regras-de-negócio) |
@@ -732,6 +747,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão (cenário 10.6) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
 | EC39 | Marcar um projeto como concluído sem querer | É pedida uma confirmação antes; ao cancelar, o estado mantém-se (cenário 1.22) | [R28](requirements.md#4-regras-de-negócio) |
 | EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
+| EC41 | Um substituto ficaria com mais de 5 tarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenário 1.25) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
