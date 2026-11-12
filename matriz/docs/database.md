@@ -46,10 +46,10 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | `name` | texto | Sim | Máximo 100 caracteres (R14, P17) |
 | `description` | texto | Não | Máximo 2000 caracteres (R14, P17). Se é obrigatória, não está definido (M7) |
 | `start_date` | data | Sim | R16 |
-| `start_time` | hora | Não | Sem hora, conta a partir das 00:00 (P26, por validar) |
+| `start_time` | hora | Não | Sem hora, conta a partir das 00:00 (P26) |
 | `end_date` | data | Sim | R16 |
-| `end_time` | hora | Não | Sem hora, o dia de fim conta inteiro (P26, por validar) |
-| `timezone` | texto | Sim | Fuso horário do projeto; por defeito, o de Lisboa (P26, por validar) |
+| `end_time` | hora | Não | Sem hora, o dia de fim conta inteiro (P26) |
+| `timezone` | texto | Sim | Fuso horário do projeto; por defeito, o de Lisboa (P26) |
 | `phase` | texto | Sim | `Initiation`, `Planning`, `Execution`, `Monitoring` ou `Evaluation` (P3) |
 | `status` | texto | Sim | Só os estados definidos pelo gestor: `Not started`, `In progress`, `Suspended` ou `Completed`. `Attention` e `Late` não se guardam (secção 6, P5, R12) |
 | `manager_id` | inteiro | Sim | Chave para `APP_USER`. Um só gestor por projeto, indicado por quem cria o projeto (R19) |
@@ -77,7 +77,7 @@ A linha mantém-se quando o projeto é concluído ou suspenso (P20, P22). O gest
 | `deadline` | data | Sim | R1. Se tem hora, não está definido (M3) |
 | `urgency` | inteiro | Sim | 1 a 4: Low, Medium, High, Critical (F03) |
 | `importance` | inteiro | Sim | 1 a 4: Low, Medium, High, Critical (F03) |
-| `block_reason` | texto | Só se `Blocked` | R6. O limite de tamanho não está definido (M8) |
+| `block_reason` | texto | Só se `Blocked` | R6. Máximo 100 caracteres (R14, M8) |
 | `original_task_id` | inteiro | Só se `Duplicate` | Chave para `TASK`: a tarefa original, escolhida à mão (R6) |
 | `deleted_at` | data e hora | Não | Vazio = não apagada (R9, R20, M4) |
 
@@ -212,7 +212,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
 | R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, só o autor edita ou apaga (apagar elimina a linha), nada disto num projeto `Completed`, e os comentários seguem o `deleted_at` da tarefa |
 | R26 | **Aplicação:** cada tarefa mantém pelo menos uma linha em `TASK_ASSIGNEE`; remover a última é recusado |
-| R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também as suas tarefas, recuperar desfaz, e a eliminação definitiva corre ao fim de 30 dias |
+| R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também, com o mesmo `deleted_at`, as suas tarefas ainda não apagadas; recuperar o projeto restaura só essas, e a eliminação definitiva corre ao fim de 30 dias |
 | R18, R15, R23, R25 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance`; filtros por `status` e por quadrante; pesquisa de projetos por `name` |
 
 R7 e R10 pertencem à v2 (secção 8).
@@ -235,24 +235,24 @@ Calculam-se sempre a partir dos dados acima, para nunca ficarem desatualizados.
 
 ## 7. Pontos por confirmar
 
-Decisões de modelação que não estão documentadas e escolhas que dependem de pressupostos ainda por validar. O código **M** é local a este documento.
+Decisões de modelação que não estão documentadas e escolhas que dependem de pressupostos. Estão todos decididos ou confirmados. O código **M** é local a este documento.
 
 | ID | Ponto | Proposta usada no modelo | Estado |
 |---|---|---|---|
-| M1 | Uma subtarefa pode ter subtarefas? | Não: um só nível. Subtarefa e tarefa partilham a entidade `TASK`, e a subtarefa tem `parent_task_id`. A documentação fala em tarefa-mãe e subtarefas, sem definir mais níveis | Por confirmar |
-| M2 | Datas e horas do projeto | `start_time` e `end_time` opcionais, e `timezone` obrigatório com o de Lisboa por defeito. Depende de P23 e P26 | Por validar (P23, P26) |
-| M3 | O prazo da tarefa tem hora? | Só data. R13 fala em "prazo igual à data atual", e P26 só dá hora à data de fim do projeto | Por confirmar |
-| M4 | Como se guarda a reciclagem | Uma marca `deleted_at` em `PROJECT` e `TASK`, em vez de uma entidade própria. Fica em aberto: se uma tarefa apagada à mão antes do projeto volta quando o projeto é recuperado, e se uma subtarefa se recupera depois de a tarefa-mãe ser eliminada (já é questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)) | Por confirmar |
-| M5 | O gestor é membro do seu projeto? | Não precisa de linha em `PROJECT_MEMBER` no seu projeto: é referido por `manager_id` (R21 diz "membros do projeto ou o seu gestor"). Em projetos de outros gestores, é adicionado como membro (R19) | Por confirmar |
+| M1 | Uma subtarefa pode ter subtarefas? | Não: um só nível. Subtarefa e tarefa partilham a entidade `TASK`, e a subtarefa tem `parent_task_id`. A documentação fala em tarefa-mãe e subtarefas, sem definir mais níveis | Confirmado |
+| M2 | Datas e horas do projeto | `start_time` e `end_time` opcionais, e `timezone` obrigatório com o de Lisboa por defeito. Depende de P23 e P26 | Decisão (P23, P26) |
+| M3 | O prazo da tarefa tem hora? | Só data. R13 fala em "prazo igual à data atual", e P26 só dá hora à data de fim do projeto | Confirmado |
+| M4 | Como se guarda a reciclagem | Uma marca `deleted_at` em `PROJECT` e `TASK`, em vez de uma entidade própria. Apagar o projeto marca também, com o mesmo `deleted_at`, as tarefas ainda não apagadas; recuperar o projeto restaura só as tarefas com esse valor, por isso as apagadas antes continuam na reciclagem (R9). A mesma regra vale para as subtarefas em relação à tarefa-mãe, e só se recupera um item enquanto o projeto ou a tarefa-mãe existir (R9) | Decisão |
+| M5 | O gestor é membro do seu projeto? | Não precisa de linha em `PROJECT_MEMBER` no seu projeto: é referido por `manager_id` (R21 diz "membros do projeto ou o seu gestor"). Em projetos de outros gestores, é adicionado como membro (R19) | Confirmado |
 | M6 | Uma tarefa tem de ter pelo menos um responsável? | Sim, sempre pelo menos um (R26) | Decisão |
-| M7 | Que campos de texto são obrigatórios? | Só são obrigatórios o nome do projeto e o título da tarefa. As descrições são opcionais. Os requisitos só tornam obrigatórios o prazo (R1) e as datas do projeto (R16) | Por confirmar |
-| M8 | Limite do motivo de bloqueio | Não está definido. R14 só limita título e descrição | Por confirmar |
-| M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Proposta |
-| M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Por confirmar |
-| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Por confirmar |
+| M7 | Que campos de texto são obrigatórios? | Só são obrigatórios o nome do projeto e o título da tarefa. As descrições são opcionais. Os requisitos só tornam obrigatórios o prazo (R1) e as datas do projeto (R16) | Confirmado |
+| M8 | Limite do motivo de bloqueio | Máximo 100 caracteres, como o título (R14) | Decisão |
+| M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Confirmado |
+| M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Confirmado |
+| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Confirmado |
 | M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
 
-**Dependem também de pressupostos por validar:** P23 e P26 (datas do projeto).
+Não há pressupostos por validar neste modelo.
 
 **Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 

@@ -219,6 +219,13 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o membro tenta remover a atribuição do Rui, que é o último responsável
 - **Then** a remoção é recusada, com uma mensagem a pedir que se atribua primeiro outra pessoa, e o Rui continua responsável.
 
+**Cenário 2.12: tamanho do motivo de bloqueio**
+- **Given** uma tarefa "em curso"
+- **When** o membro a passa para "bloqueado" com um motivo de 100 caracteres
+- **Then** a mudança é aceite.
+- **When** o membro tenta passá-la para "bloqueado" com um motivo de 101 caracteres
+- **Then** a mudança é recusada, com indicação do limite, e a tarefa mantém o estado anterior.
+
 ### US03 — Matriz do projeto
 
 **Cenário 3.1: posição na matriz**
@@ -415,6 +422,19 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **Given** um projeto na reciclagem há 31 dias
 - **When** o gestor abre a reciclagem
 - **Then** o projeto já não aparece e não pode ser recuperado.
+
+**Cenário 7.7: tarefa apagada antes do projeto**
+- **Given** um projeto com as tarefas T1, T2 e T3, em que a T1 foi apagada por um membro e está na reciclagem
+- **When** o gestor apaga o projeto e depois o recupera
+- **Then** o projeto volta com as tarefas T2 e T3, e a T1 continua na reciclagem, onde o gestor a pode recuperar.
+
+**Cenário 7.8: subtarefa cuja tarefa-mãe foi eliminada de vez**
+- **Given** uma tarefa-mãe com uma subtarefa que foi apagada antes dela, e a tarefa-mãe apagada há 31 dias (eliminada definitivamente)
+- **When** o gestor tenta recuperar a subtarefa
+- **Then** a subtarefa não pode ser recuperada, porque a tarefa-mãe já não existe.
+- **Given** a mesma situação, mas com a tarefa-mãe apagada há 5 dias
+- **When** o gestor recupera a tarefa-mãe
+- **Then** a tarefa-mãe volta sem essa subtarefa, que continua na reciclagem e pode ser recuperada.
 
 ### US08 — Visibilidade por projeto
 
@@ -680,12 +700,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | A12 | Arredondamento do progresso | Duas casas decimais (cenário 6.12) |
 
 ### Cenários que dependem de pressupostos por validar
-| Cenários | Pressuposto | O que depende dele |
-|---|---|---|
-| 1.9, 1.10 | [P23](constraints.md#2-pressupostos-assumidos) e [P26](constraints.md#2-pressupostos-assumidos) | Datas obrigatórias; um projeto de um só dia, sem hora, é válido |
-| 6.3, 6.4, 6.5 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta inteiro, o que dá 31 dias a 1-31 de janeiro |
-| 6.15 | [P26](constraints.md#2-pressupostos-assumidos) | O dia de fim sem hora conta até ao fim desse dia |
-| MVP-1 | [P26](constraints.md#2-pressupostos-assumidos) | O tempo decorrido é cerca de 30% |
+Nenhum cenário da v1 depende de pressupostos por validar. Os pressupostos P21, P23, P26, P27, P28 e P29, de que alguns cenários dependem, foram confirmados pela autora.
 
 O [P14](constraints.md#2-pressupostos-assumidos) (conteúdo da auditoria) também está por validar, mas nenhum cenário da v1 depende dele.
 

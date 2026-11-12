@@ -322,6 +322,7 @@ components:
           $ref: '#/components/schemas/Level'
         blockReason:
           type: [string, 'null']
+          maxLength: 100
           description: Filled only when the status is `Blocked` (R6).
         originalTaskId:
           type: [integer, 'null']

@@ -53,6 +53,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e diagrama ER (Mermaid) |
 | [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado: criar tarefa e listar as tarefas de um projeto |
 | [docs/ui/matrix-wireframe.md](docs/ui/matrix-wireframe.md) | Wireframe de baixa fidelidade do ecrã Matrix (SVG), elementos, navegação e validação face ao MVP |
+| [docs/plan.md](docs/plan.md) | Análise de lacunas e decisões pendentes, e plano incremental de implementação (proposta) |
 | [AGENTS.md](AGENTS.md) | Instruções persistentes para agentes de desenvolvimento que trabalhem neste repositório |
 
 ### Convenções
@@ -66,7 +67,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | Fase | Estado |
 |---|---|
 | Descrição do problema e perguntas de clarificação | Concluído |
-| Análise de requisitos e âmbito do MVP | Concluído, com pressupostos por validar |
+| Análise de requisitos e âmbito do MVP | Concluído (só o P14, da v2, por validar) |
 | User stories e critérios de aceitação da v1 | Concluído (13 stories, cobrem F01 a F10, F17 e F22) |
 | User stories da v2 | Por fazer (F11 a F14 e F23) |
 | Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 confirmados |
