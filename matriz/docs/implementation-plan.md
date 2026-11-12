@@ -194,4 +194,4 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
 | Edições simultâneas | T13 por decidir |
-| Validação do contrato | O `openapi.yaml` ainda não foi validado com uma ferramenta; fazê-lo no incremento 0 |
+| Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |

@@ -16,11 +16,11 @@ info:
     - Dates use the time zone of the project (P26).
 
     Assumptions to confirm (marked "Assumption" in the descriptions)
-    - A3: a task always has at least one assignee (R26).
-    - A4: only one level of subtasks (M1 in docs/database.md).
-    - A5: a task deadline is a date without time (M3 in docs/database.md).
-    - A6: the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
-    - A7: when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
+    - A3 (confirmed): a task always has at least one assignee (R26).
+    - A4 (confirmed): only one level of subtasks (M1 in docs/database.md).
+    - A5 (confirmed): a task deadline is a date without time (M3 in docs/database.md).
+    - A6 (confirmed): the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
+    - A7 (confirmed): when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
 
 tags:
   - name: Auth
