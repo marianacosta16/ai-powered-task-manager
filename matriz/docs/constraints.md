@@ -51,6 +51,10 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | P27 | O painel inicial conta só as tarefas principais (R18). O painel inicial, tanto do gestor como do membro, não mostra os projetos concluídos (decisão sobre a vista global); encontram-se em Projetos e na pesquisa (F22), onde cada um vê os projetos a que tem acesso (R8) | Concilia o painel inicial novo com a vista global do gestor (F07) | Confirmado |
 | P28 | Os comentários têm no máximo 2000 caracteres e são listados do mais antigo para o mais recente. O autor edita e apaga os seus comentários; apagar elimina o comentário de vez, sem reciclagem, e a edição não guarda histórico. Aplicam-se às tarefas e subtarefas, em projetos em aberto e suspensos; num projeto concluído não se adiciona, edita nem apaga. Os comentários seguem a tarefa (apagar ou recuperar a tarefa faz o mesmo aos comentários) | O novo âmbito pede só adicionar e listar; o resto foi decidido pela autora | Confirmado |
 | P29 | A pesquisa de projetos procura o texto em qualquer parte do nome, sem distinguir maiúsculas de minúsculas. Os filtros por estado e por quadrante aplicam-se na Lista, sobre as tarefas principais, e podem combinar-se com "as minhas" | O novo âmbito diz "pesquisar pelo nome" e "filtrar por estado e prioridade" sem mais detalhe | Confirmado |
+| P30 | Na v1 não há limite de tentativas de início de sessão nem bloqueio de contas | A documentação não define este limite e as contas são fictícias, num ambiente controlado (C8, S5). Seria preciso defini-lo antes de usar dados reais | Por validar |
+| P31 | A proteção CSRF está desligada na v1: a API só aceita JSON e o cookie de sessão é `SameSite=Lax`. Reve-se quando se escolher a interface (T1) | Simplifica a API enquanto não há interface; a decisão fica registada para não se perder | Por validar |
+| P32 | As sessões ficam guardadas em memória no servidor: reiniciar a aplicação termina-as e o utilizador tem de iniciar sessão outra vez | Suficiente para uma só instância na v1 (T8); evita uma tabela de sessões | Por validar |
+| P33 | Um pedido sem sessão válida recebe 401. Se trazia o cookie de uma sessão que já terminou (por terminar sessão ou por 3 horas sem atividade), a mensagem diz que a sessão terminou ("Your session has ended. Sign in again to continue."); sem cookie, diz "Sign in to continue.". A interface leva o utilizador ao início de sessão e mostra a mensagem (cenários 10.5 e 10.6, EC31, EC38) | Cumpre o pedido de uma mensagem compreensível quando a sessão deixa de ser válida, sem acrescentar estados novos | Por validar |
 
 ## 3. Requisitos de segurança e privacidade
 
@@ -68,6 +72,7 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 ### Riscos aceites de forma consciente na v1
 - As contas de demonstração e as regras de palavra-passe não estão definidas para segurança real (S5, C8).
 - Sem registo de auditoria na v1, não fica registado quem apagou o quê.
+- Sem limite de tentativas de início de sessão (P30) e sem proteção CSRF (P31): aceitável só com dados fictícios num ambiente controlado.
 
 Mitigação decidida: só dados fictícios num ambiente controlado (C8). Se a aplicação passar a usar dados reais, é preciso definir primeiro as regras de autenticação e de proteção de dados.
 
@@ -84,7 +89,7 @@ O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e Po
 |---|---|---|
 | T1 | Forma de execução da aplicação (por exemplo, acesso por navegador ou aplicação instalada). **Decidido em parte:** API REST primeiro; a interface decide-se depois | NF02 |
 | T2 | Onde e como se guardam os dados, e se há um local central partilhado pelas equipas. **Decidido:** PostgreSQL, uma base central | F10, F06, F09, F13 |
-| T3 | Mecanismo de autenticação e de controlo de acesso por papel e por projeto. **Decidido:** sessão no servidor com cookie, e controlo de acesso feito no servidor | S1, S2, S5 e S6 |
+| T3 | Mecanismo de autenticação e de controlo de acesso por papel e por projeto. **Decidido:** sessão no servidor com cookie, e controlo de acesso feito no servidor. **Implementado no incremento 1** com Spring Security: cookie `SESSION` (`HttpOnly`, `SameSite=Lax`), 3 horas sem atividade, palavras-passe com hash BCrypt, permissões por projeto no módulo Acesso (ver P30 a P33) | S1, S2, S5 e S6 |
 | T4 | Como se disparam os lembretes e alertas de atraso dentro da aplicação | F12, P11 |
 | T5 | Como se implementam as datas e horas (fuso horário do projeto, P26, e cálculo do tempo decorrido) | P5, cenários 6.3 a 6.6, 6.14 e 6.15 |
 | T6 | Como se guarda o registo de auditoria | F14, S7 |
@@ -93,7 +98,7 @@ O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e Po
 | T9 | Estratégia de testes, incluindo como automatizar os cenários Given / When / Then | [user-stories.md](user-stories.md) |
 | T10 | Navegadores ou sistemas suportados, e requisitos de acessibilidade | NF02 |
 | T11 | Cópias de segurança e recuperação de dados | T2 |
-| T12 | Como se criam as contas de demonstração por seed e como se guardam as credenciais (decisão funcional já tomada: S5, P21) | F10, F06, S1, S2 |
+| T12 | Como se criam as contas de demonstração por seed e como se guardam as credenciais (decisão funcional já tomada: S5, P21). **Decidido no incremento 0:** um componente que corre ao arrancar, só se ainda não houver utilizadores, numa só transação; a palavra-passe vem da variável `DEMO_PASSWORD` do `.env` (que não se versiona), com pelo menos 8 caracteres, e guarda-se como hash BCrypt | F10, F06, S1, S2 |
 | T13 | Como se tratam as edições simultâneas da mesma tarefa por vários utilizadores | F02, F08 |
 
 ### Questões funcionais em aberto

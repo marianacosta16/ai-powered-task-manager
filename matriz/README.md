@@ -128,6 +128,43 @@ curl -s localhost:8080/actuator/health
 PGPASSWORD="$DB_PASSWORD" psql -h localhost -U matriz_app -d matriz -c "SELECT (SELECT count(*) FROM app_user) AS users, (SELECT count(*) FROM project) AS projects, (SELECT count(*) FROM task) AS tasks"
 ```
 
+## Autenticação e sessão (incremento 1)
+
+Mecanismo (T3, S5): **sessão no servidor, identificada por um cookie `SESSION`** (`HttpOnly`, `SameSite=Lax`). O ciclo completo está no contrato, em `securitySchemes` de [openapi.yaml](openapi.yaml).
+
+| Passo | O que acontece |
+|---|---|
+| Iniciar sessão | `POST /auth/login` com `username` e `password`. Credenciais certas: `200` com `id`, `name` e `role`, e o cookie com um identificador novo. Erradas (utilizador ou palavra-passe): `401 INVALID_CREDENTIALS`, igual nos dois casos |
+| Durante a sessão | O cliente envia o cookie em cada pedido. O servidor tira a identidade da sessão: quem faz o pedido e o autor dos comentários nunca vêm do pedido. O gestor de um projeto novo é indicado por quem o cria (R19) e validado no servidor (M10) |
+| Perfil | `GET /auth/me` devolve o nome e o papel |
+| Fim | `POST /auth/logout` (`204`), ou 3 horas sem qualquer pedido |
+| Sem sessão válida | `401 UNAUTHENTICATED`. Se o pedido trazia cookie, a mensagem é "Your session has ended. Sign in again to continue."; caso contrário, "Sign in to continue." A interface deve levar o utilizador ao início de sessão e mostrar a mensagem |
+| Sem acesso ao projeto | `403 FORBIDDEN`, também por ligação direta. Um projeto que não existe ou foi apagado dá `404` |
+
+Regras de acesso (R8, R19, S1): o gestor só vê os projetos que gere e o membro só aqueles de que faz parte. Estão no módulo `access` (`ProjectPermissions`), que as tarefas, comentários e atribuições dos próximos incrementos vão reutilizar. Já estão implementadas as operações de leitura `listProjects` e `getProject`, para as testar com dois utilizadores.
+
+Palavras-passe: guardadas só como hash BCrypt (nunca em texto simples, nem em respostas ou logs); mínimo de 8 caracteres (S5). As contas são de demonstração, com a palavra-passe de `DEMO_PASSWORD`. Utilizadores de demonstração: `marta` e `pedro` (gestores), `ana`, `rui`, `luis`, `sofia`, `carla`, `ines`, `tiago` e `diana` (membros).
+
+**Decisões e limites:** a proteção CSRF está desligada por agora (API só JSON e cookie `SameSite=Lax`); rever quando houver interface (T1). Ao servir por HTTPS, ativar `server.servlet.session.cookie.secure`. As sessões ficam em memória: reiniciar a aplicação termina-as. Não há limite de tentativas de início de sessão (não está definido na documentação).
+
+Experimentar (com a aplicação a correr em `localhost:8081`; substituir `<DEMO_PASSWORD>` pela do `.env`):
+
+```bash
+curl -i -c /tmp/ana.txt -H 'Content-Type: application/json' -d '{"username":"ana","password":"<DEMO_PASSWORD>"}' localhost:8081/auth/login
+```
+
+```bash
+curl -s -b /tmp/ana.txt localhost:8081/auth/me
+```
+
+```bash
+curl -s -b /tmp/ana.txt localhost:8081/projects
+```
+
+```bash
+curl -i -b /tmp/ana.txt -X POST localhost:8081/auth/logout
+```
+
 ## Estado atual
 
 | Fase | Estado |
@@ -140,6 +177,6 @@ PGPASSWORD="$DB_PASSWORD" psql -h localhost -U matriz_app -d matriz -c "SELECT (
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões do incremento 0 (ver T1, T8, T10, T11 e T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incremento 0 concluído (projeto, esquema e dados de demonstração verificados); próximo, o incremento 1 (contas e sessão) |
+| Implementação | Em curso: incrementos 0 (fundações) e 1 (contas e sessão) concluídos; próximo, o incremento 2 (projetos e equipa) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.

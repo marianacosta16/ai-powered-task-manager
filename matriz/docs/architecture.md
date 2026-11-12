@@ -66,7 +66,7 @@ Estas regras mantêm o monólito modular e não um monólito comum.
 2. **Um módulo não lê nem escreve nos dados de outro.** Quando precisa de informação de outro módulo, usa a sua interface pública.
 3. **As dependências vão num só sentido.** Os módulos de negócio não dependem uns dos outros em círculo; quando duas regras cruzam módulos (por exemplo, o R17 envolve membros e tarefas), a coordenação fica nos **casos de uso**.
 4. **As regras de negócio vivem nos módulos**, não na interface nem nos casos de uso, que só as combinam.
-5. **A decisão sobre o que o utilizador vê ou pode fazer vem sempre do módulo Acesso e Visibilidade**, para uma mudança futura na autenticação (por exemplo, a criação de contas na v2) mudar só esse módulo.
+5. **A decisão sobre o que o utilizador vê ou pode fazer vem sempre do módulo Acesso e Visibilidade**, para uma mudança futura na autenticação (por exemplo, a criação de contas na v2) mudar só esse módulo. Para decidir, o módulo Acesso lê `manager_id` e a associação de membros do projeto ([database.md](database.md#61-o-que-o-modelo-garante-e-o-que-a-aplicação-valida)): é a única exceção à regra 2, porque é ele que sabe quem tem acesso. Os dados do projeto continuam a ser lidos só pelo módulo Projetos, e os casos de uso juntam as duas respostas (404 se o projeto não existe, 403 se não há acesso).
 
 ### Dependências entre componentes
 
@@ -113,10 +113,12 @@ Escolhida em 2026-11-12 com a autora do projeto, por ser a mais simples que serv
 | Base de dados | **PostgreSQL** | Decidido | O modelo de dados é relacional, com chaves e transações que as regras R11, R17 e R20 precisam ([database.md](database.md)) |
 | Forma de execução e interface | **API REST primeiro**; a interface escolhe-se depois da API (T1) | Decidido | A API testa-se contra o [openapi.yaml](../openapi.yaml) sem depender da interface; os wireframes já existem |
 | Autenticação | **Sessão no servidor, identificada por um cookie**, que termina ao terminar sessão ou após 3 horas sem atividade; controlo de acesso por papel e por projeto feito no servidor | Decidido | Expira e termina com facilidade; a S1 exige recusar o acesso também por ligação direta |
-| Build | Maven | Proposta | É o arranque habitual do Spring Boot |
-| Acesso aos dados e migrações | Spring Data JPA e Flyway | Proposta | Esquema versionado e seed de contas fictícias numa migração (T12) |
-| Testes | JUnit 5 e Spring Boot Test, com um PostgreSQL de teste | Proposta | Cada cenário Given / When / Then passa a ser um teste (T9) |
+| Build | Maven | Adotado (incremento 0) | É o arranque habitual do Spring Boot |
+| Acesso aos dados e migrações | Flyway para o esquema; consultas e escritas por JDBC (`JdbcTemplate`). O Spring Data JPA está nas dependências, mas ainda não há entidades | Flyway adotado; JPA por decidir | Esquema versionado (T12). O seed corre ao arrancar e não numa migração, porque precisa do hash da palavra-passe. Até agora o JDBC bastou; decide-se se se usa JPA quando houver escritas mais complexas (incremento 2) |
+| Testes | JUnit 5 e Spring Boot Test, com um PostgreSQL de teste (`matriz_test`); ArchUnit para as fronteiras; swagger-parser para validar o contrato | Adotado (incremento 0) | Cada cenário Given / When / Then passa a ser um teste (T9) |
 | Datas e horas | `java.time` com o fuso do projeto | Proposta | Cumpre o P26 e o cálculo do tempo decorrido (T5) |
+| Segurança | Spring Security, com um serviço de utilizadores sobre `app_user`, hash BCrypt e filtros que devolvem 401 e 403 em JSON | Adotado (incremento 1) | Entrou só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 |
+| Proteção CSRF e sessões | CSRF desligado (API só JSON e cookie `SameSite=Lax`); sessões em memória | Pressuposto (P31, P32) | Simples para a v1; rever com a interface (T1) |
 
 **Como a stack respeita a arquitetura**
 - Cada módulo da secção 4 é um pacote da aplicação, e os casos de uso são serviços que coordenam os módulos numa só transação.

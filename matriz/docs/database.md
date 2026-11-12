@@ -35,7 +35,7 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | `id` | inteiro | Sim | Identificador |
 | `name` | texto | Sim | Nome do utilizador |
 | `username` | texto | Sim | Identificador de início de sessão; único (M11) |
-| `password` | texto | Sim | Credencial da conta de demonstração, guardada de forma protegida; o mecanismo é decisão técnica (T3, M11) |
+| `password` | texto | Sim | Credencial da conta de demonstração, guardada como hash BCrypt (60 caracteres, coluna de 100), nunca em texto simples (S5, T12, M11) |
 | `role` | texto | Sim | `Team member` ou `Project manager`. Atributo do utilizador, não do projeto (secção 3.1 de requirements) |
 
 ### 3.2 `PROJECT`
@@ -252,7 +252,7 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M8 | Limite do motivo de bloqueio | Máximo 100 caracteres, como o título (R14) | Decisão |
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Confirmado |
 | M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Confirmado |
-| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Confirmado |
+| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5). Implementado com `username` em minúsculas e comparado exatamente, e palavra-passe de pelo menos 8 caracteres, guardada como hash BCrypt (incremento 1) | Confirmado |
 | M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
 
 Não há pressupostos por validar neste modelo.

@@ -46,7 +46,7 @@ paths:
       operationId: signIn
       summary: Sign in
       description: |
-        Starts a session with a demonstration account (F10, S5). The session ends on sign out or after 3 hours without activity.
+        Starts a session with a demonstration account (F10, S5). The session ends on sign out or after 3 hours without activity (see the session cycle in the `session` security scheme).
         The same error is returned when the username or the password is wrong, without saying which one (scenario 10.2).
       security: []
       requestBody:
@@ -84,7 +84,7 @@ paths:
       tags: [Auth]
       operationId: signOut
       summary: Sign out
-      description: Ends the current session (scenario 10.4).
+      description: Ends the current session and asks the client to drop the cookie (`Set-Cookie` with `Max-Age=0`) (scenario 10.4).
       responses:
         '204':
           description: Signed out.
@@ -840,8 +840,16 @@ components:
       in: cookie
       name: SESSION
       description: |
-        The user signs in with a demonstration account (F10, S5, P21) and the server keeps the session, identified by a cookie. The session ends on sign out or after 3 hours without activity.
-        The cookie name is a placeholder for this contract.
+        The user signs in with a demonstration account (F10, S5, P21) and the server keeps the session, identified by a cookie.
+
+        Session cycle:
+        1. `POST /auth/login` with valid credentials starts the session. The server answers with `Set-Cookie: SESSION=...; HttpOnly; SameSite=Lax; Path=/` and a new identifier at every sign in (a cookie sent by the client is never adopted).
+        2. The client sends the cookie in every later request (a browser does it by itself). The server takes the identity of the user from the session, never from the request: who is asking and the author of a comment are set by the server. The manager of a new project is chosen by its creator (R19) and validated by the server (M10).
+        3. Each request restarts the 3 hours of inactivity. After 3 hours without any request, or after `POST /auth/logout`, the session no longer exists.
+        4. A request without a valid session gets `401` with the code `UNAUTHENTICATED`. If it carried a session cookie, the message says that the session has ended ("Your session has ended. Sign in again to continue."); otherwise it says "Sign in to continue.". The client should then send the user to the sign in screen and show the message.
+        5. A signed in user without access to a project gets `403` (`FORBIDDEN`) on any operation on it, also by direct link.
+
+        Requests that change data are not protected by a CSRF token for now: the API only accepts JSON and the cookie is `SameSite=Lax`. To review when the interface is chosen (T1).
 
   parameters:
     ProjectId:
@@ -891,14 +899,23 @@ components:
               - field: title
                 issue: Longer than 100 characters.
     Unauthorized:
-      description: 'There is no valid session, because the user has not signed in or the session ended (F10).'
+      description: |
+        There is no valid session, because the user has not signed in or the session ended (F10). When the request carried a session cookie, the message is "Your session has ended. Sign in again to continue."; the code is the same.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: UNAUTHENTICATED
-            message: Sign in to continue.
+          examples:
+            notSignedIn:
+              summary: No session cookie
+              value:
+                code: UNAUTHENTICATED
+                message: Sign in to continue.
+            sessionEnded:
+              summary: The session cookie is no longer valid
+              value:
+                code: UNAUTHENTICATED
+                message: Your session has ended. Sign in again to continue.
     Forbidden:
       description: The user has no access to this project, or the action is not allowed to their role (R8, S1, section 2.1 of docs/requirements.md).
       content:

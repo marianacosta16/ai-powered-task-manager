@@ -1,6 +1,7 @@
 package com.matriz.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
@@ -68,6 +69,14 @@ class PersistenceIntegrationTest {
         assertThat(projectsOf("sofia")).containsExactlyInAnyOrder("Intranet");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE password = ?", Integer.class, password))
                 .isZero();
+    }
+
+    @Test
+    void demoPasswordShorterThanEightCharactersIsRefused() {
+        // Given an empty database, when the demo data is created with a 7-character password (S5)
+        // Then it is refused and nothing is created
+        assertThatThrownBy(() -> seeder.seed("1234567")).isInstanceOf(IllegalArgumentException.class);
+        assertThat(count("app_user")).isZero();
     }
 
     private int count(String table) {

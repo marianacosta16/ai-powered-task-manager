@@ -28,7 +28,7 @@ Como atualizar: ao terminar um incremento, passar o estado a **Concluído**, ind
 | # | Incremento | Estado | Concluído em | Verificado por |
 |---|---|---|---|---|
 | 0 | Fundações | Concluído | 2026-11-12 | `mvn test`: 12 testes verdes (contrato OpenAPI válido com 28 operações, 9 regras de fronteira ArchUnit, health check e seed idempotente contra `matriz_test`). Aplicação arrancada duas vezes contra `matriz`: health `UP` com `db` UP; 10 utilizadores, 4 projetos, 14 tarefas e 5 comentários nas duas vezes, sem duplicar |
-| 1 | Contas e sessão | Por fazer | | |
+| 1 | Contas e sessão | Concluído | 2026-11-12 | Cenários 10.1 a 10.6, EC31 e EC38 em testes HTTP (15 testes de acesso, 28 no total, verdes): credenciais certas e erradas com a mesma resposta, 401 sem sessão, logout, identificador de sessão novo a cada início, e Ana, Inês, Marta e Pedro com acessos distintos (200 no seu projeto, 403 no alheio, 404 se não existe ou foi apagado). Confirmado com `curl` na aplicação a correr; nenhuma palavra-passe nem hash nos logs. Expiração às 3 horas verificada só pela configuração do servidor (não se espera 3 horas). Também já feitas, só em leitura, `listProjects` e `getProject` (incremento 2) para provar o acesso por projeto |
 | 2 | Projetos e equipa | Por fazer | | |
 | 3 | Tarefas, subtarefas e responsáveis | Por fazer | | |
 | 4 | Lista, Matriz, pesquisa e filtros | Por fazer | | |
@@ -60,10 +60,12 @@ src/test/java/...                         testes por cenário Given / When / The
 | Decisão técnica | Estado |
 |---|---|
 | Java 21, Spring Boot, PostgreSQL, sessão com cookie, API primeiro | **Decidido** |
-| Build com Maven | Proposta |
-| Acesso aos dados com Spring Data JPA e migrações com Flyway | Proposta |
-| Testes com JUnit 5 e Spring Boot Test, contra o PostgreSQL da VM Ubuntu, numa base de dados de teste separada | Proposta |
+| Build com Maven | Adotado (incremento 0) |
+| Migrações com Flyway; acesso aos dados por JDBC (`JdbcTemplate`) até agora, com o Spring Data JPA instalado e sem entidades | Flyway adotado; JPA por decidir no incremento 2 |
+| Testes com JUnit 5 e Spring Boot Test, contra o PostgreSQL da VM Ubuntu, numa base de dados de teste separada | Adotado (incremento 0) |
 | Datas e horas com `java.time` e o fuso do projeto (T5) | Proposta |
+| Spring Security, com hash BCrypt, 401 e 403 em JSON | Adotado (incremento 1) |
+| CSRF desligado e sessões em memória (P31, P32); sem limite de tentativas de início de sessão (P30) | Pressupostos, a rever com a interface e antes de dados reais |
 | Edições simultâneas da mesma tarefa (T13) | Por decidir |
 
 ## 4. Incrementos
@@ -97,6 +99,8 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Depende de** | Incremento 1 |
 | **Aceitação** | Cenários 1.1 a 1.23, 1.29, 1.30 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39, EC40 e EC42 |
 | **Verificação** | Testes com relógio controlável; acesso a um projeto alheio recusado no servidor (403), também por ligação direta; conclusão de um projeto congela-o (R28) |
+
+> `listProjects` e `getProject` (só leitura) e o serviço de permissões por projeto (`access/ProjectPermissions`) já foram feitos no incremento 1, para provar o acesso com dois utilizadores. Este incremento acrescenta as escritas e o resto das operações, reutilizando esse serviço.
 
 ### Incremento 3 — Tarefas, subtarefas e responsáveis (F02, F03, F08; US02, US04, US05)
 

@@ -71,7 +71,7 @@ Os papéis do utilizador (gestor ou membro) aplicam-se **por projeto**: quem ger
 | Recuperar projetos | Sim | Não | R9 |
 | Recuperar tarefas e subtarefas | Sim | Sim | R9 |
 
-Quando uma ação não está permitida, o controlo não aparece; se for pedida por outra via, é recusada com uma mensagem (NF08).
+Quando uma ação não está permitida, o controlo não aparece; se for pedida por outra via, é recusada com uma mensagem (NF08). Quem não tem sessão válida recebe 401 e é levado ao início de sessão, com uma mensagem que diz se a sessão terminou (P33); quem tem sessão mas não tem acesso ao projeto recebe 403 (S1). Quem faz cada pedido e o autor de um comentário vêm sempre da sessão, nunca do pedido. O gestor de um projeto novo é indicado por quem o cria (R19) e o servidor valida que tem o papel de gestor (M10).
 
 ## 3. Requisitos funcionais
 

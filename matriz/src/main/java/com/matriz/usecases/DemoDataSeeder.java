@@ -23,6 +23,7 @@ public class DemoDataSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
 
+    private static final int MIN_PASSWORD_LENGTH = 8; // S5
     private static final String MANAGER = "Project manager";
     private static final String MEMBER = "Team member";
 
@@ -52,6 +53,10 @@ public class DemoDataSeeder implements ApplicationRunner {
     /** @return true if the data was created, false if users already existed. */
     @Transactional
     public boolean seed(String password) {
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("The demo password must have at least " + MIN_PASSWORD_LENGTH
+                    + " characters (S5).");
+        }
         // Serialises concurrent startups; released at the end of the transaction.
         jdbc.execute("SELECT pg_advisory_xact_lock(7301001)");
         Integer users = jdbc.queryForObject("SELECT count(*) FROM app_user", Integer.class);
