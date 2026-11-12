@@ -190,6 +190,18 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor remove a Ana e passa 2 tarefas dela para o Rui e 2 para a Sofia
 - **Then** a Ana deixa de fazer parte da equipa e o Rui e a Sofia ficam com 5 tarefas em aberto cada.
 
+**Cenário 1.27: tarefa partilhada com outro responsável**
+- **Given** a membro "Ana" e o membro "Rui", ambos responsáveis pela tarefa "Escrever relatório" do projeto "Website", e a membro "Sofia", também do projeto
+- **When** o gestor tenta remover a Ana sem indicar um substituto para essa tarefa
+- **Then** a remoção não é concluída e é mostrado um aviso a pedir um substituto.
+- **When** o gestor remove a Ana e indica a Sofia como substituta
+- **Then** a tarefa fica com o Rui e a Sofia como responsáveis.
+
+**Cenário 1.28: as subtarefas contam para o limite**
+- **Given** a membro "Ana" com 1 tarefa em aberto no projeto "Website", e o membro "Rui", também do projeto, com 4 tarefas e 1 subtarefa em aberto
+- **When** o gestor tenta remover a Ana e passar a tarefa dela para o Rui
+- **Then** a remoção é recusada, com uma mensagem a explicar que o Rui ficaria com mais de 5 tarefas em aberto, e a Ana continua na equipa.
+
 ### US02 — Criar tarefa
 
 **Cenário 2.1: criação com sucesso**
@@ -721,7 +733,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC12 | Adicionar a um projeto um membro que já está noutro projeto em aberto | Ação recusada com aviso (cenário 1.5) | [R11](requirements.md#4-regras-de-negócio) |
 | EC13 | Adicionar a um projeto um membro cujo projeto anterior foi concluído ou suspenso | Aceite, porque esses projetos não estão em aberto (cenário 1.7) | [R11](requirements.md#4-regras-de-negócio), [P20](constraints.md#2-pressupostos-assumidos) |
 | EC14 | Retomar um projeto suspenso cujos membros já estão noutro projeto em aberto | Retoma aceite, com etiqueta vermelha nesses membros e aviso ao gestor (cenário 1.8) | [P22](constraints.md#2-pressupostos-assumidos) |
-| EC15 | Remover um membro que ainda tem tarefas por concluir atribuídas | A remoção só é concluída se todas as tarefas em aberto passarem para substitutos (cenários 1.12, 1.13 e 1.24 a 1.26) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
+| EC15 | Remover um membro que ainda tem tarefas ou subtarefas por concluir atribuídas, mesmo partilhadas | A remoção só é concluída se todas passarem para substitutos (cenários 1.12, 1.13 e 1.24 a 1.27) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC16 | Projeto sem tarefas com a data de fim ultrapassada | Mantém a etiqueta "sem tarefas", sem estado calculado (cenário 6.10) | [P16](constraints.md#2-pressupostos-assumidos) |
 | EC17 | Criar um projeto com data de fim igual ou anterior à data de início | Projeto não criado, com indicação (cenário 1.10) | [R16](requirements.md#4-regras-de-negócio), [P23](constraints.md#2-pressupostos-assumidos) |
 | EC18 | O substituto novo de uma remoção já está noutro projeto em aberto | Ação recusada; a remoção não é concluída (cenário 1.14) | [R11](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
@@ -747,7 +759,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão (cenário 10.6) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
 | EC39 | Marcar um projeto como concluído sem querer | É pedida uma confirmação antes; ao cancelar, o estado mantém-se (cenário 1.22) | [R28](requirements.md#4-regras-de-negócio) |
 | EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
-| EC41 | Um substituto ficaria com mais de 5 tarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenário 1.25) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
+| EC41 | Um substituto ficaria com mais de 5 tarefas e subtarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenários 1.25 e 1.28) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

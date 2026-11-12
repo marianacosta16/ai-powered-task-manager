@@ -207,7 +207,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R6 | **Modelo:** `block_reason` e `original_task_id` existem. **Aplicação:** são obrigatórios nos estados `Blocked` e `Duplicate`; a original é do mesmo projeto, diferente da própria e não está em `Duplicate` |
 | R8, R12, R9 (permissões), R19 (visibilidade) | **Aplicação**, no módulo Acesso e Visibilidade, a partir de `role`, `manager_id` e `PROJECT_MEMBER` |
 | R11 | **Aplicação.** Não pode ser uma restrição do modelo, porque depende do `status` do projeto e porque o P22 permite, de forma excecional, um membro em dois projetos em aberto |
-| R17 | **Aplicação:** remove a linha de `PROJECT_MEMBER` e passa as tarefas por concluir para substitutos (`TASK_ASSIGNEE`), que podem ser vários, já no projeto ou novos, nenhum com mais de 5 tarefas em aberto, numa só transação |
+| R17 | **Aplicação:** remove a linha de `PROJECT_MEMBER` e passa as tarefas por concluir para substitutos (`TASK_ASSIGNEE`), que podem ser vários, já no projeto ou novos, nenhum com mais de 5 tarefas e subtarefas em aberto, numa só transação. Inclui as tarefas em que o membro é um de vários responsáveis |
 | R21 | **Aplicação:** cada `TASK_ASSIGNEE` tem de ser membro do projeto da tarefa ou o seu gestor |
 | R22 | **Aplicação:** ao criar uma tarefa, o `status` do projeto não pode ser `Completed` nem `Suspended` |
 | R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, só o autor edita ou apaga (apagar elimina a linha), nada disto num projeto `Completed`, e os comentários seguem o `deleted_at` da tarefa |

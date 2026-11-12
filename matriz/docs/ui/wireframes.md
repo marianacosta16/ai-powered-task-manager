@@ -55,15 +55,14 @@ Ficheiro: [dashboard-wireframe.svg](dashboard-wireframe.svg). Um cartão por pro
 | 3 | Cartão do projeto | Nome (ligação para o detalhe), fase e estado. Só aparecem os projetos acessíveis ao utilizador | Cenários 13.2 e 13.3, R8 |
 | 4 | Mosaicos de contagem | Um por estado da tarefa (7), com o número de tarefas principais. Os zeros também se mostram | Cenários 13.1 e 13.4, R18, P27 |
 | 5 | *Progress* (só gestor) | Barra de progresso e estado calculado ("Attention" ou "Late"). Projeto sem tarefas mostra "No tasks" | US06, P5, P16 |
-| 6 | *View all projects* | Abre a lista de projetos | F22 |
-| 7 | Botão *Recycle bin* | Abre a reciclagem. Está no painel para todos os utilizadores | F09, R9 |
-| 8 | Projeto concluído | O membro vê-o; o painel do gestor não o mostra e ele encontra-o pela pesquisa | Cenário 13.5, P27 |
+| 6 | Botão *Recycle bin* | Abre a reciclagem. Está no painel para todos os utilizadores | F09, R9 |
+| 7 | Projeto concluído | O wireframe é o painel de um membro, que vê os projetos concluídos. O painel do gestor não os mostra; ele encontra-os em *Projects* | Cenário 13.5, P27 |
 
 | De | Ação | Para |
 |---|---|---|
 | Painel | Nome do projeto (3) | Detalhe do projeto (cenário 13.3) |
-| Painel | *View all projects* (6) ou *Projects* | Projetos |
-| Painel | *Recycle bin* (7) | Reciclagem |
+| Painel | *Projects* (barra superior) | Projetos, com a lista completa e a pesquisa |
+| Painel | *Recycle bin* (6) | Reciclagem |
 
 ## 3. Projetos (F01, F22; US01, US12)
 
@@ -161,7 +160,7 @@ Ficheiro: [team-wireframe.svg](team-wireframe.svg). Só o gestor do projeto cheg
 | 4 | *Remove* | Remove o membro. Se tiver tarefas por concluir, abre o diálogo de substituição (7) | F01, R17, cenários 1.11 a 1.13, 1.24 a 1.26 |
 | 5 | *Add member* | Escolher uma pessoa e adicioná-la ao projeto | F01, cenário 1.4 |
 | 6 | Pessoa indisponível | Quem já está noutro projeto em aberto aparece desativado, com o motivo; adicioná-lo é recusado com mensagem | R11, cenário 1.5 |
-| 7 | Diálogo de remoção com substitutos | Lista as tarefas por concluir e, para cada uma, o gestor escolhe quem a leva, repartindo-as se quiser. Os substitutos podem ser membros já no projeto, com o número das suas tarefas em aberto, ou novos membros livres. Quem ficaria com mais de 5 tarefas em aberto não é oferecido. Sem substituto para todas as tarefas a remoção não se conclui | R17, P24, cenários 1.12 a 1.14 e 1.24 a 1.26 |
+| 7 | Diálogo de remoção com substitutos | Lista as tarefas e subtarefas por concluir, incluindo as partilhadas com outros responsáveis, e, para cada uma, o gestor escolhe quem a leva, repartindo-as se quiser. Os substitutos podem ser membros já no projeto, com o número das suas tarefas em aberto, ou novos membros livres. Quem ficaria com mais de 5 tarefas e subtarefas em aberto não é oferecido. Sem substituto para todas as tarefas a remoção não se conclui | R17, P24, cenários 1.12 a 1.14 e 1.24 a 1.28 |
 
 | De | Ação | Para |
 |---|---|---|
