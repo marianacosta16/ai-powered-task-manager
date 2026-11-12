@@ -26,7 +26,7 @@ Uma aplicação em que as equipas organizam projetos, gerem tarefas e acompanham
 | Etiqueta | Significado |
 |---|---|
 | **Decisão** | Definição tomada pela autora do projeto em nome do cliente |
-| **Pressuposto** | Proposta aceite para preencher uma lacuna; deve ser validada com o cliente real (ver [constraints.md](constraints.md#2-pressupostos-assumidos)) |
+| **Pressuposto** | Proposta aceite para preencher uma lacuna; deve ser validada com um cliente real, se vier a haver um (ver [constraints.md](constraints.md#2-pressupostos-assumidos)) |
 | **Fora de âmbito** | Excluído conscientemente (ver [constraints.md](constraints.md#5-limitações-de-âmbito)) |
 | **Fora do MVP** | Funcionalidade prevista para a v2 ou a v3, não para a v1 |
 | **Premissa** | Condição do contexto do exercício que não se decide nem se valida (por exemplo, o cliente ser fictício) |
@@ -186,6 +186,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R27 | Num projeto suspenso, as tarefas e subtarefas editam-se, mudam de estado e apagam-se, mas não se criam novas (R22). Num projeto concluído não se cria, edita, muda de estado nem apaga nada nas tarefas, subtarefas, responsáveis e comentários (R24), e os dados continuam visíveis. Os controlos não aparecem e, se a ação for pedida por outra via, é recusada com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
 | R28 | Um projeto concluído fica congelado: não se edita (dados, membros, tarefas, responsáveis e comentários), não muda de estado, ou seja, não se reabre, e não se apaga. Tudo fica como estava no momento da conclusão e continua visível. Antes de marcar um projeto como concluído, pede-se uma confirmação a avisar que deixa de poder ser alterado. Os controlos não aparecem e, se a ação for pedida por outra via, é recusada com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
 | R29 | A data de início de um projeto não pode estar no passado ao ser definida ou alterada; o dia de hoje é aceite. Uma data já definida que passa a ser passada com o tempo não é afetada | v1 | Decisão |
+| R30 | Se duas pessoas editam a mesma tarefa ou subtarefa ao mesmo tempo, a primeira gravação é aceite e a segunda, feita a partir de uma versão já desatualizada, é recusada com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; nada se perde sem aviso. Aplica-se à edição dos dados da tarefa; as tarefas não ficam ligadas a uma fase do projeto (só o projeto tem fase, P3) | v1 | Decisão (T13) |
 
 **Origem das regras:** *Decisão* quer dizer que a autora decidiu tudo o que a regra diz. *Decisão, detalhes em Pn (confirmado)* quer dizer que a ideia é da autora e o pressuposto que a completa já foi aceite. *Decisão, detalhes em Pn (por validar)* quer dizer que a ideia é da autora e o pressuposto que a completa ainda não foi aceite. *Pressuposto Pn (por validar)* quer dizer que a regra depende de algo que ainda não foi confirmado (ver [constraints.md](constraints.md#2-pressupostos-assumidos)).
 
@@ -197,7 +198,7 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 |---|---|---|---|
 | NF01 | A interface está em inglês | Decisão | v1 |
 | NF02 | A aplicação é usada em computador | Decisão | v1 |
-| NF03 | Dimensão de referência: cerca de 30 utilizadores, 3 a 5 projetos em aberto em simultâneo, cada um com uma equipa de 5 a 8 pessoas | Pressuposto (P18) | v1 |
+| NF03 | Dimensão da v1: 10 utilizadores de demonstração (2 gestores e 8 membros) e os projetos que os gestores criarem; a dimensão de cada equipa é definida por quem cria o projeto | Decisão (P18) | v1 |
 | NF04 | Controlo de acesso por papel e por projeto, com o utilizador autenticado por sessão (F10, S5) | Pressuposto (P15), regra R8 | v1 |
 | NF05 | Rastreabilidade: ficam registados quem fez o quê e quando (criar, editar, mudar de estado, apagar) | Pressuposto (P14) | v2 |
 | NF06 | Recuperabilidade: o que é apagado vai para uma reciclagem, durante 30 dias, e pode ser recuperado por quem tem acesso, conforme o papel | Decisão, regras R9 e R20 | v1 |

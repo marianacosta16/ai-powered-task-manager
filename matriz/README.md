@@ -60,7 +60,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 
 ### Convenções
 - Os códigos identificam os itens em todos os documentos: **F** (funcionalidade), **R** (regra de negócio), **NF** (requisito não funcional), **C** (restrição), **P** (pressuposto), **S** (segurança), **T** (decisão técnica pendente), **US** (user story) e **EC** (caso excecional).
-- Cada item está marcado como **Decisão** ou **Pressuposto**. As decisões foram tomadas pela autora do projeto em nome do cliente, que não está disponível, por isso os pressupostos devem ser validados com um cliente real.
+- Cada item está marcado como **Decisão** ou **Pressuposto**. As decisões foram tomadas pela autora do projeto em nome de um cliente fictício, por isso os pressupostos só teriam de ser validados com um cliente real se a aplicação viesse a ter um (é um trabalho de formação, C1).
 - Os documentos estão em português; a interface da aplicação é em inglês.
 - Estes documentos servem de contexto para as fases seguintes. Quando se usar IA para apoiar a escrita ou o desenvolvimento, convém rever a consistência entre eles.
 
@@ -175,7 +175,7 @@ curl -i -b /tmp/ana.txt -X POST localhost:8081/auth/logout
 | User stories da v2 | Por fazer (F11 a F14 e F23) |
 | Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 confirmados |
 | Base de conhecimento (esta documentação) | Concluído |
-| Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões do incremento 0 (ver T1, T8, T10, T11 e T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
+| Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
 | Implementação | Em curso: incrementos 0 (fundações) e 1 (contas e sessão) concluídos; próximo, o incremento 2 (projetos e equipa) |
 

@@ -773,6 +773,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
 | EC41 | Um substituto ficaria com mais de 5 tarefas e subtarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenários 1.25 e 1.28) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC42 | Adicionar a um projeto suspenso um membro que está noutro projeto em aberto | Aceite; ao retomar o projeto aplica-se a etiqueta vermelha (cenário 1.29) | [R11](requirements.md#4-regras-de-negócio), [P22](constraints.md#2-pressupostos-assumidos) |
+| EC43 | Duas pessoas editam a mesma tarefa e gravam uma depois da outra | A segunda gravação é recusada, com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; a primeira mantém-se (a verificar no incremento 3) | [R30](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

@@ -21,7 +21,7 @@
 
 ## 3. Justificação
 
-1. **Dimensão pequena.** A referência é de cerca de 30 utilizadores e 3 a 5 projetos em aberto (NF03), sem requisitos de desempenho nem de disponibilidade. Uma só aplicação chega.
+1. **Dimensão pequena.** A dimensão da v1 é de 10 utilizadores e os projetos que os gestores criarem (NF03), sem requisitos de desempenho nem de disponibilidade. Uma só aplicação chega.
 2. **Regras que cruzam entidades.** Projetos, membros, tarefas e subtarefas têm regras que têm de ser atómicas: um membro só está num projeto em aberto (R11), a remoção com substituto (R17), tarefa-mãe e subtarefas (R3, R4) e a reciclagem em cascata (R9, R20). Com uma só base de dados, cada operação é uma transação. Com serviços separados seriam precisos mecanismos distribuídos, sem benefício aqui.
 3. **Cenários testáveis.** Os cenários Given / When / Then ([user-stories.md](user-stories.md)) correspondem a operações completas. Numa só aplicação testam-se sem levantar vários serviços.
 4. **Evolução prevista.** A v2 e a v3 entram como módulos novos ou como extensões de módulos existentes (secção 6), sem reestruturar o que já existe.
@@ -100,7 +100,7 @@ Todos os módulos ──► Persistência (cada um só aos seus dados)
 | v3 | Importação e exportação (F19) | Novo módulo |
 
 ## 7. O que este documento não decide
-- A tecnologia da interface do utilizador, o ambiente onde a aplicação corre, as cópias de segurança e as edições simultâneas: continuam em T1, T8, T10, T11 e T13 ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
+- A tecnologia da interface do utilizador, o ambiente onde a aplicação corre, e as cópias de segurança: continuam em T1, T8, T10 e T11 ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
 - A estrutura interna de cada módulo e os nomes das suas interfaces: ficam para o desenho detalhado.
 
 ## 8. Stack e decisões técnicas

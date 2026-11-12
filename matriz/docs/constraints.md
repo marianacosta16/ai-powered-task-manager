@@ -7,18 +7,18 @@
 
 | ID | Restrição | Origem |
 |---|---|---|
-| C1 | O cliente não está disponível: as respostas foram dadas pela autora do projeto em nome do cliente, pelo que todas as decisões devem ser validadas com um cliente real | Contexto do exercício |
+| C1 | Este é um trabalho de formação: não há cliente real. A autora cria a aplicação e decide em nome de um cliente fictício; as decisões só teriam de ser validadas com um cliente real se a aplicação viesse a ter um | Contexto do exercício |
 | C2 | A interface é em inglês | Decisão |
 | C3 | A aplicação é usada em computador | Decisão |
 | C4 | Existem apenas dois papéis: gestor de projeto e membro da equipa | Decisão |
 | C5 | A IA é usada como apoio ao desenvolvimento; a aplicação não tem funcionalidades de IA | Decisão |
-| C6 | Não há indicadores de sucesso, orçamento nem prazo definidos pelo cliente, que é fictício | Contexto do exercício (C1) |
+| C6 | Não há indicadores de sucesso, orçamento nem prazo definidos por um cliente, porque não há cliente real (C1). O prazo de cerca de 1 mês do MVP é decisão da autora | Contexto do exercício (C1) |
 | C7 | Os documentos estão em português; os termos da interface (por exemplo, os nomes dos quadrantes como "Do first") estão em inglês | Convenção |
 | C8 | Na v1 usam-se só dados fictícios e contas de demonstração criadas por seed, num ambiente controlado, porque não se definiram regras de palavra-passe nem segurança avançada (S5) | Decisão |
 
 ## 2. Pressupostos assumidos
 
-Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real. Quando uma decisão depender de um pressuposto, deve ser questionada à autora do projeto. A coluna "Estado" indica se a autora já aceitou o pressuposto (*Confirmado*), se falta validá-lo (*Por validar*) ou se é uma condição do contexto do exercício (*Premissa*).
+Propostas aceites para preencher lacunas. Devem ser validadas com um cliente real, se a aplicação vier a ter um (C1). Quando uma decisão depender de um pressuposto, deve ser questionada à autora do projeto. A coluna "Estado" indica se a autora já aceitou o pressuposto (*Confirmado*), se falta validá-lo (*Por validar*) ou se é uma condição do contexto do exercício (*Premissa*).
 
 | ID | Pressuposto | Justificação | Estado |
 |---|---|---|---|
@@ -34,12 +34,12 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | P10 | Tarefas em estado final ficam escondidas por defeito na Matriz | Mantém a Matriz focada no que falta fazer | Confirmado |
 | P11 | Quando existirem lembretes (v2), os avisos aparecem só com a aplicação aberta | Consequência de não haver canais externos antes da v3 | Confirmado |
 | P12 | Os projetos e tarefas apagados ficam numa reciclagem; arquivar é diferente de apagar | Separa remoção de encerramento | Confirmado |
-| P13 | (v2, com a gestão de contas) Quando um utilizador sai, as suas tarefas em aberto passam para quem o substitui; o nome mantém-se no histórico e nas tarefas arquivadas ou em estado final | Evita tarefas sem responsável e preserva o histórico | Confirmado |
+| P13 | (v2, com a gestão de contas) Quando um utilizador sai, as suas tarefas em aberto passam para quem o substitui; o nome mantém-se no histórico e nas tarefas arquivadas ou em estado final, e os comentários que escreveu mantêm-se no histórico (confirmado em 2026-11-12) | Evita tarefas sem responsável e preserva o histórico | Confirmado |
 | P14 | O registo de auditoria guarda quem fez o quê e quando (criar, editar, mudar de estado, apagar) | A resposta foi só "sim" | Por validar |
 | P15 | A aplicação precisa de controlo de acesso por papel desde a v1; o utilizador inicia sessão (F10, S5) | Necessário para cumprir as regras de visibilidade e de apagar | Confirmado |
 | P16 | Se não houver tarefas contáveis, o projeto mostra a etiqueta "sem tarefas" em vez de percentagem, mesmo que a data de fim tenha passado, e os estados "atenção" e "atrasado" não lhe são atribuídos por cálculo | Evita confundir "sem tarefas" com "tarefas por fazer"; confirmado pela autora | Confirmado |
 | P17 | Os limites de 100 caracteres (título) e 2000 (descrição) aplicam-se também ao nome e à descrição do projeto | A autora aceitou os limites para "títulos e descrições" e confirmou que valem para tarefas e projetos | Confirmado |
-| P18 | Dimensão de referência: cerca de 30 utilizadores, 3 a 5 projetos em aberto em simultâneo, cada um com uma equipa de 5 a 8 pessoas | Foi preciso um tamanho para o dimensionamento; aceite pela autora | Confirmado |
+| P18 | Dimensão da v1: 10 utilizadores de demonstração (2 gestores e 8 membros, P21) e os projetos que os gestores criarem; a dimensão de cada equipa é definida por quem cria o projeto (F01). Não há requisitos de volume | Substitui a referência anterior (cerca de 30 utilizadores, 3 a 5 projetos em aberto e equipas de 5 a 8 pessoas); decisão da autora em 2026-11-12 | Confirmado |
 | P19 | A empresa não tem hoje nenhuma aplicação deste tipo | Premissa do exercício | Premissa |
 | P20 | Ao concluir ou suspender um projeto, os seus membros ficam livres para serem adicionados a outro; a lista de membros do projeto mantém-se e eles continuam a vê-lo | Num projeto suspenso não se vai trabalhar durante algum tempo, por isso os membros têm de ser realocados; sem isto a regra de um projeto em aberto por membro (R11) não seria aplicável | Confirmado |
 | P21 | Na v1 os utilizadores são contas de demonstração criadas por seed (não são criadas na aplicação); o gestor escolhe os membros entre essas contas; a criação de contas pelo gestor chega na v2 (F23). Existem dez contas: os gestores Marta e Pedro (gestor de projeto) e os membros Ana, Rui, Luís, Sofia, Carla, Inês, Tiago e Diana (membro da equipa). As palavras-passe são valores de exemplo claramente falsos, definidos no seed e não escritos na documentação | O novo âmbito aceita contas de demonstração por seed; sem criação de contas, tem de haver utilizadores pré-existentes de onde o gestor escolhe os membros | Confirmado |
@@ -99,20 +99,26 @@ O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e Po
 | T10 | Navegadores ou sistemas suportados, e requisitos de acessibilidade | NF02 |
 | T11 | Cópias de segurança e recuperação de dados | T2 |
 | T12 | Como se criam as contas de demonstração por seed e como se guardam as credenciais (decisão funcional já tomada: S5, P21). **Decidido no incremento 0:** um componente que corre ao arrancar, só se ainda não houver utilizadores, numa só transação; a palavra-passe vem da variável `DEMO_PASSWORD` do `.env` (que não se versiona), com pelo menos 8 caracteres, e guarda-se como hash BCrypt | F10, F06, S1, S2 |
-| T13 | Como se tratam as edições simultâneas da mesma tarefa por vários utilizadores | F02, F08 |
+| T13 | Como se tratam as edições simultâneas da mesma tarefa por vários utilizadores. **Decidido em 2026-11-12:** quem grava depois de outra pessoa ter alterado a tarefa vê a gravação recusada, com uma mensagem a pedir para recarregar e tentar outra vez (R30, EC43); a tarefa tem uma versão que o contrato e o modelo de dados passam a ter (M13). Implementa-se no incremento 3 | F02, F08, R30 |
 
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
-- Se as tarefas ficam ligadas a uma fase do projeto.
-- Que integrações, se alguma, o cliente quer (F19).
-- O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
+
+**Fechadas em 2026-11-12:**
+- As tarefas não ficam ligadas a uma fase: pertencem só ao projeto, que é quem tem fase (P3).
+- Integrações: só as que a v1 já define; as restantes ficam na v3 (F19).
+- O nível 2 chama-se "medium" e conta como "baixo" na Matriz (1 e 2 baixo, 3 e 4 alto): nomenclatura confirmada.
+- Antecedência e repetição dos lembretes (F12) e conteúdo da auditoria (P14) continuam por definir, na v2.
 
 ## 5. Limitações de âmbito
 
 - Sem RGPD nem segurança avançada.
 - Sem requisitos de desempenho, disponibilidade, compatibilidade, acessibilidade ou cópias de segurança.
-- Sem indicadores de sucesso, orçamento ou prazo do cliente.
-- Sem utilizadores externos à empresa.
+- Sem indicadores de sucesso, orçamento ou prazo definidos por um cliente (C1, C6).
+- Sem utilizadores externos à empresa e sem papel transversal (por exemplo, direção ou administração): só gestor de projeto e membro (C4).
+- Sem tarefas confidenciais: quem tem acesso ao projeto vê todas as suas tarefas.
+- Sem dados reais (C8): só dados fictícios de demonstração.
+- Desempenho esperado e navegadores suportados por definir (T10); não há requisitos de disponibilidade nem de cópias de segurança (T11).
 - Sem estado "adiantado" do projeto.
 - Sem funcionalidades de IA na aplicação.
 - Fora do MVP, na v2: criação de contas pelo gestor, etiquetas, lembretes e alertas de atraso, arquivo de projetos e registo de auditoria.

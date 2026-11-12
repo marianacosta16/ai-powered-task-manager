@@ -66,7 +66,7 @@ src/test/java/...                         testes por cenário Given / When / The
 | Datas e horas com `java.time` e o fuso do projeto (T5) | Proposta |
 | Spring Security, com hash BCrypt, 401 e 403 em JSON | Adotado (incremento 1) |
 | CSRF desligado e sessões em memória (P31, P32); sem limite de tentativas de início de sessão (P30) | Pressupostos, a rever com a interface e antes de dados reais |
-| Edições simultâneas da mesma tarefa (T13) | Por decidir |
+| Edições simultâneas da mesma tarefa (T13): recusar a gravação desatualizada, com uma `version` na tarefa (R30) | Decidido em 2026-11-12; implementa-se no incremento 3 |
 
 ## 4. Incrementos
 
@@ -100,6 +100,8 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Aceitação** | Cenários 1.1 a 1.23, 1.29, 1.30 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39, EC40 e EC42 |
 | **Verificação** | Testes com relógio controlável; acesso a um projeto alheio recusado no servidor (403), também por ligação direta; conclusão de um projeto congela-o (R28) |
 
+> **R19 confirmado em 2026-11-12:** em `createProject`, quem cria vem da sessão e tem de ser gestor (403 se não for); o `managerId` é indicado por quem cria (R19) e o servidor valida que tem o papel de gestor (M10, `MANAGER_NOT_A_MANAGER`). Se for outra pessoa, o criador deixa de ver o projeto. O exercício pede para inferir o proprietário no servidor: aqui, é o criador (sessão) que decide quem gere, e nunca um valor que prove identidade.
+
 > `listProjects` e `getProject` (só leitura) e o serviço de permissões por projeto (`access/ProjectPermissions`) já foram feitos no incremento 1, para provar o acesso com dois utilizadores. Este incremento acrescenta as escritas e o resto das operações, reutilizando esse serviço.
 
 ### Incremento 3 — Tarefas, subtarefas e responsáveis (F02, F03, F08; US02, US04, US05)
@@ -109,8 +111,10 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Componentes e ficheiros** | `tasks/`, `usecases/` (R17 com substitutos, R21, R22, R26, R27), migrações de `TASK` e `TASK_ASSIGNEE` |
 | **API** | `createTask`, `getTask`, `updateTask`, `addAssignee`, `removeAssignee`, `listAssignableUsers`, e `removeMember` completo (cenários 1.24 a 1.28) |
 | **Depende de** | Incremento 2 e do wireframe da tarefa |
-| **Aceitação** | Cenários 2.1 a 2.13, 4.x, 5.x e 1.24 a 1.28; EC2 a EC5, EC10, EC15, EC18, EC19, EC22, EC28 a EC30, EC35 e EC41 |
-| **Verificação** | Testes de contrato contra o [openapi.yaml](../openapi.yaml); distinguir 400 de 422 e os códigos de erro; limite de 5 tarefas na substituição |
+| **Aceitação** | Cenários 2.1 a 2.13, 4.x, 5.x e 1.24 a 1.28; EC2 a EC5, EC10, EC15, EC18, EC19, EC22, EC28 a EC30, EC35, EC41 e EC43 (edições simultâneas, R30) |
+| **Verificação** | Testes de contrato contra o [openapi.yaml](../openapi.yaml); distinguir 400 de 422 e os códigos de erro; limite de 5 tarefas na substituição; duas gravações da mesma versão: a segunda dá 409 `TASK_CHANGED` e nada se perde (R30, T13) |
+
+> **T13 decidido em 2026-11-12:** a tarefa tem uma `version` (contrato 0.3.0, modelo M13). Como a migração V1 já foi aplicada, a coluna `version` entra numa migração nova (V2), que não altera a V1. O `updateTask` compara a versão recebida com a atual.
 
 ### Incremento 4 — Lista, Matriz, pesquisa e filtros (F04, F05, F22; US03, US09, US12)
 
@@ -197,5 +201,4 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 |---|---|
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
-| Edições simultâneas | T13 por decidir |
 | Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |
