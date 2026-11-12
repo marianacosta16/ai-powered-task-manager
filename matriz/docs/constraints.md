@@ -58,10 +58,10 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | ID | Requisito | Origem | Versão |
 |---|---|---|---|
 | S1 | Um membro só acede aos projetos de que é membro e às suas tarefas, também por ligação direta; o gestor acede só aos projetos de que é gestor | R8, F06 | v1 |
-| S2 | Só o gestor apaga projetos, recupera apagados e reabre tarefas finais | R9, P8 | v1 |
+| S2 | Só o gestor apaga e recupera projetos e reabre tarefas finais; os membros recuperam tarefas e subtarefas dos projetos a que têm acesso | R9, P8 | v1 |
 | S3 | Os dados apagados ficam numa reciclagem recuperável | P12, F09 | v1 |
 | S4 | **Substituído por S5.** Antes, o utilizador escolhia quem era num seletor, sem palavra-passe | Decisão, P15 | Substituído |
-| S5 | Todos os utilizadores iniciam sessão para aceder à aplicação, com contas de demonstração criadas por seed. Não há registo público nem recuperação de palavra-passe (extensões opcionais) | P15, F10 | v1 |
+| S5 | Todos os utilizadores iniciam sessão para aceder à aplicação, com contas de demonstração criadas por seed. A sessão termina ao terminar sessão ou após 3 horas sem atividade. As palavras-passe têm pelo menos 8 caracteres e guardam-se só de forma protegida, nunca em texto simples. A mensagem de erro não diz se falhou o utilizador ou a palavra-passe. Não há registo público nem recuperação de palavra-passe (extensões opcionais) | P15, F10 | v1 |
 | S6 | As contas passam a ser criadas pelo gestor de projeto; não há registo livre | Decisão, F23 | v2 |
 | S7 | As ações relevantes ficam registadas (quem, o quê, quando) | P14, F14 | v2 |
 
@@ -99,7 +99,7 @@ Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) es
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
 - Se as tarefas ficam ligadas a uma fase do projeto.
-- Se um projeto concluído pode ser reaberto pelo gestor (mudar o estado) e se, estando concluído, se podem editar os dados do projeto ou os seus membros (R27 só trata das tarefas e dos comentários).
+- Se, estando concluído, se podem editar os dados do projeto, os seus membros ou apagá-lo (R27 trata só das tarefas e dos comentários, e o R28 só impede a reabertura).
 - Que integrações, se alguma, o cliente quer (F19).
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
 

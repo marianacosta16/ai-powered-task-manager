@@ -24,7 +24,7 @@
 | US04 | Membro da equipa | dividir uma tarefa em subtarefas com prazo próprio | acompanhar trabalho grande por partes | [F08](requirements.md#3-requisitos-funcionais), [R2](requirements.md#4-regras-de-negócio), [R3](requirements.md#4-regras-de-negócio) |
 | US05 | Membro da equipa | concluir uma tarefa-mãe só quando as subtarefas estiverem fechadas | garantir que nada fica por fazer | [F08](requirements.md#3-requisitos-funcionais), [R4](requirements.md#4-regras-de-negócio), [R5](requirements.md#4-regras-de-negócio) |
 | US06 | Gestor de projeto | ver uma barra de progresso por projeto e o respetivo estado calculado | saber se cada projeto está dentro do prazo | [F07](requirements.md#3-requisitos-funcionais), [R18](requirements.md#4-regras-de-negócio), [P5](constraints.md#2-pressupostos-assumidos), [P7](constraints.md#2-pressupostos-assumidos) |
-| US07 | Gestor de projeto | recuperar projetos e tarefas apagados | corrigir remoções acidentais | [F09](requirements.md#3-requisitos-funcionais), [R9](requirements.md#4-regras-de-negócio), [R20](requirements.md#4-regras-de-negócio) |
+| US07 | Membro da equipa ou gestor de projeto | recuperar tarefas apagadas dos meus projetos e, sendo gestor, também projetos apagados | corrigir remoções acidentais | [F09](requirements.md#3-requisitos-funcionais), [R9](requirements.md#4-regras-de-negócio), [R20](requirements.md#4-regras-de-negócio) |
 | US08 | Membro da equipa | ver apenas os projetos de que sou membro e as suas tarefas | trabalhar sem ver informação de outras equipas | [F06](requirements.md#3-requisitos-funcionais), [R8](requirements.md#4-regras-de-negócio) |
 | US09 | Membro da equipa | ver todas as tarefas de um projeto numa lista, com as abertas primeiro e o filtro "as minhas" | ter uma visão completa do trabalho do projeto | [F05](requirements.md#3-requisitos-funcionais), [R15](requirements.md#4-regras-de-negócio), [R18](requirements.md#4-regras-de-negócio) |
 | US10 | Membro da equipa ou gestor de projeto | iniciar e terminar sessão e consultar quem sou | aceder à aplicação com a minha conta | [F10](requirements.md#3-requisitos-funcionais), [S5](constraints.md#3-requisitos-de-segurança-e-privacidade), [P21](constraints.md#2-pressupostos-assumidos) |
@@ -151,6 +151,13 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **Given** um gestor de projeto identificado e um projeto "em andamento"
 - **When** o gestor abre as opções de estado do projeto
 - **Then** os estados "atenção" e "atrasado" não estão disponíveis para escolha.
+
+**Cenário 1.21: um projeto concluído não se reabre**
+- **Given** um gestor de projeto identificado e um projeto no estado "concluído"
+- **When** o gestor abre as opções de estado do projeto
+- **Then** não está disponível nenhuma mudança de estado.
+- **When** é pedida a mudança de estado por outra via
+- **Then** a mudança é recusada, com uma mensagem a explicar que um projeto concluído não pode ser reaberto, e o estado mantém-se.
 
 ### US02 — Criar tarefa
 
@@ -409,10 +416,14 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** o gestor o recupera
 - **Then** o projeto volta à lista, com as 5 tarefas e os estados que tinham.
 
-**Cenário 7.3: membro não recupera**
-- **Given** uma tarefa apagada por um membro e presente na reciclagem
-- **When** um membro tenta recuperá-la
-- **Then** a ação de recuperar não está disponível; só o gestor a pode recuperar.
+**Cenário 7.3: o que cada papel recupera**
+- **Given** a gestora "Marta" dos projetos "Website" e "Intranet", a membro "Ana" (membro do "Website" e não do "Intranet"), a tarefa T1 apagada do projeto "Website", e o projeto "Intranet" apagado, ambos na reciclagem
+- **When** a Ana abre a reciclagem, pelo painel inicial
+- **Then** vê a tarefa T1, que pode recuperar, e não vê o projeto "Intranet".
+- **When** a Ana recupera a T1
+- **Then** a T1 volta ao projeto "Website".
+- **When** a Marta abre a reciclagem
+- **Then** vê o projeto "Intranet" e pode recuperá-lo.
 
 **Cenário 7.4: apagar uma tarefa-mãe com subtarefas em aberto**
 - **Given** uma tarefa-mãe com uma subtarefa "em curso"
@@ -435,7 +446,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 **Cenário 7.7: tarefa apagada antes do projeto**
 - **Given** um projeto com as tarefas T1, T2 e T3, em que a T1 foi apagada por um membro e está na reciclagem
 - **When** o gestor apaga o projeto e depois o recupera
-- **Then** o projeto volta com as tarefas T2 e T3, e a T1 continua na reciclagem, onde o gestor a pode recuperar.
+- **Then** o projeto volta com as tarefas T2 e T3, e a T1 continua na reciclagem, onde pode ser recuperada.
 
 **Cenário 7.8: subtarefa cuja tarefa-mãe foi eliminada de vez**
 - **Given** uma tarefa-mãe com uma subtarefa que foi apagada antes dela, e a tarefa-mãe apagada há 31 dias (eliminada definitivamente)
@@ -515,6 +526,11 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **Given** ninguém com sessão iniciada
 - **When** é aberta uma ligação direta para um projeto
 - **Then** é pedido o início de sessão e o projeto não é mostrado.
+
+**Cenário 10.6: sessão sem atividade**
+- **Given** a Ana com sessão iniciada, que deixou a aplicação sem qualquer atividade durante 3 horas
+- **When** tenta abrir um projeto
+- **Then** a sessão já terminou, é pedido o início de sessão e o projeto não é mostrado.
 
 ### US11 — Comentários nas tarefas
 
@@ -694,6 +710,9 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC33 | Pesquisar um projeto cujo nome não corresponde a nenhum acessível | Sem resultados, com indicação (cenários 12.2 e 12.3) | [R25](requirements.md#4-regras-de-negócio) |
 | EC34 | Adicionar, editar ou apagar um comentário num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 11.10) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 | EC35 | Editar, mudar de estado ou apagar uma tarefa num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem. Num projeto suspenso estas ações são aceites (cenário 2.13) | [R27](requirements.md#4-regras-de-negócio) |
+| EC36 | Um membro tenta recuperar um projeto apagado | A reciclagem não lhe mostra o projeto; só o gestor o recupera (cenário 7.3) | [R9](requirements.md#4-regras-de-negócio) |
+| EC37 | Reabrir um projeto concluído | A mudança de estado não está disponível; um pedido por outra via é recusado, com mensagem (cenário 1.21) | [R28](requirements.md#4-regras-de-negócio) |
+| EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão (cenário 10.6) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

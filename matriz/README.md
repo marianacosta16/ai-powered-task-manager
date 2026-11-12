@@ -53,7 +53,7 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e diagrama ER (Mermaid) |
 | [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado: criar tarefa e listar as tarefas de um projeto |
 | [docs/ui/matrix-wireframe.md](docs/ui/matrix-wireframe.md) | Wireframe de baixa fidelidade do ecrã Matrix (SVG), elementos, navegação e validação face ao MVP |
-| [docs/ui/wireframes.md](docs/ui/wireframes.md) | Wireframes de início de sessão, painel inicial, projetos, detalhe do projeto e detalhe da tarefa, com elementos e navegação |
+| [docs/ui/wireframes.md](docs/ui/wireframes.md) | Wireframes de início de sessão, painel inicial, projetos, detalhe do projeto, detalhe da tarefa (ver e editar) e reciclagem, com elementos e navegação |
 | [docs/plan.md](docs/plan.md) | Análise de lacunas e decisões pendentes, e plano incremental de implementação (proposta) |
 | [AGENTS.md](AGENTS.md) | Instruções persistentes para agentes de desenvolvimento que trabalhem neste repositório |
 

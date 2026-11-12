@@ -88,4 +88,4 @@ Nenhum ponto deste wireframe depende de pressupostos por validar.
 
 ## 7. Fora deste wireframe
 
-Os outros ecrãs (início de sessão, painel inicial, projetos, detalhe do projeto e detalhe da tarefa) estão em [wireframes.md](wireframes.md). Ainda sem wireframe: equipa e reciclagem.
+Os outros ecrãs (início de sessão, painel inicial, projetos, detalhe do projeto e detalhe da tarefa) estão em [wireframes.md](wireframes.md). A reciclagem também já tem wireframe. Ainda sem wireframe: a gestão da equipa.

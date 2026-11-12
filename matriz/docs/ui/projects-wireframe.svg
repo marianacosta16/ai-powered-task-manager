@@ -84,12 +84,11 @@
   <rect class="box" x="770" y="240" width="380" height="50" rx="3"/>
   <text x="780" y="260" class="g">max 2000 characters</text>
   <text x="770" y="308" class="s b">Start date *</text>
-  <rect class="box" x="770" y="316" width="200" height="30" rx="3"/><text x="780" y="336">2026-01-01</text>
+  <rect class="box" x="770" y="316" width="200" height="30" rx="3"/><text x="780" y="336">2026-11-02</text><text x="945" y="336">▦</text>
   <rect class="box" x="980" y="316" width="170" height="30" rx="3"/><text x="990" y="336" class="g">time (optional)</text>
   <text x="770" y="364" class="s b">End date *</text>
-  <rect class="err" x="770" y="372" width="200" height="30" rx="3"/><text x="780" y="392">2026-01-01</text>
+  <rect class="err" x="770" y="372" width="200" height="30" rx="3"/><text x="780" y="392">2026-11-30</text><text x="945" y="392">▦</text>
   <rect class="box" x="980" y="372" width="170" height="30" rx="3"/><text x="990" y="392" class="g">time (optional)</text>
-  <text x="770" y="418" class="s">The end must be after the start. Choose a later date or time.</text>
   <text x="770" y="436" class="s b">Time zone</text>
   <rect class="box" x="770" y="444" width="380" height="30" rx="3"/><text x="780" y="464">Lisbon (default)</text><text x="1130" y="464">▼</text>
   <text x="770" y="492" class="s b">Phase</text>
@@ -101,6 +100,23 @@
   <rect class="dark" x="770" y="606" width="100" height="34" rx="3"/><text x="820" y="628" class="m w b">Save</text>
   <rect class="box" x="880" y="606" width="100" height="34" rx="3"/><text x="930" y="628" class="m">Cancel</text>
 
+  <!-- Calendar popup for the end date: dates before the start date are disabled -->
+  <rect x="770" y="406" width="250" height="214" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+  <text x="895" y="428" class="m b">◀   November 2026   ▶</text>
+  <text x="787" y="450" class="m s g">S</text><text x="821" y="450" class="m s g">M</text><text x="855" y="450" class="m s g">T</text><text x="889" y="450" class="m s g">W</text><text x="923" y="450" class="m s g">T</text><text x="957" y="450" class="m s g">F</text><text x="991" y="450" class="m s g">S</text>
+  <text x="787" y="476" class="m s" style="fill:#bbb">1</text>
+  <rect x="807" y="462" width="28" height="20" fill="#ffffff" stroke="#333333"/>
+  <g class="m s">
+    <text x="821" y="476">2</text><text x="855" y="476">3</text><text x="889" y="476">4</text><text x="923" y="476">5</text><text x="957" y="476">6</text><text x="991" y="476">7</text>
+    <text x="787" y="504">8</text><text x="821" y="504">9</text><text x="855" y="504">10</text><text x="889" y="504">11</text><text x="923" y="504">12</text><text x="957" y="504">13</text><text x="991" y="504">14</text>
+    <text x="787" y="532">15</text><text x="821" y="532">16</text><text x="855" y="532">17</text><text x="889" y="532">18</text><text x="923" y="532">19</text><text x="957" y="532">20</text><text x="991" y="532">21</text>
+    <text x="787" y="560">22</text><text x="821" y="560">23</text><text x="855" y="560">24</text><text x="889" y="560">25</text><text x="923" y="560">26</text><text x="957" y="560">27</text><text x="991" y="560">28</text>
+    <text x="787" y="588">29</text>
+  </g>
+  <rect x="807" y="574" width="28" height="20" fill="#333333"/>
+  <text x="821" y="588" class="m s w b">30</text>
+  <text x="780" y="612" class="s g">Dates before the start date are disabled.</text>
+
   <!-- Callouts -->
   <circle class="c" cx="30" cy="125" r="11"/><text class="n" x="30" y="129">1</text>
   <circle class="c" cx="30" cy="207" r="11"/><text class="n" x="30" y="211">2</text>
@@ -109,7 +125,7 @@
   <circle class="c" cx="560" cy="125" r="11"/><text class="n" x="560" y="129">5</text>
   <circle class="c" cx="750" cy="125" r="11"/><text class="n" x="750" y="129">6</text>
   <circle class="c" cx="965" cy="492" r="11" transform="translate(-18 -10)"/><text class="n" x="947" y="486">7</text>
-  <circle class="c" cx="752" cy="412" r="11"/><text class="n" x="752" y="416">8</text>
+  <circle class="c" cx="770" cy="406" r="11"/><text class="n" x="770" y="410">8</text>
   <circle class="c" cx="120" cy="360" r="11"/><text class="n" x="120" y="364">9</text>
 
   <text x="10" y="735">Dashed outline = shown only to the project manager. A thick outline marks a field with an error message. Numbers refer to docs/ui/wireframes.md.</text>

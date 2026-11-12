@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" width="1200" height="620">
+  <title>Matriz - wireframe of the Recycle bin screen (low fidelity)</title>
+  <desc>Low-fidelity wireframe of the Recycle bin screen (F09, US07): deleted projects, tasks and subtasks the user can access, with Restore. All data is fictitious.</desc>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#333}
+    .g{fill:#777}.b{font-weight:bold}.s{font-size:11px}.m{text-anchor:middle}.w{fill:#fff}.l{font-size:20px;font-weight:bold}
+    .box{fill:#fff;stroke:#333}.bar{fill:#eee;stroke:#333}.sel{fill:#ddd;stroke:#333}.dash{fill:#fff;stroke:#666;stroke-dasharray:5 4}
+    .hd{fill:#ddd;stroke:#999}.row{fill:#fff;stroke:#bbb}.off{fill:#f3f3f3;stroke:#bbb}
+    .c{fill:#333;stroke:#fff;stroke-width:1.5}.n{font-size:12px;font-weight:bold;fill:#fff;text-anchor:middle}
+  </style>
+
+  <rect x="0" y="0" width="1200" height="620" fill="#ffffff"/>
+  <rect x="10" y="10" width="1180" height="540" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+
+  <!-- Top bar -->
+  <rect class="bar" x="10" y="10" width="1180" height="56"/>
+  <text x="30" y="45" style="font-size:22px;font-weight:bold">Matriz</text>
+  <rect class="sel" x="150" y="24" width="100" height="30"/>
+  <text x="200" y="44" class="m b">Dashboard</text>
+  <rect class="box" x="260" y="24" width="100" height="30"/>
+  <text x="310" y="44" class="m">Projects</text>
+  <rect class="box" x="900" y="22" width="190" height="32" rx="4"/>
+  <text x="912" y="43">Ana Example (Team member)</text>
+  <rect class="box" x="1100" y="22" width="70" height="32" rx="4"/>
+  <text x="1135" y="43" class="m">Sign out</text>
+
+  <text x="30" y="92" class="s g">Dashboard / Recycle bin</text>
+  <text x="30" y="122" class="l">Recycle bin</text>
+  <text x="30" y="146" class="g">Items are removed for good 30 days after they are deleted.</text>
+  <text x="30" y="164" class="s g">You see the items of the projects you can access. Members restore tasks and subtasks; the project manager also restores projects.</text>
+
+  <!-- Table header -->
+  <rect class="hd" x="30" y="176" width="1140" height="32"/>
+  <text x="44" y="197" class="b">Type</text>
+  <text x="150" y="197" class="b">Name</text>
+  <text x="520" y="197" class="b">Project</text>
+  <text x="720" y="197" class="b">Deleted</text>
+  <text x="840" y="197" class="b">Days left</text>
+  <text x="960" y="197" class="b">Action</text>
+
+  <!-- Row 1: project (manager only) -->
+  <rect class="dash" x="30" y="208" width="1140" height="48"/>
+  <text x="44" y="236" style="fill:#666">Project</text>
+  <text x="150" y="230" class="b" style="fill:#666">Intranet</text>
+  <text x="150" y="246" class="s" style="fill:#666">Includes the 5 tasks deleted with it</text>
+  <text x="520" y="236" style="fill:#666">-</text>
+  <text x="720" y="236" style="fill:#666">2026-11-05</text>
+  <text x="840" y="236" style="fill:#666">23</text>
+  <rect class="dash" x="960" y="218" width="90" height="28" rx="3"/><text x="1005" y="237" class="m s" style="fill:#666">Restore</text>
+
+  <!-- Row 2: task -->
+  <rect class="row" x="30" y="256" width="1140" height="48"/>
+  <text x="44" y="284">Task</text>
+  <text x="150" y="284" class="b">Update contact form</text>
+  <text x="520" y="284">Website Redesign</text>
+  <text x="720" y="284">2026-11-09</text>
+  <text x="840" y="284">27</text>
+  <rect class="box" x="960" y="266" width="90" height="28" rx="3"/><text x="1005" y="285" class="m s">Restore</text>
+
+  <!-- Row 3: subtask -->
+  <rect class="row" x="30" y="304" width="1140" height="48"/>
+  <text x="44" y="332">Subtask</text>
+  <text x="150" y="332" class="b">Send invitations</text>
+  <text x="520" y="332">Prepare client demo</text>
+  <text x="720" y="332">2026-11-10</text>
+  <text x="840" y="332">28</text>
+  <rect class="box" x="960" y="314" width="90" height="28" rx="3"/><text x="1005" y="333" class="m s">Restore</text>
+
+  <!-- Row 4: subtask whose parent was removed for good -->
+  <rect class="off" x="30" y="352" width="1140" height="48"/>
+  <text x="44" y="380" class="g">Subtask</text>
+  <text x="150" y="374" class="b g">Old checklist item</text>
+  <text x="150" y="390" class="s g">Cannot restore: the parent task no longer exists.</text>
+  <text x="520" y="380" class="g">Mobile App</text>
+  <text x="720" y="380" class="g">2026-10-28</text>
+  <text x="840" y="380" class="g">15</text>
+  <rect class="dash" x="960" y="362" width="90" height="28" rx="3"/><text x="1005" y="381" class="m s g">Restore</text>
+
+  <!-- Row 5: task whose project is in the bin -->
+  <rect class="off" x="30" y="400" width="1140" height="48"/>
+  <text x="44" y="428" class="g">Task</text>
+  <text x="150" y="422" class="b g">Legacy page</text>
+  <text x="150" y="438" class="s g">Cannot restore: restore the project first.</text>
+  <text x="520" y="428" class="g">Intranet</text>
+  <text x="720" y="428" class="g">2026-10-30</text>
+  <text x="840" y="428" class="g">17</text>
+  <rect class="dash" x="960" y="410" width="90" height="28" rx="3"/><text x="1005" y="429" class="m s g">Restore</text>
+
+  <text x="30" y="480" class="s g">When there is nothing to restore the screen shows: "The recycle bin is empty."</text>
+  <text x="30" y="498" class="s g">Restoring a project brings back the tasks deleted with it; tasks deleted earlier stay in the recycle bin.</text>
+
+  <!-- Callouts -->
+  <circle class="c" cx="30" cy="146" r="11"/><text class="n" x="30" y="150">1</text>
+  <circle class="c" cx="30" cy="176" r="11"/><text class="n" x="30" y="180">2</text>
+  <circle class="c" cx="30" cy="208" r="11"/><text class="n" x="30" y="212">3</text>
+  <circle class="c" cx="960" cy="266" r="11"/><text class="n" x="960" y="270">4</text>
+  <circle class="c" cx="136" cy="352" r="11"/><text class="n" x="136" y="356">5</text>
+  <circle class="c" cx="840" cy="176" r="11"/><text class="n" x="840" y="180">6</text>
+
+  <text x="10" y="575">Dashed outline = shown only to the project manager, or an action that is not available. Numbers refer to docs/ui/wireframes.md.</text>
+  <text x="10" y="593" class="g">Low-fidelity wireframe. All names and tasks are fictitious.</text>
+</svg>

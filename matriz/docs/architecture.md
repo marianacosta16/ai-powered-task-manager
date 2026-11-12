@@ -47,7 +47,7 @@
 | **Tarefas** | Guarda tarefas e subtarefas: estado, prazo, urgência, importância, responsáveis e comentários. Valida os prazos (R1, R2, R3, R13), os fechos (R4, R5), os motivos de bloqueio e a tarefa original de um duplicado (R6), os limites de texto (R14) que os responsáveis são membros do projeto (R21) e que há sempre pelo menos um (R26), e os limites e a ordem dos comentários (R24) | F02, F03, F08, F17; R1 a R6, R13, R14, R21, R24, R26; P8, P28 |
 | **Vistas e Progresso** | Responde a consultas de leitura: a Matriz por projeto, a Lista (com "as minhas" e os filtros por estado e quadrante), o painel inicial (contagens de tarefas por estado e, para o gestor, o progresso) e a pesquisa de projetos. Calcula o progresso e os estados "atenção" e "atrasado" | F04, F05, F07, F22; R15, R18, R23, R25; P5, P7, P16, P25, P26, P27, P29 |
 | **Acesso e Visibilidade** | Autentica o utilizador (iniciar e terminar sessão, com contas de demonstração por seed) e sabe o seu papel. Decide o que cada pessoa pode ver e fazer. Fornece esta resposta aos outros componentes | F06, F10; R8, R9 (permissões), R19 (visibilidade do gestor); S1, S2, S5 |
-| **Reciclagem** | Guarda projetos, tarefas e subtarefas apagados, deixa o gestor recuperá-los e elimina-os definitivamente ao fim de 30 dias | F09; R9, R20 |
+| **Reciclagem** | Guarda projetos, tarefas e subtarefas apagados, deixa recuperá-los a quem tem acesso, conforme o papel (R9), e elimina-os definitivamente ao fim de 30 dias | F09; R9, R20 |
 
 ### 4.2 Componentes transversais
 

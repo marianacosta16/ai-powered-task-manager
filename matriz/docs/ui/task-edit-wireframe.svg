@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 830" width="1200" height="830">
+  <title>Matriz - wireframe of the Task detail screen, edit mode (low fidelity)</title>
+  <desc>Low-fidelity wireframe of the Task detail screen in edit mode (F02, F03, F08, F17, US02, US04, US11): editable fields, date picker, assignees, subtasks and comments. All data is fictitious.</desc>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#333}
+    .g{fill:#777}.b{font-weight:bold}.s{font-size:11px}.m{text-anchor:middle}.w{fill:#fff}.u{text-decoration:underline}
+    .box{fill:#fff;stroke:#333}.bar{fill:#eee;stroke:#333}.sel{fill:#ddd;stroke:#333}.dash{fill:#fff;stroke:#666;stroke-dasharray:5 4}
+    .hd{fill:#ddd;stroke:#999}.row{fill:#fff;stroke:#bbb}.dark{fill:#333;stroke:#333}.card{fill:#fafafa;stroke:#999}.err{fill:#fff;stroke:#333;stroke-width:2}
+    .c{fill:#333;stroke:#fff;stroke-width:1.5}.n{font-size:12px;font-weight:bold;fill:#fff;text-anchor:middle}
+  </style>
+
+  <rect x="0" y="0" width="1200" height="830" fill="#ffffff"/>
+  <rect x="10" y="10" width="1180" height="770" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+
+  <!-- Top bar -->
+  <rect class="bar" x="10" y="10" width="1180" height="56"/>
+  <text x="30" y="45" style="font-size:22px;font-weight:bold">Matriz</text>
+  <rect class="box" x="150" y="24" width="100" height="30"/>
+  <text x="200" y="44" class="m">Dashboard</text>
+  <rect class="sel" x="260" y="24" width="100" height="30"/>
+  <text x="310" y="44" class="m b">Projects</text>
+  <rect class="box" x="900" y="22" width="190" height="32" rx="4"/>
+  <text x="912" y="43">Ana Example (Team member)</text>
+  <rect class="box" x="1100" y="22" width="70" height="32" rx="4"/>
+  <text x="1135" y="43" class="m">Sign out</text>
+
+  <text x="30" y="92" class="s g">Projects / Website Redesign / Fix payment bug</text>
+  <rect class="dark" x="640" y="76" width="80" height="22" rx="11"/>
+  <text x="680" y="91" class="m s w b">EDIT MODE</text>
+
+  <!-- Edit banner -->
+  <rect class="dark" x="30" y="100" width="690" height="28"/>
+  <text x="42" y="119" class="w b s">Editing task - your changes are saved only when you press Save changes.</text>
+
+  <!-- Main column -->
+  <rect class="err" x="30" y="136" width="560" height="36" rx="3"/>
+  <text x="42" y="160" class="b" style="font-size:16px">Fix payment bug</text>
+  <rect class="box" x="600" y="140" width="120" height="28" rx="14"/>
+  <text x="660" y="159" class="m s">Quadrant: Do first</text>
+
+  <text x="30" y="198" class="s b">Description</text>
+  <rect class="box" x="30" y="204" width="690" height="64" rx="3"/>
+  <text x="42" y="226" class="g">Refunds fail with an error when the gateway times out.</text>
+
+  <text x="30" y="294" class="s b">Status</text>
+  <rect class="box" x="30" y="300" width="160" height="30" rx="3"/><text x="42" y="320">In progress</text><text x="170" y="320">▼</text>
+  <text x="205" y="294" class="s b">Deadline</text>
+  <rect class="err" x="205" y="300" width="160" height="30" rx="3"/><text x="217" y="320">2026-11-20</text><text x="342" y="320">▦</text>
+  <text x="380" y="294" class="s b">Urgency</text>
+  <rect class="box" x="380" y="300" width="160" height="30" rx="3"/><text x="392" y="320">4 - Critical</text><text x="520" y="320">▼</text>
+  <text x="555" y="294" class="s b">Importance</text>
+  <rect class="box" x="555" y="300" width="165" height="30" rx="3"/><text x="567" y="320">4 - Critical</text><text x="700" y="320">▼</text>
+
+  <text x="30" y="354" class="s b" style="fill:#666">Block reason (only when Blocked)</text>
+  <rect class="dash" x="30" y="360" width="330" height="30" rx="3"/><text x="42" y="380" class="g s">max 100 characters</text>
+  <text x="380" y="354" class="s b" style="fill:#666">Original task (only when Duplicate)</text>
+  <rect class="dash" x="380" y="360" width="340" height="30" rx="3"/><text x="392" y="380" class="g s">same project, not a duplicate</text>
+
+  <text x="30" y="420" class="s b">Assignees (at least one)</text>
+  <rect class="box" x="30" y="428" width="80" height="28" rx="14"/><text x="70" y="447" class="m s">Ana  x</text>
+  <rect class="box" x="120" y="428" width="80" height="28" rx="14"/><text x="160" y="447" class="m s">Rui  x</text>
+  <rect class="box" x="210" y="428" width="170" height="28" rx="14"/><text x="295" y="447" class="m s">+ Add assignee (members)  ▼</text>
+  <text x="30" y="476" class="s g">The last assignee cannot be removed: assign someone else first.</text>
+
+  <text x="30" y="510" class="b">Subtasks</text>
+  <rect class="hd" x="30" y="518" width="690" height="28"/>
+  <text x="42" y="537" class="s b">Title</text><text x="330" y="537" class="s b">Status</text><text x="440" y="537" class="s b">Deadline</text><text x="560" y="537" class="s b">Assignees</text>
+  <rect class="row" x="30" y="546" width="690" height="34"/>
+  <text x="42" y="568" class="u s">Check gateway logs</text><text x="330" y="568" class="s">Done</text><text x="440" y="568" class="s">2026-11-10</text><text x="560" y="568" class="s">Ana</text>
+  <rect class="row" x="30" y="580" width="690" height="34"/>
+  <text x="42" y="602" class="u s">Write regression test</text><text x="330" y="602" class="s">To do</text><text x="440" y="602" class="s">2026-11-18</text><text x="560" y="602" class="s">Rui</text>
+  <rect class="box" x="30" y="626" width="140" height="30" rx="3"/><text x="100" y="646" class="m s">+ Add subtask</text>
+
+  <rect class="dark" x="30" y="688" width="140" height="36" rx="3"/><text x="100" y="711" class="m w b">Save changes</text>
+  <rect class="box" x="180" y="688" width="110" height="36" rx="3"/><text x="235" y="711" class="m">Cancel</text>
+  <text x="30" y="750" class="s g">Cancel discards the changes and returns to view mode. A subtask deadline cannot be later than its parent task deadline.</text>
+
+  <!-- Comments column -->
+  <rect class="card" x="750" y="132" width="420" height="612"/>
+  <text x="766" y="158" class="b" style="font-size:15px">Comments (3)</text>
+  <text x="900" y="158" class="s g">oldest first</text>
+  <rect class="box" x="766" y="174" width="388" height="72"/>
+  <text x="778" y="194" class="b s">Rui  -  2026-11-10 09:00</text>
+  <text x="778" y="218" class="s">Gateway returns 500 on refunds.</text>
+  <rect class="box" x="766" y="256" width="388" height="72"/>
+  <text x="778" y="276" class="b s">Ana  -  2026-11-10 10:30</text>
+  <text x="778" y="300" class="s">I will check the logs today.</text>
+  <text x="1060" y="276" class="s u">Edit</text><text x="1100" y="276" class="s u">Delete</text>
+  <rect class="box" x="766" y="338" width="388" height="72"/>
+  <text x="778" y="358" class="b s">Marta  -  2026-11-11 08:15</text>
+  <text x="778" y="382" class="s">Please prioritise before the demo.</text>
+  <text x="766" y="442" class="s b">New comment</text>
+  <rect class="box" x="766" y="448" width="388" height="90" rx="3"/>
+  <text x="778" y="470" class="g s">Write a comment (max 2000 characters)</text>
+  <text x="1154" y="556" class="s g" style="text-anchor:end">0 / 2000</text>
+  <rect class="dark" x="766" y="562" width="130" height="34" rx="3"/><text x="831" y="584" class="m w b">Add comment</text>
+
+  <!-- Calendar popup for the deadline: dates before today are disabled -->
+  <rect x="205" y="334" width="250" height="214" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+  <text x="330" y="356" class="m b">◀   November 2026   ▶</text>
+  <text x="222" y="378" class="m s g">S</text><text x="256" y="378" class="m s g">M</text><text x="290" y="378" class="m s g">T</text><text x="324" y="378" class="m s g">W</text><text x="358" y="378" class="m s g">T</text><text x="392" y="378" class="m s g">F</text><text x="426" y="378" class="m s g">S</text>
+  <g class="m s" style="fill:#bbb">
+    <text x="222" y="404">1</text><text x="256" y="404">2</text><text x="290" y="404">3</text><text x="324" y="404">4</text><text x="358" y="404">5</text><text x="392" y="404">6</text><text x="426" y="404">7</text>
+    <text x="222" y="432">8</text><text x="256" y="432">9</text><text x="290" y="432">10</text><text x="324" y="432">11</text>
+  </g>
+  <rect x="344" y="418" width="28" height="20" fill="#ffffff" stroke="#333333"/>
+  <g class="m s">
+    <text x="358" y="432">12</text><text x="392" y="432">13</text><text x="426" y="432">14</text>
+    <text x="222" y="460">15</text><text x="256" y="460">16</text><text x="290" y="460">17</text><text x="324" y="460">18</text><text x="358" y="460">19</text>
+  </g>
+  <rect x="378" y="446" width="28" height="20" fill="#333333"/>
+  <text x="392" y="460" class="m s w b">20</text>
+  <g class="m s">
+    <text x="426" y="460">21</text>
+    <text x="222" y="488">22</text><text x="256" y="488">23</text><text x="290" y="488">24</text><text x="324" y="488">25</text><text x="358" y="488">26</text><text x="392" y="488">27</text><text x="426" y="488">28</text>
+    <text x="222" y="516">29</text><text x="256" y="516">30</text>
+  </g>
+  <text x="215" y="540" class="s g">Today is 2026-11-12. Past dates are disabled.</text>
+
+  <!-- Callouts -->
+  <circle class="c" cx="30" cy="100" r="11"/><text class="n" x="30" y="104">1</text>
+  <circle class="c" cx="30" cy="136" r="11"/><text class="n" x="30" y="140">2</text>
+  <circle class="c" cx="30" cy="300" r="11"/><text class="n" x="30" y="304">3</text>
+  <circle class="c" cx="205" cy="334" r="11"/><text class="n" x="205" y="338">4</text>
+  <circle class="c" cx="30" cy="360" r="11"/><text class="n" x="30" y="364">5</text>
+  <circle class="c" cx="30" cy="420" r="11" transform="translate(0 -8)"/><text class="n" x="30" y="416">6</text>
+  <circle class="c" cx="30" cy="510" r="11" transform="translate(0 -8)"/><text class="n" x="30" y="506">7</text>
+  <circle class="c" cx="30" cy="688" r="11"/><text class="n" x="30" y="692">8</text>
+  <circle class="c" cx="750" cy="132" r="11"/><text class="n" x="750" y="136">9</text>
+
+  <text x="10" y="805">Dashed outline = shown only when the status is Blocked or Duplicate. Numbers refer to docs/ui/wireframes.md.</text>
+  <text x="10" y="823" class="g">Low-fidelity wireframe. All names and tasks are fictitious.</text>
+</svg>

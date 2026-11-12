@@ -42,7 +42,7 @@ Existem apenas dois papéis (decisão).
 
 | Papel | Descrição | Pode |
 |---|---|---|
-| **Membro da equipa** | Executa o trabalho | Ver os projetos de que é membro e as suas tarefas; criar, editar e apagar tarefas; mudar estados (ver P8) |
+| **Membro da equipa** | Executa o trabalho | Ver os projetos de que é membro e as suas tarefas; criar, editar e apagar tarefas e recuperar as apagadas dos seus projetos; mudar estados (ver P8) |
 | **Gestor de projeto** | Planeia e acompanha | Tudo o que o membro pode, mais: criar projetos e adicionar-lhes ou remover-lhes membros (formar a equipa); definir a fase e o estado do projeto; ver os projetos de que é gestor e o seu progresso global; apagar e recuperar projetos. Na v2: gerir contas e arquivar projetos |
 
 O gestor de projeto também forma as equipas; não existe um papel separado de "gestor de equipas" (P2).
@@ -90,7 +90,7 @@ Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Coul
 | F06 | Visibilidade por papel e por projeto | Protege o que cada utilizador deve ver | Must | v1 |
 | F07 | Painel inicial: projetos acessíveis com contagens de tarefas por estado e navegação para o detalhe; para o gestor, também a barra de progresso e o estado calculado por projeto | Responde a "acompanhar o progresso" e dá o ponto de entrada da aplicação | Must | v1 |
 | F08 | Subtarefas com estado e prioridades próprios, e regras de prazo e fecho | Permite dividir trabalho grande | Must | v1 |
-| F09 | Reciclagem (recuperar projetos e tarefas apagados) | Evita perdas acidentais | Must | v1 |
+| F09 | Reciclagem, acessível pelo painel inicial (recuperar projetos e tarefas apagados, conforme o papel) | Evita perdas acidentais | Must | v1 |
 | F10 | Autenticação: iniciar e terminar sessão e consultar o utilizador autenticado, com contas de demonstração criadas por seed | Identifica os utilizadores e protege o acesso; substitui o seletor de utilizador previsto antes | Must | v1 |
 | F11 | Etiquetas por tipo de trabalho e tempo de execução | Ajuda a organizar e filtrar | Should | v2 |
 | F12 | Lembretes e alertas de atraso, configuráveis | Evita falhar prazos | Should | v2 |
@@ -125,6 +125,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | Iniciar e terminar sessão | Sign in, Sign out |
 | Comentários | Comments |
 | Pesquisa de projetos | Search projects |
+| Reciclagem | Recycle bin |
 
 ## 4. Regras de negócio
 
@@ -138,7 +139,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R6 | Uma tarefa bloqueada exige motivo. Uma tarefa duplicada exige indicar a tarefa original, escolhida manualmente: tem de ser do mesmo projeto, diferente da própria e não pode estar em estado "duplicado" | v1 | Decisão |
 | R7 | Cada tarefa tem um lembrete, com antecedência definida por tarefa; o alerta de atraso repete-se segundo um intervalo definido pelo utilizador | v2 | Decisão |
 | R8 | Um membro só vê os projetos de que é membro, incluindo os concluídos e suspensos; o gestor vê só os projetos de que é gestor | v1 | Decisão, detalhes em P20 (confirmado) |
-| R9 | Só o gestor apaga projetos e recupera apagados; qualquer membro da equipa apaga tarefas e subtarefas. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas. Um projeto recupera-se como estava no momento em que foi apagado: voltam as tarefas apagadas com ele, e as tarefas apagadas antes continuam na reciclagem. A mesma regra vale para tarefas e subtarefas: recuperar uma tarefa devolve as subtarefas apagadas com ela, as apagadas antes continuam na reciclagem, e uma tarefa ou subtarefa só se recupera enquanto o projeto ou a tarefa-mãe a que pertence não tiver sido eliminado de vez | v1 | Decisão |
+| R9 | Só o gestor apaga e recupera projetos; qualquer membro do projeto apaga e recupera tarefas e subtarefas, e o gestor recupera as dos seus projetos. A reciclagem, acessível pelo painel inicial, mostra a cada utilizador só o que está em projetos a que tem acesso (R8) e só deixa recuperar o que o seu papel permite. Não se apaga uma tarefa-mãe com subtarefas em aberto. As subtarefas apagadas vão para a reciclagem, tal como as tarefas. Um projeto recupera-se como estava no momento em que foi apagado: voltam as tarefas apagadas com ele, e as tarefas apagadas antes continuam na reciclagem. A mesma regra vale para tarefas e subtarefas: recuperar uma tarefa devolve as subtarefas apagadas com ela, as apagadas antes continuam na reciclagem, e uma tarefa ou subtarefa só se recupera enquanto o projeto ou a tarefa-mãe a que pertence não tiver sido eliminado de vez | v1 | Decisão |
 | R10 | Só se arquiva um projeto concluído (um projeto suspenso não se arquiva); o arquivo guarda tarefas e histórico | v2 | Decisão |
 | R11 | Um membro pertence a um projeto em aberto de cada vez; adicionar a um projeto um membro que já está noutro projeto em aberto é recusado, com um aviso. Projetos concluídos e suspensos não são projetos em aberto (P4, P20). A regra não se aplica ao gestor. Exceção: ao retomar um projeto suspenso, os membros que entretanto entraram noutro projeto em aberto ficam sinalizados e o gestor vê um aviso (P22) | v1 | Decisão, detalhes em P20 e P22 (confirmado) |
 | R12 | Só o gestor altera a fase do projeto e define o seu estado, exceto "atenção" e "atrasado", que são só calculados e que o gestor não define (P5) | v1 | Decisão, detalhes em P5 (confirmado) |
@@ -157,6 +158,7 @@ A interface está em inglês (NF01). Nos outros documentos os termos aparecem em
 | R25 | A pesquisa de projetos faz-se pelo nome e só devolve projetos acessíveis ao utilizador (R8), incluindo os concluídos. A Lista filtra as tarefas por estado e por quadrante (a "prioridade" do novo âmbito, calculada a partir da urgência e da importância); os filtros combinam-se com o filtro "as minhas" | v1 | Decisão, detalhes em P29 (confirmado) |
 | R26 | Uma tarefa ou subtarefa tem sempre pelo menos um responsável. Podem associar-se vários responsáveis, que têm de ser elegíveis (R21), e remover-se atribuições; remover o último responsável é recusado, com uma mensagem a pedir que se atribua primeiro outra pessoa | v1 | Decisão |
 | R27 | Num projeto suspenso, as tarefas e subtarefas editam-se, mudam de estado e apagam-se, mas não se criam novas (R22). Num projeto concluído não se cria, edita, muda de estado nem apaga nada nas tarefas, subtarefas, responsáveis e comentários (R24), e os dados continuam visíveis. Os controlos não aparecem e, se a ação for pedida por outra via, é recusada com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
+| R28 | Um projeto concluído não pode ser reaberto: depois de "concluído", o estado do projeto já não muda. A ação não está disponível e, se for pedida por outra via, é recusada com uma mensagem a explicar o motivo (NF08) | v1 | Decisão |
 
 **Origem das regras:** *Decisão* quer dizer que a autora decidiu tudo o que a regra diz. *Decisão, detalhes em Pn (confirmado)* quer dizer que a ideia é da autora e o pressuposto que a completa já foi aceite. *Decisão, detalhes em Pn (por validar)* quer dizer que a ideia é da autora e o pressuposto que a completa ainda não foi aceite. *Pressuposto Pn (por validar)* quer dizer que a regra depende de algo que ainda não foi confirmado (ver [constraints.md](constraints.md#2-pressupostos-assumidos)).
 
@@ -171,7 +173,7 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 | NF03 | Dimensão de referência: cerca de 30 utilizadores, 3 a 5 projetos em aberto em simultâneo, cada um com uma equipa de 5 a 8 pessoas | Pressuposto (P18) | v1 |
 | NF04 | Controlo de acesso por papel e por projeto, com o utilizador autenticado por sessão (F10, S5) | Pressuposto (P15), regra R8 | v1 |
 | NF05 | Rastreabilidade: ficam registados quem fez o quê e quando (criar, editar, mudar de estado, apagar) | Pressuposto (P14) | v2 |
-| NF06 | Recuperabilidade: o que é apagado vai para uma reciclagem, durante 30 dias, e pode ser recuperado pelo gestor | Decisão, regras R9 e R20 | v1 |
+| NF06 | Recuperabilidade: o que é apagado vai para uma reciclagem, durante 30 dias, e pode ser recuperado por quem tem acesso, conforme o papel | Decisão, regras R9 e R20 | v1 |
 | NF07 | O cálculo da barra de progresso e dos estados "atenção" e "atrasado" segue exatamente as fórmulas definidas | Pressuposto (P5, P7) | v1 |
 | NF08 | Sempre que uma ação é recusada, é mostrada uma mensagem que explica o motivo e o que fazer. Quando o utilizador não tem acesso a uma ação, o controlo simplesmente não aparece | Decisão | v1 |
 | NF09 | O texto introduzido pelos utilizadores (nomes, títulos, descrições, motivos) é sempre mostrado como texto simples, nunca interpretado como código nem como formatação | Decisão | v1 |
@@ -259,7 +261,7 @@ Em 2026-11-11 o exercício acrescentou um comportamento mínimo para a aplicaç�
 | 17 | Medição | Como se mede o progresso? | Barra de progresso: percentagem de tarefas concluídas e data | Decisão |
 | 18 | Vistas | Que vistas existem? | Matriz e Lista na primeira fase; Calendário depois | Decisão |
 | 19 | Avisos | Como se avisa? | Lembretes e alertas de atraso configurados pelo utilizador, dentro da aplicação (v2) | Decisão |
-| 20 | Apagar | Quem apaga e recupera? | Projetos: só o gestor. Tarefas: qualquer membro da equipa. Há reciclagem, e só o gestor recupera | Decisão |
+| 20 | Apagar | Quem apaga e recupera? | Projetos: só o gestor. Tarefas: qualquer membro da equipa. Há reciclagem, e só o gestor recupera (revisto: os membros também recuperam tarefas e subtarefas dos seus projetos, R9) | Decisão |
 | 21 | Arquivo | O que é arquivar? | Só se arquiva um projeto concluído, com todas as tarefas e o histórico (v2) | Decisão |
 | 22 | Auditoria | É preciso registo de ações? | Sim (v2) | Decisão |
 | 23 | Saída de utilizador | O que acontece? | Remove-se o utilizador e coloca-se outro no seu lugar | Decisão |
