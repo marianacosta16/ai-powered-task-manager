@@ -1,6 +1,6 @@
 # Matriz — Arquitetura
 
-> Decisão sobre o estilo de arquitetura e identificação dos componentes principais. Não escolhe tecnologias: as decisões técnicas continuam pendentes em [constraints.md](constraints.md#4-decisões-técnicas-pendentes).
+> Decisão sobre o estilo de arquitetura, identificação dos componentes principais e a stack. As decisões técnicas por tomar continuam em [constraints.md](constraints.md#4-decisões-técnicas-pendentes).
 > Documentos relacionados: [requirements.md](requirements.md), [user-stories.md](user-stories.md) e [constraints.md](constraints.md).
 
 ## 1. Decisão
@@ -100,5 +100,27 @@ Todos os módulos ──► Persistência (cada um só aos seus dados)
 | v3 | Importação e exportação (F19) | Novo módulo |
 
 ## 7. O que este documento não decide
-- Linguagens, bibliotecas, base de dados, forma de execução e ambiente: continuam em T1 a T13 ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
+- A tecnologia da interface do utilizador, o ambiente onde a aplicação corre, as cópias de segurança e as edições simultâneas: continuam em T1, T8, T10, T11 e T13 ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
 - A estrutura interna de cada módulo e os nomes das suas interfaces: ficam para o desenho detalhado.
+
+## 8. Stack e decisões técnicas
+
+Escolhida em 2026-11-12 com a autora do projeto, por ser a mais simples que serve a arquitetura e o contrato. Antes não estava registada em nenhum documento.
+
+| Decisão | Escolha | Estado | Porquê |
+|---|---|---|---|
+| Linguagem e framework | **Java 21 com Spring Boot** | Decidido | Uma só aplicação executável, com módulos como pacotes; validação, segurança e geração do contrato OpenAPI maduras |
+| Base de dados | **PostgreSQL** | Decidido | O modelo de dados é relacional, com chaves e transações que as regras R11, R17 e R20 precisam ([database.md](database.md)) |
+| Forma de execução e interface | **API REST primeiro**; a interface escolhe-se depois da API (T1) | Decidido | A API testa-se contra o [openapi.yaml](../openapi.yaml) sem depender da interface; os wireframes já existem |
+| Autenticação | **Sessão no servidor, identificada por um cookie**, que termina ao terminar sessão ou após 3 horas sem atividade; controlo de acesso por papel e por projeto feito no servidor | Decidido | Expira e termina com facilidade; a S1 exige recusar o acesso também por ligação direta |
+| Build | Maven | Proposta | É o arranque habitual do Spring Boot |
+| Acesso aos dados e migrações | Spring Data JPA e Flyway | Proposta | Esquema versionado e seed de contas fictícias numa migração (T12) |
+| Testes | JUnit 5 e Spring Boot Test, com um PostgreSQL de teste | Proposta | Cada cenário Given / When / Then passa a ser um teste (T9) |
+| Datas e horas | `java.time` com o fuso do projeto | Proposta | Cumpre o P26 e o cálculo do tempo decorrido (T5) |
+
+**Como a stack respeita a arquitetura**
+- Cada módulo da secção 4 é um pacote da aplicação, e os casos de uso são serviços que coordenam os módulos numa só transação.
+- Os controladores REST fazem o papel da **Interface**: só falam com os casos de uso e com as consultas de leitura (regra 1 da secção 5).
+- Um teste automático verifica as dependências entre pacotes (regras 2 e 3 da secção 5).
+
+As propostas confirmam-se no incremento 0 do [plano de implementação](implementation-plan.md).

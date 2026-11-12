@@ -48,7 +48,7 @@ Propostas aceites para preencher lacunas. Devem ser validadas com o cliente real
 | P24 | Ao remover um membro com tarefas ou subtarefas por concluir, mesmo partilhadas com outros responsáveis (R17), o gestor passa cada uma dessas tarefas para um substituto. Um substituto é um membro já no projeto ou um novo membro, que tem de ser livre (R11) e é adicionado nessa altura; as tarefas podem ser repartidas por vários substitutos, e nenhum fica com mais de 5 tarefas e subtarefas em aberto no total (as subtarefas contam). O substituto de uma tarefa não pode já ser responsável por ela. O limite de 5 vale só nesta substituição. "Por concluir" são as tarefas que não estão em estado final | Completa a regra de remoção decidida pela autora | Confirmado |
 | P25 | O filtro "as minhas" mostra a tarefa principal se o membro for responsável por ela ou por alguma das suas subtarefas | Interpretação de "o filtro considera as subtarefas", dado que as subtarefas não aparecem sozinhas (R18) | Confirmado |
 | P26 | O fuso horário é definido ao criar o projeto (por defeito, o de Lisboa) e aplica-se a todas as datas e horas do projeto, incluindo os prazos das tarefas. A data de fim pode ter hora; sem hora, o dia de fim conta inteiro (até ao fim desse dia). A data de início sem hora conta a partir das 00:00. O tempo decorrido mede-se entre o instante de início e o de fim | O fuso e a hora de fim são decisão da autora; o dia inteiro e as 00:00 são interpretações minhas, aceites pela autora | Confirmado |
-| P27 | O painel inicial conta só as tarefas principais (R18). O painel do gestor continua a não mostrar os projetos concluídos (decisão anterior sobre a vista global) e o gestor encontra-os pela pesquisa de projetos (F22). O painel do membro mostra todos os seus projetos, incluindo concluídos e suspensos (R8) | Concilia o painel inicial novo com a vista global do gestor (F07) | Confirmado |
+| P27 | O painel inicial conta só as tarefas principais (R18). O painel inicial, tanto do gestor como do membro, não mostra os projetos concluídos (decisão sobre a vista global); encontram-se em Projetos e na pesquisa (F22), onde cada um vê os projetos a que tem acesso (R8) | Concilia o painel inicial novo com a vista global do gestor (F07) | Confirmado |
 | P28 | Os comentários têm no máximo 2000 caracteres e são listados do mais antigo para o mais recente. O autor edita e apaga os seus comentários; apagar elimina o comentário de vez, sem reciclagem, e a edição não guarda histórico. Aplicam-se às tarefas e subtarefas, em projetos em aberto e suspensos; num projeto concluído não se adiciona, edita nem apaga. Os comentários seguem a tarefa (apagar ou recuperar a tarefa faz o mesmo aos comentários) | O novo âmbito pede só adicionar e listar; o resto foi decidido pela autora | Confirmado |
 | P29 | A pesquisa de projetos procura o texto em qualquer parte do nome, sem distinguir maiúsculas de minúsculas. Os filtros por estado e por quadrante aplicam-se na Lista, sobre as tarefas principais, e podem combinar-se com "as minhas" | O novo âmbito diz "pesquisar pelo nome" e "filtrar por estado e prioridade" sem mais detalhe | Confirmado |
 
@@ -78,17 +78,17 @@ Mitigação decidida: só dados fictícios num ambiente controlado (C8). Se a ap
 
 ## 4. Decisões técnicas pendentes
 
-Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) está decidido em [architecture.md](architecture.md). Os pontos seguintes têm de ser decididos na fase de desenho.
+O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e PostgreSQL, com a interface depois da API) estão decididos em [architecture.md](architecture.md#8-stack-e-decisões-técnicas). A coluna indica o que já está decidido; o resto tem de ser decidido no incremento 0 do [plano de implementação](implementation-plan.md).
 
 | ID | Decisão pendente | Condiciona |
 |---|---|---|
-| T1 | Forma de execução da aplicação (por exemplo, acesso por navegador ou aplicação instalada) | NF02 |
-| T2 | Onde e como se guardam os dados, e se há um local central partilhado pelas equipas | F10, F06, F09, F13 |
-| T3 | Mecanismo de autenticação e de controlo de acesso por papel e por projeto | S1, S2, S5 e S6 |
+| T1 | Forma de execução da aplicação (por exemplo, acesso por navegador ou aplicação instalada). **Decidido em parte:** API REST primeiro; a interface decide-se depois | NF02 |
+| T2 | Onde e como se guardam os dados, e se há um local central partilhado pelas equipas. **Decidido:** PostgreSQL, uma base central | F10, F06, F09, F13 |
+| T3 | Mecanismo de autenticação e de controlo de acesso por papel e por projeto. **Decidido:** sessão no servidor com cookie, e controlo de acesso feito no servidor | S1, S2, S5 e S6 |
 | T4 | Como se disparam os lembretes e alertas de atraso dentro da aplicação | F12, P11 |
 | T5 | Como se implementam as datas e horas (fuso horário do projeto, P26, e cálculo do tempo decorrido) | P5, cenários 6.3 a 6.6, 6.14 e 6.15 |
 | T6 | Como se guarda o registo de auditoria | F14, S7 |
-| T7 | Tecnologias de interface, lógica e armazenamento | Todas |
+| T7 | Tecnologias de interface, lógica e armazenamento. **Decidido:** Java 21, Spring Boot e PostgreSQL para a lógica e o armazenamento; a interface por decidir | Todas |
 | T8 | Ambiente onde a aplicação corre e como se publica | T1 |
 | T9 | Estratégia de testes, incluindo como automatizar os cenários Given / When / Then | [user-stories.md](user-stories.md) |
 | T10 | Navegadores ou sistemas suportados, e requisitos de acessibilidade | NF02 |
@@ -99,6 +99,7 @@ Nenhuma tecnologia foi escolhida. O estilo de arquitetura (monólito modular) es
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
 - Se as tarefas ficam ligadas a uma fase do projeto.
+- Se se podem adicionar e remover membros num projeto suspenso (R11 e R17 falam em "projeto em aberto"; R27 trata só das tarefas e dos comentários).
 - Que integrações, se alguma, o cliente quer (F19).
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
 

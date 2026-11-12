@@ -8,7 +8,7 @@ Estas instruções aplicam-se a qualquer agente que trabalhe neste repositório.
 
 ## Contexto do projeto
 
-A **Matriz** é uma aplicação de gestão de projetos e tarefas para equipas, com uma matriz urgente/importante como vista principal. O estado atual está no [README.md](README.md): neste momento existe apenas documentação, **não há código e nenhuma tecnologia foi escolhida**.
+A **Matriz** é uma aplicação de gestão de projetos e tarefas para equipas, com uma matriz urgente/importante como vista principal. O estado atual está no [README.md](README.md): neste momento existe apenas documentação e **ainda não há código**. A stack está decidida em [docs/architecture.md](docs/architecture.md): Java 21, Spring Boot e PostgreSQL.
 
 ## 1. Consultar a documentação antes de agir
 
@@ -22,10 +22,11 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 | [docs/constraints.md](docs/constraints.md) | Restrições (C), pressupostos (P), segurança (S), decisões técnicas pendentes (T) |
 | [docs/architecture.md](docs/architecture.md) | Estilo de arquitetura decidido (monólito modular), componentes, responsabilidades e regras de fronteira |
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e pontos por confirmar (M) |
-| [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado com duas operações da v1 (criar tarefa e listar tarefas do projeto) e pressupostos por confirmar (A) |
+| [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 com as 28 operações da v1: sessão, projetos, equipa, tarefas, responsáveis, comentários, painel e reciclagem. Pressupostos por confirmar (A) |
 | [docs/ui/matrix-wireframe.md](docs/ui/matrix-wireframe.md) | Wireframe do ecrã Matrix: elementos, navegação e pontos por confirmar (W) |
 | [docs/ui/wireframes.md](docs/ui/wireframes.md) | Wireframes dos restantes ecrãs da v1: elementos, navegação e pontos por confirmar (W) |
-| [docs/plan.md](docs/plan.md) | Lacunas, decisões técnicas pendentes e plano incremental proposto (não aprovado) |
+| [docs/implementation-plan.md](docs/implementation-plan.md) | Plano de implementação: incrementos, operações da API, critérios de aceitação, verificações e estado de cada incremento. Segue-o e atualiza o estado ao concluir cada incremento |
+| [docs/plan.md](docs/plan.md) | Análise de lacunas, contradições e decisões pendentes (o plano executável está em implementation-plan.md) |
 
 - A documentação é a fonte de verdade, exceto os itens marcados como Pressuposto, que ainda não estão confirmados (ver secção 3). Se algo no código ou no pedido a contradiz, pára e pergunta.
 - Se dois documentos se contradizem, não escolhas por tua conta: assinala a contradição.
@@ -43,7 +44,7 @@ Antes de qualquer tarefa, lê os documentos relevantes:
 - Não acrescentes funcionalidades, regras, estados, campos nem decisões que não estejam documentados.
 - Os itens marcados como **Pressuposto** podem ser usados, mas não os trates como confirmados: se uma tarefa depender de um pressuposto, questiona a autora do projeto.
 - Se a documentação não define algo (ver as questões em aberto em [docs/constraints.md](docs/constraints.md)), pergunta em vez de assumir.
-- Não escolhas tecnologias, bibliotecas nem ferramentas: são decisões pendentes (T). Respeita a arquitetura decidida em [docs/architecture.md](docs/architecture.md) e não a alteres sem aprovação. Podes apresentar opções com prós e contras, mas espera pela aprovação.
+- Respeita a arquitetura e a stack decididas em [docs/architecture.md](docs/architecture.md) e não as alteres sem aprovação. Não escolhas outras tecnologias, bibliotecas nem ferramentas: as que são *proposta* e as decisões ainda pendentes (T) confirmam-se com a autora no incremento 0 do [plano de implementação](docs/implementation-plan.md). Podes apresentar opções com prós e contras, mas espera pela aprovação.
 
 ## 4. Planear antes de alterações significativas
 

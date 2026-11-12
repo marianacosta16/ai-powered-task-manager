@@ -52,11 +52,11 @@ Ficheiro: [dashboard-wireframe.svg](dashboard-wireframe.svg). Um cartão por pro
 |---|---|---|---|
 | 1 | Utilizador autenticado e *Sign out* | Nome e papel de quem tem a sessão iniciada | F10, US10 |
 | 2 | Título | "Dashboard" | F07 |
-| 3 | Cartão do projeto | Nome (ligação para o detalhe), fase e estado. Só aparecem os projetos acessíveis ao utilizador | Cenários 13.2 e 13.3, R8 |
+| 3 | Cartão do projeto | Nome (ligação para o detalhe), fase e estado. Só aparecem os projetos acessíveis ao utilizador que não estão concluídos | Cenários 13.2 e 13.3, R8 |
 | 4 | Mosaicos de contagem | Um por estado da tarefa (7), com o número de tarefas principais. Os zeros também se mostram | Cenários 13.1 e 13.4, R18, P27 |
 | 5 | *Progress* (só gestor) | Barra de progresso e estado calculado ("Attention" ou "Late"). Projeto sem tarefas mostra "No tasks" | US06, P5, P16 |
 | 6 | Botão *Recycle bin* | Abre a reciclagem. Está no painel para todos os utilizadores | F09, R9 |
-| 7 | Projeto concluído | O wireframe é o painel de um membro, que vê os projetos concluídos. O painel do gestor não os mostra; ele encontra-os em *Projects* | Cenário 13.5, P27 |
+| 7 | Nota sobre projetos concluídos | Os projetos concluídos não aparecem no painel, nem ao gestor nem ao membro; encontram-se em *Projects* e na pesquisa | Cenário 13.5, P27 |
 
 | De | Ação | Para |
 |---|---|---|

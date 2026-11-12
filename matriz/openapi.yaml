@@ -1,34 +1,381 @@
 openapi: 3.1.0
 
 info:
-  title: Matriz API (MVP contract, simplified)
-  version: 0.1.0
+  title: Matriz API (MVP contract)
+  version: 0.2.0
   description: |
-    Simplified contract with two operations for the MVP (v1): create a task and list the tasks of a project.
+    REST contract for the MVP (v1) of Matriz: sign in and out, projects, team, tasks, assignees, comments, search and filters, dashboard and recycle bin.
 
-    This file describes an interface only. It does not choose technologies: those decisions remain open (T1 to T13 in docs/constraints.md).
-    Field names follow the data model in docs/database.md. References such as F02, R13 or P25 point to docs/requirements.md and docs/constraints.md.
+    The contract describes an interface only. The backend stack is Java 21 with Spring Boot and PostgreSQL, and the user interface is decided later, after the API (docs/architecture.md, section 8). This file does not depend on any of them.
+    References such as F02, R13 or P25 point to docs/requirements.md and docs/constraints.md. Field names follow docs/database.md.
+    Who may do what is summarised in docs/requirements.md, section 2.1. A user who has no access to a project always gets 403, also by direct link (S1); a request without a session gets 401.
 
-    Assumptions to confirm (marked "Assumption" in the descriptions):
-    - A1: the current user is identified by the session started with sign in (F10, S5). The session mechanism is not decided (T3).
-    - A2 (confirmed, scenario 2.1): a new task starts in status `To do`.
-    - A3: a task has at least one assignee (M6 in docs/database.md).
+    Conventions
+    - 400: the request is malformed or a field is missing, out of range or too long.
+    - 422: the request is well formed but breaks a business rule. The body carries a stable `code` and a message that says why and what to do (NF08).
+    - Dates use the time zone of the project (P26).
+
+    Assumptions to confirm (marked "Assumption" in the descriptions)
+    - A3: a task always has at least one assignee (R26).
     - A4: only one level of subtasks (M1 in docs/database.md).
     - A5: a task deadline is a date without time (M3 in docs/database.md).
     - A6: the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
+    - A7: when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
 
 tags:
+  - name: Auth
+    description: Sign in, sign out and the authenticated user (F10).
+  - name: Projects
+    description: Projects, search and the team (F01, F22).
   - name: Tasks
-    description: Tasks and subtasks of a project (F02, F03, F05, F08).
+    description: Tasks, subtasks and assignees (F02, F03, F05, F08).
+  - name: Comments
+    description: Comments on tasks and subtasks (F17).
+  - name: Dashboard
+    description: Dashboard with the accessible projects (F07).
+  - name: Recycle bin
+    description: Deleted projects, tasks and subtasks (F09).
 
 security:
   - session: []
 
 paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: signIn
+      summary: Sign in
+      description: |
+        Starts a session with a demonstration account (F10, S5). The session ends on sign out or after 3 hours without activity.
+        The same error is returned when the username or the password is wrong, without saying which one (scenario 10.2).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignIn'
+      responses:
+        '200':
+          description: Signed in. The session cookie is set and the authenticated user is returned.
+          headers:
+            Set-Cookie:
+              description: The session cookie.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: The credentials are not correct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: INVALID_CREDENTIALS
+                message: Credentials are not correct. Check your username and password and try again.
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: signOut
+      summary: Sign out
+      description: Ends the current session (scenario 10.4).
+      responses:
+        '204':
+          description: Signed out.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      operationId: getAuthenticatedUser
+      summary: Get the authenticated user
+      description: Returns the name and role of the user of the current session (scenario 10.3).
+      responses:
+        '200':
+          description: The authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /projects:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: List and search projects
+      description: |
+        Returns the projects the user can access, completed and suspended ones included (R8, R25). The order is not defined yet.
+        With `search`, only projects whose name contains the text, ignoring case (P29).
+      parameters:
+        - name: search
+          in: query
+          description: Text to find anywhere in the project name.
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+      responses:
+        '200':
+          description: The accessible projects. An empty array when there is no match ("No projects found.").
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create a project
+      description: |
+        Only a project manager creates projects (F01, R19). The creator indicates the manager of the project; if it is someone else, the creator stops seeing the project.
+        Rules: name up to 100 and description up to 2000 characters (R14); start and end dates are required and the end is not before the start (R16); the start date is not in the past, and today is accepted (R29); the manager must have the role Project manager (M10).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Project created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Get a project
+      description: Returns the data of a project the user can access. A completed project can still be viewed (R28).
+      responses:
+        '200':
+          description: The project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Projects]
+      operationId: updateProject
+      summary: Update a project
+      description: |
+        Only the manager of the project changes its data, phase and status (R12). The states Attention and Late cannot be set (they are calculated, P5).
+        A completed project cannot be changed or reopened (R28). The start date is validated only when it is changed (R29).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: The updated project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+    delete:
+      tags: [Projects]
+      operationId: deleteProject
+      summary: Delete a project
+      description: |
+        Only the manager of the project deletes it. The project and its tasks go to the recycle bin for 30 days (R9, R20).
+        A completed project cannot be deleted (R28).
+      responses:
+        '204':
+          description: Project moved to the recycle bin.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /projects/{projectId}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: listMembers
+      summary: List the members of a project
+      description: |
+        Returns the members, with the number of open tasks and subtasks of each one. The manager of the project is not listed (M5).
+        `inOtherOpenProject` is the red label of a member of a resumed project who is also in another open project (P22).
+      responses:
+        '200':
+          description: The members.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Projects]
+      operationId: addMember
+      summary: Add a member to a project
+      description: |
+        Only the manager of the project adds members. A person who is already a member of another open project is refused (R11); suspended and completed projects are not open (P4).
+        A completed project cannot be changed (R28). Whether members can be added to a suspended project is still undefined (docs/constraints.md).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMember'
+      responses:
+        '201':
+          description: Member added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /projects/{projectId}/members/{userId}/removal:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/UserId'
+    post:
+      tags: [Projects]
+      operationId: removeMember
+      summary: Remove a member from a project
+      description: |
+        Only the manager of the project removes members (R17). The member is freed for another open project.
+        Every open task and subtask of the member, including those shared with other assignees, needs a substitute in `reassignments`; they can be split among several substitutes. A substitute cannot already be an assignee of that task (P24).
+        Nobody can end up with more than 5 open tasks and subtasks in total (R17, P24). Assumption A7: a substitute who is not yet a member is added to the project in the same transaction.
+        Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRemoval'
+      responses:
+        '204':
+          description: Member removed and tasks reassigned.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /projects/{projectId}/candidate-members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: listCandidateMembers
+      summary: List the people who can be added to a project
+      description: |
+        Used by the manager to choose a member to add or a substitute. Returns everyone who is not yet in the project, saying who is available.
+        A person already in another open project is returned as unavailable, with the reason (R11, scenario 1.5).
+      responses:
+        '200':
+          description: The candidates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Candidate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{projectId}/assignable-users:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: listAssignableUsers
+      summary: List the users who can be assigned to tasks of a project
+      description: Returns the eligible assignees: the members of the project and its manager (R21).
+      responses:
+        '200':
+          description: The eligible users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /projects/{projectId}/tasks:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
-
     post:
       tags: [Tasks]
       operationId: createTask
@@ -45,7 +392,7 @@ paths:
         - R22: tasks can only be created in an open project; a `Completed` or `Suspended` project refuses the creation.
         - R6 does not apply here: a task is never created as `Blocked` or `Duplicate`.
 
-        A2 (confirmed, scenario 2.1): the new task has status `To do`. Assumption A3: at least one assignee is required.
+        The new task has status `To do` (scenario 2.1). Assumption A3: at least one assignee is required.
         Who can create: any member of the project and its manager (R8, S1). A project that is deleted is treated as not found.
       requestBody:
         required: true
@@ -80,35 +427,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
         '400':
-          description: Invalid request. A required field is missing or a value is malformed, out of range or too long (R1, R14).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                code: VALIDATION_ERROR
-                message: The title must have at most 100 characters. Shorten it and try again.
-                details:
-                  - field: title
-                    issue: Longer than 100 characters.
+          $ref: '#/components/responses/ValidationError'
         '401':
-          description: There is no valid session: the user has not signed in or the session ended (F10).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: The current user is neither a member nor the manager of the project (R8, S1).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: The project does not exist or was deleted, or `parentTaskId` does not exist in this project.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/NotFound'
         '422':
           description: The request is well formed but breaks a business rule.
           content:
@@ -135,13 +460,12 @@ paths:
                   summary: R22
                   value:
                     code: PROJECT_NOT_OPEN
-                    message: Tasks cannot be created in a completed or suspended project. Change the project status first.
+                    message: Tasks cannot be created in a completed or suspended project.
                 parentIsSubtask:
                   summary: A4
                   value:
                     code: PARENT_IS_SUBTASK
                     message: A subtask cannot have subtasks. Choose a main task as parent.
-
     get:
       tags: [Tasks]
       operationId: listProjectTasks
@@ -185,64 +509,339 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Task'
-              example:
-                - id: 101
-                  projectId: 7
-                  parentTaskId: null
-                  title: Prepare kick-off meeting
-                  description: Agenda and invitations for the whole team.
-                  status: In progress
-                  deadline: 2026-12-15
-                  urgency: 3
-                  importance: 4
-                  blockReason: null
-                  originalTaskId: null
-                  assignees:
-                    - id: 12
-                      name: Ana Example
-                      role: Team member
-                  subtasks:
-                    - id: 102
-                      projectId: 7
-                      parentTaskId: 101
-                      title: Send invitations
-                      status: To do
-                      deadline: 2026-12-10
-                      urgency: 2
-                      importance: 2
-                      blockReason: null
-                      originalTaskId: null
-                      assignees:
-                        - id: 12
-                          name: Ana Example
-                          role: Team member
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
-          description: There is no valid session: the user has not signed in or the session ended (F10).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: The current user is neither a member nor the manager of the project (R8, S1).
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: The project does not exist or was deleted.
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Get a task or a subtask
+      description: Returns the data, assignees and subtasks of a task, or the data of a subtask. Members and the manager of the project can read it, in any project state.
+      responses:
+        '200':
+          description: The task.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Update a task or a subtask
+      description: |
+        Edits the data, status, priority and deadline. Allowed in an open or suspended project, never in a completed one (R27, R28).
+        Rules: R13 and R2 apply whenever a deadline is set or changed; R3 blocks moving the deadline of a parent before one of its subtasks; a task with open subtasks cannot be completed or cancelled (R4); a `Blocked` task needs a reason of up to 100 characters; a `Duplicate` task needs its original, from the same project, different from itself and not a duplicate (R6).
+        Reopening a task in a final status is allowed only to the manager of the project (P8).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: The updated task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+    delete:
+      tags: [Tasks]
+      operationId: deleteTask
+      summary: Delete a task or a subtask
+      description: |
+        Sends the task, its subtasks and its comments to the recycle bin for 30 days (R9, R20). Allowed in an open or suspended project (R27).
+        A task with open subtasks is not deleted (R9).
+      responses:
+        '204':
+          description: Task moved to the recycle bin.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /tasks/{taskId}/assignees:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    post:
+      tags: [Tasks]
+      operationId: addAssignee
+      summary: Assign a user to a task
+      description: |
+        Adds an assignee. The user must be a member of the project or its manager (R21, scenario 2.9). Allowed in an open or suspended project (R27).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddAssignee'
+      responses:
+        '200':
+          description: The assignees of the task after the change.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /tasks/{taskId}/assignees/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+      - $ref: '#/components/parameters/UserId'
+    delete:
+      tags: [Tasks]
+      operationId: removeAssignee
+      summary: Remove an assignee from a task
+      description: |
+        Removes the assignment. The last assignee cannot be removed: someone else must be assigned first (R26, scenario 2.11). Allowed in an open or suspended project (R27).
+      responses:
+        '204':
+          description: Assignment removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /tasks/{taskId}/comments:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Comments]
+      operationId: listComments
+      summary: List the comments of a task or subtask
+      description: Returns the comments from the oldest to the newest, with author and date (R24, scenario 11.2).
+      responses:
+        '200':
+          description: The comments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Comments]
+      operationId: addComment
+      summary: Add a comment to a task or subtask
+      description: |
+        Any member of the project and its manager can comment. The author and the date are set by the application (R24).
+        Allowed in an open or suspended project, never in a completed one (R28). The text is plain text of up to 2000 characters (NF09).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentWrite'
+      responses:
+        '201':
+          description: Comment added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /comments/{commentId}:
+    parameters:
+      - $ref: '#/components/parameters/CommentId'
+    patch:
+      tags: [Comments]
+      operationId: editComment
+      summary: Edit a comment
+      description: |
+        Only the author edits their comment (R24). The author and the creation date do not change. Not allowed in a completed project (R28).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentWrite'
+      responses:
+        '200':
+          description: The updated comment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+    delete:
+      tags: [Comments]
+      operationId: deleteComment
+      summary: Delete a comment
+      description: |
+        Only the author deletes their comment, and it is removed for good, without the recycle bin (R24, P28). Not allowed in a completed project (R28).
+      responses:
+        '204':
+          description: Comment deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      operationId: getDashboard
+      summary: Get the dashboard
+      description: |
+        Returns the projects the user can access that are not completed (open and suspended), each with the count of its main tasks by status (R18, P27).
+        For the manager of a project it also returns the progress and the calculated status (US06, P5, P7, P16). Completed projects are not returned; they are found in the project list and search (P27).
+      responses:
+        '200':
+          description: The dashboard.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardProject'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recycle-bin:
+    get:
+      tags: [Recycle bin]
+      operationId: listRecycleBin
+      summary: List the deleted items
+      description: |
+        Returns the deleted items of the projects the user can access, with the days left before they are removed for good (R20).
+        A project manager sees deleted projects and tasks of their projects; a member sees deleted tasks and subtasks of the projects they belong to (R9).
+        An item that cannot be restored says why.
+      responses:
+        '200':
+          description: The deleted items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecycleItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recycle-bin/projects/{projectId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Recycle bin]
+      operationId: restoreProject
+      summary: Restore a deleted project
+      description: |
+        Only a project manager restores projects (R9). The project comes back as it was when it was deleted: the tasks deleted with it return, and those deleted before stay in the recycle bin (scenario 7.7).
+      responses:
+        '204':
+          description: Project restored.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+
+  /recycle-bin/tasks/{taskId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    post:
+      tags: [Recycle bin]
+      operationId: restoreTask
+      summary: Restore a deleted task or subtask
+      description: |
+        A member of the project or its manager restores tasks and subtasks (R9). An item is restored only while its project or parent task exists and is not in the recycle bin (scenarios 7.7 and 7.8).
+      responses:
+        '204':
+          description: Task restored.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
 
 components:
   securitySchemes:
     session:
-      type: http
-      scheme: bearer
+      type: apiKey
+      in: cookie
+      name: SESSION
       description: |
-        Assumption A1. The user signs in with a demonstration account (F10, S5, P21) and the session identifies them in later requests.
-        "Bearer" is only a placeholder for this contract: the real mechanism is not decided (T3).
+        The user signs in with a demonstration account (F10, S5, P21) and the server keeps the session, identified by a cookie. The session ends on sign out or after 3 hours without activity.
+        The cookie name is a placeholder for this contract.
 
   parameters:
     ProjectId:
@@ -253,8 +852,307 @@ components:
       schema:
         type: integer
         minimum: 1
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      description: Identifier of the task or subtask.
+      schema:
+        type: integer
+        minimum: 1
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Identifier of the user.
+      schema:
+        type: integer
+        minimum: 1
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      description: Identifier of the comment.
+      schema:
+        type: integer
+        minimum: 1
+
+  responses:
+    ValidationError:
+      description: Invalid request. A required field is missing or a value is malformed, out of range or too long (R1, R14).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: VALIDATION_ERROR
+            message: The title must have at most 100 characters. Shorten it and try again.
+            details:
+              - field: title
+                issue: Longer than 100 characters.
+    Unauthorized:
+      description: There is no valid session: the user has not signed in or the session ended (F10).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHENTICATED
+            message: Sign in to continue.
+    Forbidden:
+      description: The user has no access to this project, or the action is not allowed to their role (R8, S1, section 2.1 of docs/requirements.md).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: FORBIDDEN
+            message: You do not have access to this project.
+    NotFound:
+      description: The resource does not exist or was deleted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: The item was not found.
+    BusinessRuleViolation:
+      description: The request is well formed but breaks a business rule. The `code` says which one.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            projectCompleted:
+              summary: R27 and R28
+              value:
+                code: PROJECT_COMPLETED
+                message: A completed project cannot be changed or reopened.
+            memberInOtherProject:
+              summary: R11
+              value:
+                code: MEMBER_IN_OTHER_OPEN_PROJECT
+                message: This person is already in another open project.
+            assigneeLimit:
+              summary: R17
+              value:
+                code: ASSIGNEE_LIMIT_EXCEEDED
+                message: This person would have more than 5 open tasks. Choose someone else or split the tasks.
+            lastAssignee:
+              summary: R26
+              value:
+                code: LAST_ASSIGNEE
+                message: A task needs at least one assignee. Assign someone else first.
 
   schemas:
+    SignIn:
+      type: object
+      required: [username, password]
+      additionalProperties: false
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+
+    User:
+      type: object
+      required: [id, name, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+          enum: [Team member, Project manager]
+
+    Member:
+      description: A member of a project, with the number of open tasks and subtasks assigned to them in it.
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [openTaskCount, inOtherOpenProject]
+          properties:
+            openTaskCount:
+              type: integer
+              minimum: 0
+            inOtherOpenProject:
+              type: boolean
+              description: True when the member is also in another open project (the red label, P22).
+
+    Candidate:
+      type: object
+      required: [user, available]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        available:
+          type: boolean
+        unavailableReason:
+          type: [string, 'null']
+          enum: [IN_OTHER_OPEN_PROJECT, null]
+          description: Why the person cannot be added (R11).
+
+    AddMember:
+      type: object
+      required: [userId]
+      additionalProperties: false
+      properties:
+        userId:
+          type: integer
+          minimum: 1
+
+    MemberRemoval:
+      type: object
+      required: [reassignments]
+      additionalProperties: false
+      properties:
+        reassignments:
+          type: array
+          description: One entry for each open task or subtask of the member. Empty when the member has none.
+          items:
+            type: object
+            required: [taskId, newAssigneeId]
+            additionalProperties: false
+            properties:
+              taskId:
+                type: integer
+                minimum: 1
+              newAssigneeId:
+                type: integer
+                minimum: 1
+                description: The substitute. A member of the project or a free person (A7), who is not already an assignee of the task.
+
+    ProjectPhase:
+      type: string
+      enum: [Initiation, Planning, Execution, Monitoring, Evaluation]
+
+    ProjectStatus:
+      type: string
+      description: States set by the manager. Attention and Late are calculated and never set (R12, P5).
+      enum: [Not started, In progress, Suspended, Completed]
+
+    ProjectSummary:
+      type: object
+      required: [id, name, phase, status, manager]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          maxLength: 100
+        phase:
+          $ref: '#/components/schemas/ProjectPhase'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        manager:
+          $ref: '#/components/schemas/User'
+
+    Project:
+      allOf:
+        - $ref: '#/components/schemas/ProjectSummary'
+        - type: object
+          required: [startDate, endDate, timezone]
+          properties:
+            description:
+              type: [string, 'null']
+              maxLength: 2000
+            startDate:
+              type: string
+              format: date
+            startTime:
+              type: [string, 'null']
+              format: time
+              description: Empty means 00:00 (P26).
+            endDate:
+              type: string
+              format: date
+            endTime:
+              type: [string, 'null']
+              format: time
+              description: Empty means the whole end day counts (P26).
+            timezone:
+              type: string
+              description: Time zone of the project, Lisbon by default (P26).
+
+    ProjectCreate:
+      type: object
+      required: [name, startDate, endDate, phase, status, managerId]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 2000
+        startDate:
+          type: string
+          format: date
+          description: Not in the past; today is accepted (R29).
+        startTime:
+          type: string
+          format: time
+        endDate:
+          type: string
+          format: date
+          description: Not before the start date (R16).
+        endTime:
+          type: string
+          format: time
+        timezone:
+          type: string
+          description: Defaults to Lisbon (P26).
+        phase:
+          $ref: '#/components/schemas/ProjectPhase'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        managerId:
+          type: integer
+          minimum: 1
+          description: A user with the role Project manager (R19, M10).
+
+    ProjectUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: Only the fields to change.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, 'null']
+          maxLength: 2000
+        startDate:
+          type: string
+          format: date
+        startTime:
+          type: [string, 'null']
+          format: time
+        endDate:
+          type: string
+          format: date
+        endTime:
+          type: [string, 'null']
+          format: time
+        timezone:
+          type: string
+        phase:
+          $ref: '#/components/schemas/ProjectPhase'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        managerId:
+          type: integer
+          minimum: 1
+
     TaskCreate:
       type: object
       description: Data to create a task or a subtask. The project comes from the path.
@@ -284,7 +1182,7 @@ components:
           type: array
           minItems: 1
           uniqueItems: true
-          description: Identifiers of the assignees. All must be members of the project or its manager (R21). Assumption A3 (M6).
+          description: Identifiers of the assignees. All must be members of the project or its manager (R21). Assumption A3 (R26).
           items:
             type: integer
             minimum: 1
@@ -292,6 +1190,36 @@ components:
           type: integer
           minimum: 1
           description: When given, the new item is a subtask of this main task (F08). The parent must be a main task of the same project (A4).
+
+    TaskUpdate:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: Only the fields to change.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: [string, 'null']
+          maxLength: 2000
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        deadline:
+          type: string
+          format: date
+        urgency:
+          $ref: '#/components/schemas/Level'
+        importance:
+          $ref: '#/components/schemas/Level'
+        blockReason:
+          type: [string, 'null']
+          maxLength: 100
+          description: Required when the status is `Blocked` (R6).
+        originalTaskId:
+          type: [integer, 'null']
+          description: Required when the status is `Duplicate` (R6).
 
     Task:
       type: object
@@ -320,6 +1248,8 @@ components:
           $ref: '#/components/schemas/Level'
         importance:
           $ref: '#/components/schemas/Level'
+        quadrant:
+          $ref: '#/components/schemas/Quadrant'
         blockReason:
           type: [string, 'null']
           maxLength: 100
@@ -333,7 +1263,7 @@ components:
             $ref: '#/components/schemas/User'
         subtasks:
           type: array
-          description: Subtasks of a main task. Present only in the list result and only for main tasks (R18).
+          description: Subtasks of a main task. Present only for main tasks (R18).
           items:
             $ref: '#/components/schemas/Task'
 
@@ -342,28 +1272,173 @@ components:
       description: Task status. `Done`, `Cancelled` and `Duplicate` are final.
       enum: [To do, In progress, In review, Blocked, Done, Cancelled, Duplicate]
 
-    Quadrant:
-      type: string
-      description: Matrix quadrant. Levels 1 and 2 count as low and levels 3 and 4 as high (F04, R25).
-      enum: [Do first, Schedule, Delegate, Later]
-
     Level:
       type: integer
       description: Urgency or importance level. 1 = Low, 2 = Medium, 3 = High, 4 = Critical (F03).
       minimum: 1
       maximum: 4
 
-    User:
+    Quadrant:
+      type: string
+      description: Matrix quadrant. Levels 1 and 2 count as low and levels 3 and 4 as high (F04, R25).
+      enum: [Do first, Schedule, Delegate, Later]
+
+    AddAssignee:
       type: object
-      required: [id, name, role]
+      required: [userId]
+      additionalProperties: false
       properties:
+        userId:
+          type: integer
+          minimum: 1
+
+    Comment:
+      type: object
+      required: [id, taskId, author, content, createdAt]
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        author:
+          $ref: '#/components/schemas/User'
+        content:
+          type: string
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
+
+    CommentWrite:
+      type: object
+      required: [content]
+      additionalProperties: false
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Plain text, never interpreted as code or formatting (NF09, P28).
+
+    StatusCounts:
+      type: object
+      description: Number of main tasks in each status (R18).
+      required: [toDo, inProgress, inReview, blocked, done, cancelled, duplicate]
+      properties:
+        toDo:
+          type: integer
+          minimum: 0
+        inProgress:
+          type: integer
+          minimum: 0
+        inReview:
+          type: integer
+          minimum: 0
+        blocked:
+          type: integer
+          minimum: 0
+        done:
+          type: integer
+          minimum: 0
+        cancelled:
+          type: integer
+          minimum: 0
+        duplicate:
+          type: integer
+          minimum: 0
+
+    Progress:
+      type: object
+      description: Progress and calculated status of a project, shown to its manager (P5, P7, P16).
+      required: [hasCountableTasks, percent, calculatedStatus]
+      properties:
+        hasCountableTasks:
+          type: boolean
+          description: False when there are no countable tasks; the client shows "No tasks" (P16).
+        percent:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 100
+          description: Done tasks divided by countable main tasks, rounded to two decimals (P7).
+        calculatedStatus:
+          type: [string, 'null']
+          enum: [Attention, Late, null]
+          description: Calculated only for projects `In progress` (P5).
+
+    DashboardProject:
+      type: object
+      required: [project, counts]
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectSummary'
+        counts:
+          $ref: '#/components/schemas/StatusCounts'
+        progress:
+          description: Present only when the user is the manager of the project.
+          oneOf:
+            - $ref: '#/components/schemas/Progress'
+            - type: 'null'
+
+    RecycleItem:
+      type: object
+      required: [itemType, id, name, deletedAt, daysLeft, restorable]
+      properties:
+        itemType:
+          type: string
+          enum: [Project, Task, Subtask]
         id:
           type: integer
         name:
           type: string
-        role:
+        projectName:
+          type: [string, 'null']
+          description: The project of a task or subtask; empty for a project.
+        deletedAt:
           type: string
-          enum: [Team member, Project manager]
+          format: date-time
+        daysLeft:
+          type: integer
+          minimum: 0
+          description: Days before the item is removed for good (R20).
+        includedTasks:
+          type: [integer, 'null']
+          description: For a project, the number of tasks deleted with it.
+        restorable:
+          type: boolean
+        notRestorableReason:
+          type: [string, 'null']
+          enum: [PARENT_MISSING, PROJECT_IN_RECYCLE_BIN, null]
+          description: Why the item cannot be restored (scenario 7.8).
+
+    ErrorCode:
+      type: string
+      description: Stable code of an error, for the client.
+      enum:
+        - VALIDATION_ERROR
+        - UNAUTHENTICATED
+        - INVALID_CREDENTIALS
+        - FORBIDDEN
+        - NOT_FOUND
+        - DEADLINE_IN_PAST
+        - SUBTASK_DEADLINE_AFTER_PARENT
+        - PARENT_DEADLINE_BEFORE_SUBTASK
+        - ASSIGNEE_NOT_MEMBER
+        - LAST_ASSIGNEE
+        - PROJECT_NOT_OPEN
+        - PROJECT_COMPLETED
+        - PARENT_IS_SUBTASK
+        - PARENT_HAS_OPEN_SUBTASKS
+        - BLOCK_REASON_REQUIRED
+        - ORIGINAL_TASK_REQUIRED
+        - ORIGINAL_TASK_NOT_VALID
+        - START_DATE_IN_PAST
+        - END_BEFORE_START
+        - MANAGER_NOT_A_MANAGER
+        - MEMBER_IN_OTHER_OPEN_PROJECT
+        - REPLACEMENT_REQUIRED
+        - REPLACEMENT_NOT_ELIGIBLE
+        - ASSIGNEE_LIMIT_EXCEEDED
+        - CANNOT_RESTORE
 
     Error:
       type: object
@@ -371,8 +1446,7 @@ components:
       required: [code, message]
       properties:
         code:
-          type: string
-          description: Stable code for the client, for example `VALIDATION_ERROR` or `DEADLINE_IN_PAST`.
+          $ref: '#/components/schemas/ErrorCode'
         message:
           type: string
           description: Text shown to the user, in English (NF01).

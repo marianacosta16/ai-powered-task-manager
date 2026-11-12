@@ -76,21 +76,8 @@
   <rect class="box" x="896" y="346" width="150" height="14"/><rect class="fill" x="896" y="346" width="45" height="14"/>
   <text x="1056" y="357" class="s" style="fill:#666">30%  Attention</text>
 
-  <!-- Card 4: completed -->
-  <rect class="card" x="30" y="400" width="360" height="230" style="fill:#f3f3f3"/>
-  <text x="46" y="430" class="u b g" style="font-size:15px">Old Site</text>
-  <text x="46" y="450" class="s g">Evaluation  -  Completed</text>
-  <rect class="tile" x="46" y="464" width="78" height="52"/><text class="k g" x="85" y="490">0</text><text class="m s g" x="85" y="508">To do</text>
-  <rect class="tile" x="130" y="464" width="78" height="52"/><text class="k g" x="169" y="490">0</text><text class="m s g" x="169" y="508">In progress</text>
-  <rect class="tile" x="214" y="464" width="78" height="52"/><text class="k g" x="253" y="490">0</text><text class="m s g" x="253" y="508">In review</text>
-  <rect class="tile" x="298" y="464" width="78" height="52"/><text class="k g" x="337" y="490">0</text><text class="m s g" x="337" y="508">Blocked</text>
-  <rect class="tile" x="46" y="522" width="78" height="52"/><text class="k g" x="85" y="548">8</text><text class="m s g" x="85" y="566">Done</text>
-  <rect class="tile" x="130" y="522" width="78" height="52"/><text class="k g" x="169" y="548">1</text><text class="m s g" x="169" y="566">Cancelled</text>
-  <rect class="tile" x="214" y="522" width="78" height="52"/><text class="k g" x="253" y="548">0</text><text class="m s g" x="253" y="566">Duplicate</text>
-  <text x="46" y="604" class="s g">Completed: shown to members only.</text>
 
-  <text x="420" y="430" class="s g">The manager's dashboard does not show completed projects;</text>
-  <text x="420" y="446" class="s g">the manager finds them through the search on Projects.</text>
+  <text x="30" y="410" class="s g">Completed projects are not shown on the dashboard, for the manager or for members. They are found in Projects and in the search.</text>
 
   <!-- Callouts -->
   <circle class="c" cx="900" cy="22" r="11"/><text class="n" x="900" y="26">1</text>
@@ -99,8 +86,8 @@
   <circle class="c" cx="46" cy="214" r="11"/><text class="n" x="46" y="218">4</text>
   <circle class="c" cx="46" cy="336" r="11"/><text class="n" x="46" y="340">5</text>
   <circle class="c" cx="1030" cy="98" r="11"/><text class="n" x="1030" y="102">6</text>
-  <circle class="c" cx="30" cy="400" r="11"/><text class="n" x="30" y="404">7</text>
 
+  <circle class="c" cx="18" cy="406" r="11"/><text class="n" x="18" y="410">7</text>
   <text x="10" y="715">Dashed outline = shown only to the project manager. Numbers refer to docs/ui/wireframes.md.</text>
   <text x="10" y="733" class="g">Low-fidelity wireframe. All names and tasks are fictitious.</text>
 </svg>

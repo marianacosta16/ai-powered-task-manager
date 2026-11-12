@@ -2,7 +2,7 @@
 
 Aplicação de gestão de projetos e tarefas para equipas de trabalho, com uma **matriz urgente/importante** como vista principal para decidir o que fazer primeiro.
 
-> Projeto de aprendizagem. Esta fase contém apenas a documentação de requisitos; ainda não há código.
+> Projeto de aprendizagem. Por agora contém só documentação (requisitos, arquitetura, dados, contrato da API, wireframes e plano); ainda não há código.
 
 ## O problema
 
@@ -51,10 +51,11 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | [docs/constraints.md](docs/constraints.md) | Restrições, pressupostos, requisitos de segurança e privacidade, decisões técnicas pendentes e limitações de âmbito |
 | [docs/architecture.md](docs/architecture.md) | Decisão de arquitetura (monólito modular), justificação, componentes e responsabilidades |
 | [docs/database.md](docs/database.md) | Modelo de dados da v1: entidades, atributos, relacionamentos, cardinalidades e diagrama ER (Mermaid) |
-| [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 simplificado: criar tarefa e listar as tarefas de um projeto |
+| [openapi.yaml](openapi.yaml) | Contrato OpenAPI 3.1 com as 28 operações da v1: sessão, projetos, equipa, tarefas, responsáveis, comentários, painel e reciclagem |
 | [docs/ui/matrix-wireframe.md](docs/ui/matrix-wireframe.md) | Wireframe de baixa fidelidade da vista Matrix, que é o separador Matrix do detalhe do projeto (SVG), elementos, navegação e validação face ao MVP |
 | [docs/ui/wireframes.md](docs/ui/wireframes.md) | Wireframes de início de sessão, painel inicial, projetos, detalhe do projeto, detalhe da tarefa, equipa e reciclagem, com elementos e navegação |
-| [docs/plan.md](docs/plan.md) | Análise de lacunas e decisões pendentes, e plano incremental de implementação (proposta) |
+| [docs/implementation-plan.md](docs/implementation-plan.md) | Plano de implementação: incrementos, componentes, operações da API, critérios de aceitação, verificações e estado |
+| [docs/plan.md](docs/plan.md) | Análise de lacunas, contradições e decisões pendentes |
 | [AGENTS.md](AGENTS.md) | Instruções persistentes para agentes de desenvolvimento que trabalhem neste repositório |
 
 ### Convenções
@@ -73,7 +74,8 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | User stories da v2 | Por fazer (F11 a F14 e F23) |
 | Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 confirmados |
 | Base de conhecimento (esta documentação) | Concluído |
-| Decisões técnicas e desenho | Em curso: arquitetura decidida (monólito modular, ver [docs/architecture.md](docs/architecture.md)); modelo de dados da v1 proposto, com pontos por confirmar (ver [docs/database.md](docs/database.md)); contrato OpenAPI com duas operações (ver [openapi.yaml](openapi.yaml)); tecnologias por decidir (ver T1 a T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
+| Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões do incremento 0 (ver T1, T8, T10, T11 e T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
+| Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
 | Implementação | Por iniciar |
 
-Não foi escolhida nenhuma tecnologia.
+Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.

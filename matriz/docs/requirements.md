@@ -47,6 +47,32 @@ Existem apenas dois papéis (decisão).
 
 O gestor de projeto também forma as equipas; não existe um papel separado de "gestor de equipas" (P2).
 
+### 2.1 Permissões por papel e por projeto
+
+Os papéis do utilizador (gestor ou membro) aplicam-se **por projeto**: quem gere o projeto A pode ser só membro do projeto B (R19). Quem não é gestor nem membro de um projeto não tem acesso a nada nele, nem por ligação direta (R8, S1), e quem não tem sessão iniciada só pode iniciar sessão (S5). A tabela resume o que cada papel pode fazer; as condições de estado do projeto estão em R22, R27 e R28.
+
+| Ação | Gestor do projeto | Membro do projeto | Regras |
+|---|---|---|---|
+| Iniciar e terminar sessão, consultar o utilizador autenticado | Sim | Sim | F10, S5 |
+| Criar projetos | Sim (qualquer gestor) | Não | F01, R19 |
+| Ver, listar e pesquisar projetos | Só os seus | Só aqueles de que é membro, incluindo concluídos e suspensos | R8, R25 |
+| Ver o painel inicial | Sim, com progresso e estado calculado | Sim, só com contagens por estado | F07, P27 |
+| Editar dados, fase e estado do projeto | Sim, exceto num projeto concluído | Não | R12, R28 |
+| Eliminar um projeto | Sim, exceto num projeto concluído | Não | R9, R28 |
+| Adicionar e remover membros | Em projeto em aberto; em suspenso, por definir; em concluído, não | Não | R11, R17, R28 |
+| Ver tarefas, subtarefas e comentários | Sim | Sim | R8 |
+| Criar tarefas e subtarefas | Só num projeto em aberto | Só num projeto em aberto | R22 |
+| Editar, mudar de estado e apagar tarefas e subtarefas | Em projeto em aberto ou suspenso | Em projeto em aberto ou suspenso | R9, R27, R28 |
+| Reabrir uma tarefa em estado final | Sim | Não | P8 |
+| Atribuir e remover responsáveis (só membros do projeto ou o gestor, sempre pelo menos um) | Em projeto em aberto ou suspenso | Em projeto em aberto ou suspenso | R21, R26, R27 |
+| Adicionar comentários | Em projeto em aberto ou suspenso | Em projeto em aberto ou suspenso | R24, R28 |
+| Editar e apagar comentários | Só os seus | Só os seus | R24 |
+| Ver a reciclagem | Projetos e tarefas dos seus projetos | Tarefas e subtarefas dos seus projetos | R9 |
+| Recuperar projetos | Sim | Não | R9 |
+| Recuperar tarefas e subtarefas | Sim | Sim | R9 |
+
+Quando uma ação não está permitida, o controlo não aparece; se for pedida por outra via, é recusada com uma mensagem (NF08).
+
 ## 3. Requisitos funcionais
 
 ### 3.1 Informação gerida
@@ -75,7 +101,7 @@ O gestor de projeto também forma as equipas; não existe um papel separado de "
 ### 3.2 Vistas
 - **Matriz** (vista principal, por projeto): 4 quadrantes. Cada eixo é dividido em duas metades: níveis 1 e 2 são "baixo" e níveis 3 e 4 são "alto". Quadrantes: *Do first* (urgente e importante), *Schedule* (importante, não urgente), *Delegate* (urgente, não importante) e *Later* (nem urgente nem importante). Esconde as tarefas em estado final (P10) e mostra só tarefas principais (R18).
 - **Lista** (por projeto): todas as tarefas do projeto, incluindo as de estado final; as tarefas em aberto aparecem antes das fechadas; tem o filtro "as minhas" e os filtros por estado e por quadrante (F22, R25), e mostra só tarefas principais (R15, R18).
-- **Painel inicial** (ecrã de entrada, para todos os utilizadores, F07): os projetos acessíveis ao utilizador, cada um com a contagem das suas tarefas principais por estado, e navegação para o detalhe do projeto. O painel do gestor mostra os seus projetos em aberto e suspensos, com barra de progresso e estado calculado, e não mostra os concluídos (P27); o do membro mostra todos os seus projetos (R8).
+- **Painel inicial** (ecrã de entrada, para todos os utilizadores, F07): os projetos acessíveis ao utilizador, cada um com a contagem das suas tarefas principais por estado, e navegação para o detalhe do projeto. O painel mostra os projetos em aberto e suspensos e não mostra os concluídos, nem ao gestor nem ao membro (P27); os concluídos encontram-se em Projetos e na pesquisa. Para o gestor, cada projeto mostra também a barra de progresso e o estado calculado.
 
 ### 3.3 Funcionalidades
 Prioridade segundo MoSCoW: **Must** (essencial), **Should** (importante), **Could** (desejável).

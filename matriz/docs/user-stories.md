@@ -410,9 +410,9 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** o gestor abre o painel inicial
 - **Then** o projeto aparece com o estado "suspenso" e a sua barra de progresso, e os estados "atenção" e "atrasado" não lhe são atribuídos por cálculo.
 
-**Cenário 6.9: projeto concluído fora do painel inicial do gestor**
+**Cenário 6.9: projeto concluído fora do painel inicial**
 - **Given** um projeto no estado "concluído"
-- **When** o gestor abre o painel inicial
+- **When** o gestor, ou um membro do projeto, abre o painel inicial
 - **Then** o projeto não aparece.
 
 **Cenário 6.10: projeto sem tarefas depois da data de fim**
@@ -691,13 +691,13 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** um membro abre o painel inicial
 - **Then** as contagens por estado somam 2 tarefas.
 
-**Cenário 13.5: projeto concluído para o gestor e para o membro**
-- **Given** o projeto "Website" no estado "concluído", a gestora "Marta" e a membro "Ana"
+**Cenário 13.5: projeto concluído fora do painel**
+- **Given** o projeto "Website" no estado "concluído", a gestora "Marta" e a membro "Ana", ambas com acesso ao projeto
 - **When** a Marta abre o painel inicial
 - **Then** o projeto "Website" não aparece.
-- **When** a Marta pesquisa "Website"
-- **Then** o projeto "Website" aparece.
 - **When** a Ana abre o painel inicial
+- **Then** o projeto "Website" não aparece.
+- **When** a Marta, ou a Ana, pesquisa "Website" em Projetos
 - **Then** o projeto "Website" aparece, com o estado "concluído".
 
 ### Cenário de aceitação do MVP
