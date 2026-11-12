@@ -12,6 +12,7 @@
 | Stack | **Java 21, Spring Boot e PostgreSQL**, interface depois da API, sessão no servidor com cookie. Registada em [architecture.md](architecture.md#8-stack-e-decisões-técnicas) |
 | Contrato | [openapi.yaml](../openapi.yaml): 28 operações, uma por cada ação da v1 |
 | Permissões | Tabela em [requirements.md](requirements.md#21-permissões-por-papel-e-por-projeto) |
+| Onde se desenvolve | Numa **VM Ubuntu**, que a autora indicou ter a stack instalada (por confirmar: versões). O PostgreSQL é o da VM; não se usa PostgreSQL embutido |
 | Ordem | **API primeiro**: cada incremento entrega operações da API testadas contra o contrato. A interface escolhe-se depois do incremento 8, com os wireframes já feitos |
 
 **Regras do plano**
@@ -61,7 +62,7 @@ src/test/java/...                         testes por cenário Given / When / The
 | Java 21, Spring Boot, PostgreSQL, sessão com cookie, API primeiro | **Decidido** |
 | Build com Maven | Proposta |
 | Acesso aos dados com Spring Data JPA e migrações com Flyway | Proposta |
-| Testes com JUnit 5 e Spring Boot Test, contra um PostgreSQL de teste (como o obter fica por decidir: contentor ou instalação local) | Proposta |
+| Testes com JUnit 5 e Spring Boot Test, contra o PostgreSQL da VM Ubuntu, numa base de dados de teste separada | Proposta |
 | Datas e horas com `java.time` e o fuso do projeto (T5) | Proposta |
 | Edições simultâneas da mesma tarefa (T13) | Por decidir |
 
@@ -71,11 +72,11 @@ src/test/java/...                         testes por cenário Given / When / The
 
 | | |
 |---|---|
-| **Componentes e ficheiros** | `pom.xml`, `MatrizApplication`, esqueleto dos módulos e de `usecases`, `shared`, `api`, `application.yml`, migração inicial vazia, um teste de exemplo |
+| **Componentes e ficheiros** | `pom.xml` e dependências; `MatrizApplication`; esqueleto dos módulos e de `usecases`, `shared` e `api`; `application.yml` com a ligação à base de dados por variáveis de ambiente; `.env.example` com valores fictícios; migração do esquema de utilizadores, projetos, equipa, tarefas, atribuições e comentários; dados de demonstração reproduzíveis; testes; comandos no `README.md` |
 | **API** | Nenhuma operação do contrato. Um ponto de verificação do estado da aplicação (health check) |
-| **Depende de** | Aprovação das ferramentas da secção 3 e de como obter a base de dados de teste |
-| **Aceitação** | A aplicação arranca e liga à base de dados; um teste Given / When / Then de exemplo passa; as fronteiras entre módulos são verificáveis |
-| **Verificação** | Compilar e correr os testes; um teste automático que falha se um módulo depender de outro fora das regras da [secção 5 da arquitetura](architecture.md#5-regras-de-fronteira) |
+| **Depende de** | Confirmar o que a VM Ubuntu tem instalado (Java 21, Maven e PostgreSQL) e criar uma base de dados e um utilizador para a aplicação, com credenciais fora do repositório |
+| **Aceitação** | A aplicação arranca e liga à base de dados; o esquema é criado por migrações reproduzíveis; os dados de demonstração têm pelo menos dois utilizadores e projetos que permitem testar acessos distintos (aqui, 10 contas e 4 projetos); arrancar outra vez não apaga nem duplica dados; um teste Given / When / Then de exemplo passa; as fronteiras entre módulos são verificáveis |
+| **Verificação** | Compilar e correr os testes; arrancar a aplicação e confirmar o estado da base de dados (health check); arrancar duas vezes e comparar o número de linhas; um teste que lê o [openapi.yaml](../openapi.yaml) e falha se o contrato for inválido; um teste automático que falha se um módulo depender de outro fora das regras da [secção 5 da arquitetura](architecture.md#5-regras-de-fronteira) |
 
 ### Incremento 1 — Contas e sessão (F10; US10)
 
@@ -94,7 +95,7 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Componentes e ficheiros** | `projects/`, `usecases/` (R11, R17 sem tarefas, P22), `access/` (permissões por projeto, R8, R19), `shared/` (datas, fuso, R16, R29), migrações de `PROJECT` e `PROJECT_MEMBER` |
 | **API** | `listProjects`, `createProject`, `getProject`, `updateProject`, `listMembers`, `addMember`, `removeMember` (sem tarefas por concluir), `listCandidateMembers` |
 | **Depende de** | Incremento 1 |
-| **Aceitação** | Cenários 1.1 a 1.23 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39 e EC40 |
+| **Aceitação** | Cenários 1.1 a 1.23, 1.29, 1.30 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39, EC40 e EC42 |
 | **Verificação** | Testes com relógio controlável; acesso a um projeto alheio recusado no servidor (403), também por ligação direta; conclusão de um projeto congela-o (R28) |
 
 ### Incremento 3 — Tarefas, subtarefas e responsáveis (F02, F03, F08; US02, US04, US05)
@@ -169,12 +170,28 @@ src/test/java/...                         testes por cenário Given / When / The
 | 6 | `listComments`, `addComment`, `editComment`, `deleteComment` |
 | 7 | `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject`, `restoreTask` |
 
-## 6. Riscos e pontos em aberto
+## 6. Notas para retomar o incremento 0
+
+Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a implementação (na VM Ubuntu):
+
+| Tema | Nota | Estado |
+|---|---|---|
+| Ferramentas | Maven, Spring Boot (Web, Validation, Data JPA, Actuator), Flyway, JUnit 5 e Spring Boot Test, pacote base `com.matriz`, `java.time`. A autora disse não ter preferência | Aceites |
+| Spring Boot | Usar a última versão 3.5.x estável (a verificar no Maven Central); evitar a linha 4.x até ser necessária, por ter mudanças de módulos e de bibliotecas | Proposta |
+| Segurança | Adicionar o Spring Security só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 | Proposta |
+| Base de dados | PostgreSQL da VM, ligação por variáveis de ambiente (`DB_URL`, `DB_USER`, `DB_PASSWORD`), carregadas de um `.env` que não se versiona, com um `.env.example` de valores fictícios | Proposta |
+| Esquema | Tabelas `app_user`, `project`, `project_member`, `task`, `task_assignee` e `task_comment`, segundo [database.md](database.md), em snake_case, com chaves, `CHECK` dos domínios e dos limites (R14, urgência e importância de 1 a 4) e a marca `deleted_at` | Proposta |
+| Dados de demonstração | Um componente que corre ao arrancar, só se ainda não houver utilizadores, numa só transação. A palavra-passe das contas vem da variável `DEMO_PASSWORD` do `.env`, guardada como valor protegido; nunca em ficheiros versionados (AGENTS, secção 7) | Proposta |
+| Dados de demonstração | 10 contas (P21): gestores Marta e Pedro; membros Ana, Rui, Luís, Sofia, Carla, Inês, Tiago e Diana. Projetos: *Website* (Marta; Ana, Rui e Luís), *Mobile App* (Marta; Inês e Tiago), *Intranet* (Pedro; Sofia e Carla) e *Old Site* (Pedro; concluído; Diana). Respeitam o R11 e dão acessos distintos; com tarefas, subtarefas, responsáveis e comentários | Proposta |
+| Fronteiras | Um teste ArchUnit para as regras 2 e 3 da [secção 5 da arquitetura](architecture.md#5-regras-de-fronteira) | Proposta |
+| Contrato | Um teste que lê o [openapi.yaml](../openapi.yaml) com o `swagger-parser` e falha se for inválido | Proposta |
+| Ordem do trabalho | Antes de criar ficheiros, apresentar um plano curto à autora (AGENTS, secção 4). No fim, registar os comandos no `README.md` e passar o incremento 0 a **Concluído** na secção 2, com a data e a verificação | Regra |
+
+## 7. Riscos e pontos em aberto
 
 | Tema | Nota |
 |---|---|
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
 | Edições simultâneas | T13 por decidir |
-| Membros num projeto suspenso | Adicionar e remover membros num projeto suspenso continua por definir ([constraints.md](constraints.md#questões-funcionais-em-aberto)) |
 | Validação do contrato | O `openapi.yaml` ainda não foi validado com uma ferramenta; fazê-lo no incremento 0 |

@@ -264,8 +264,8 @@ paths:
       operationId: addMember
       summary: Add a member to a project
       description: |
-        Only the manager of the project adds members. A person who is already a member of another open project is refused (R11); suspended and completed projects are not open (P4).
-        A completed project cannot be changed (R28). Whether members can be added to a suspended project is still undefined (docs/constraints.md).
+        Only the manager of the project adds members, in an open or suspended project; a completed project cannot be changed (R28).
+        In an open project, a person who is already a member of another open project is refused (R11). In a suspended project the check does not apply, because the project is not open (P4); when it is resumed, P22 applies.
       requestBody:
         required: true
         content:
@@ -299,7 +299,7 @@ paths:
       operationId: removeMember
       summary: Remove a member from a project
       description: |
-        Only the manager of the project removes members (R17). The member is freed for another open project.
+        Only the manager of the project removes members (R17), in an open or suspended project; a completed project cannot be changed (R28). The member is freed for another open project.
         Every open task and subtask of the member, including those shared with other assignees, needs a substitute in `reassignments`; they can be split among several substitutes. A substitute cannot already be an assignee of that task (P24).
         Nobody can end up with more than 5 open tasks and subtasks in total (R17, P24). Assumption A7: a substitute who is not yet a member is added to the project in the same transaction.
         Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25).
@@ -356,7 +356,7 @@ paths:
       tags: [Projects]
       operationId: listAssignableUsers
       summary: List the users who can be assigned to tasks of a project
-      description: Returns the eligible assignees: the members of the project and its manager (R21).
+      description: 'Returns the eligible assignees, which are the members of the project and its manager (R21).'
       responses:
         '200':
           description: The eligible users.
@@ -891,7 +891,7 @@ components:
               - field: title
                 issue: Longer than 100 characters.
     Unauthorized:
-      description: There is no valid session: the user has not signed in or the session ended (F10).
+      description: 'There is no valid session, because the user has not signed in or the session ended (F10).'
       content:
         application/json:
           schema:
@@ -1256,7 +1256,7 @@ components:
           description: Filled only when the status is `Blocked` (R6).
         originalTaskId:
           type: [integer, 'null']
-          description: Filled only when the status is `Duplicate`: the original task (R6).
+          description: 'Filled only when the status is `Duplicate`, and then it is the original task (R6).'
         assignees:
           type: array
           items:

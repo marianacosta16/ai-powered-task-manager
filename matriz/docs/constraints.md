@@ -99,7 +99,6 @@ O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e Po
 ### Questões funcionais em aberto
 - Valores permitidos para a antecedência do lembrete e para o intervalo de repetição do alerta, e até quando se repete (F12).
 - Se as tarefas ficam ligadas a uma fase do projeto.
-- Se se podem adicionar e remover membros num projeto suspenso (R11 e R17 falam em "projeto em aberto"; R27 trata só das tarefas e dos comentários).
 - Que integrações, se alguma, o cliente quer (F19).
 - O nível 2 chama-se "medium", mas conta como "baixo" na Matriz: confirmar a nomenclatura.
 

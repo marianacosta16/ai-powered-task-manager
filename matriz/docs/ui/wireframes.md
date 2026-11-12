@@ -221,7 +221,7 @@ O código **W** é local aos wireframes e continua a numeração de [matrix-wire
 | W9 | Criar tarefa | Formulário num painel ao lado da tabela | Confirmado |
 | W10 | Detalhe da tarefa | Um só ecrã, com "Task:" no caminho e o rótulo *Task title* para se perceber que é uma tarefa | Confirmado |
 | W11 | Equipa e reciclagem | Wireframes feitos. A reciclagem é acessível a todos pelo painel | Confirmado |
-| W12 | Wireframe Matrix | Passou a ser o separador *Matrix* do detalhe do projeto, com a mesma barra, caminho e cabeçalho | Aplicado, a rever |
+| W12 | Wireframe Matrix | Passou a ser o separador *Matrix* do detalhe do projeto, com a mesma barra, caminho e cabeçalho | Confirmado |
 | W13 | Regras do calendário | Prazos e início de projeto a partir de hoje; fim do projeto não anterior ao início; prazo de subtarefa não posterior ao da mãe (R2); prazo da mãe não anterior ao de uma subtarefa (R3). Os campos só se preenchem pelo calendário | Confirmado |
 | W14 | Tarefa cujo projeto está na reciclagem | Só se recupera depois de o projeto ser recuperado ("Cannot restore: restore the project first.") | Confirmado |
 | W15 | Equipa: pessoas indisponíveis e substituição | Quem já está noutro projeto em aberto aparece desativado ao adicionar, com o motivo. Na remoção, as tarefas podem ser repartidas por substitutos já no projeto ou novos, até 5 tarefas em aberto cada (R17). O aviso de projeto retomado fica no topo | Confirmado |

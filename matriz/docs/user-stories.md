@@ -202,6 +202,18 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor tenta remover a Ana e passar a tarefa dela para o Rui
 - **Then** a remoção é recusada, com uma mensagem a explicar que o Rui ficaria com mais de 5 tarefas em aberto, e a Ana continua na equipa.
 
+**Cenário 1.29: adicionar um membro a um projeto suspenso**
+- **Given** o projeto "Website" no estado "suspenso" e a membro "Ana" na equipa do projeto "Intranet", que está em aberto
+- **When** o gestor adiciona a Ana ao projeto "Website"
+- **Then** a Ana é adicionada, porque o projeto "Website" não está em aberto.
+- **When** o gestor retoma o projeto "Website" (estado "em andamento")
+- **Then** a Ana fica com a etiqueta vermelha e o gestor vê um aviso, como no cenário 1.8.
+
+**Cenário 1.30: remover um membro de um projeto suspenso**
+- **Given** o projeto "Website" no estado "suspenso" e a membro "Ana" na sua equipa, sem tarefas por concluir
+- **When** o gestor remove a Ana
+- **Then** a Ana deixa de fazer parte da equipa.
+
 ### US02 — Criar tarefa
 
 **Cenário 2.1: criação com sucesso**
@@ -760,6 +772,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC39 | Marcar um projeto como concluído sem querer | É pedida uma confirmação antes; ao cancelar, o estado mantém-se (cenário 1.22) | [R28](requirements.md#4-regras-de-negócio) |
 | EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
 | EC41 | Um substituto ficaria com mais de 5 tarefas e subtarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenários 1.25 e 1.28) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
+| EC42 | Adicionar a um projeto suspenso um membro que está noutro projeto em aberto | Aceite; ao retomar o projeto aplica-se a etiqueta vermelha (cenário 1.29) | [R11](requirements.md#4-regras-de-negócio), [P22](constraints.md#2-pressupostos-assumidos) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

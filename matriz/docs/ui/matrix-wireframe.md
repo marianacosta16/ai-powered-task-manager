@@ -63,4 +63,4 @@ O código **W** é local aos wireframes. Os pontos W1 a W5 foram confirmados pel
 | W3 | Onde ficam os itens do gestor | Como botões no cabeçalho do projeto | Confirmado |
 | W4 | Ordem dos cartões dentro de cada quadrante | Por prazo, do mais próximo para o mais distante; com o mesmo prazo, por urgência e depois por importância (R23, cenário 3.6) | Decisão |
 | W5 | *+ New task* num projeto concluído ou suspenso | O botão não aparece (R22, cenário 2.10) | Decisão |
-| W12 | Alinhar este wireframe com os restantes ecrãs | Passou a ser o separador *Matrix* do detalhe do projeto: sai o seletor de projeto, o separador *Dashboard* e o *Recycle bin* por projeto, que está no painel inicial | Aplicado, a rever |
+| W12 | Alinhar este wireframe com os restantes ecrãs | Passou a ser o separador *Matrix* do detalhe do projeto: sai o seletor de projeto, o separador *Dashboard* e o *Recycle bin* por projeto, que está no painel inicial | Confirmado |
