@@ -94,7 +94,7 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **Then** o projeto não é criado e é indicado que as datas são obrigatórias.
 
 **Cenário 1.10: data de fim não anterior à de início**
-- **Given** um gestor de projeto identificado
+- **Given** a data atual 2026-01-01 e um gestor de projeto identificado
 - **When** tenta criar um projeto com data de início 2026-01-31 e data de fim 2026-01-01
 - **Then** o projeto não é criado e é indicado que a data de fim não pode ser anterior à de início.
 - **When** cria um projeto com data de início 2026-01-31 e data de fim 2026-01-31, ambas sem hora
@@ -137,6 +137,11 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor do projeto "Intranet" adiciona a Marta como membro e lhe atribui uma tarefa
 - **Then** a atribuição é aceite, porque a regra de um projeto em aberto por membro não se aplica ao gestor.
 
+**Cenário 1.18: "atenção" e "atrasado" não são definidos pelo gestor**
+- **Given** um gestor de projeto identificado e um projeto "em andamento"
+- **When** o gestor abre as opções de estado do projeto
+- **Then** os estados "atenção" e "atrasado" não estão disponíveis para escolha.
+
 **Cenário 1.19: o criador indica o gestor do projeto**
 - **Given** os gestores "Marta" e "Pedro"
 - **When** a Marta cria o projeto "Website" e indica o Pedro como gestor
@@ -147,17 +152,28 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** cria um projeto sem indicar o fuso horário
 - **Then** o projeto fica com o fuso horário de Lisboa.
 
-**Cenário 1.18: "atenção" e "atrasado" não são definidos pelo gestor**
-- **Given** um gestor de projeto identificado e um projeto "em andamento"
-- **When** o gestor abre as opções de estado do projeto
-- **Then** os estados "atenção" e "atrasado" não estão disponíveis para escolha.
+**Cenário 1.21: um projeto concluído fica congelado**
+- **Given** um gestor de projeto identificado e um projeto no estado "concluído", com membros e tarefas
+- **When** o gestor abre o projeto
+- **Then** não estão disponíveis as ações de editar os dados do projeto, mudar o estado, adicionar ou remover membros, nem apagar o projeto, e tudo continua visível como estava.
+- **When** é pedida uma dessas ações por outra via
+- **Then** a ação é recusada, com uma mensagem a explicar que um projeto concluído não pode ser alterado nem reaberto, e nada muda.
 
-**Cenário 1.21: um projeto concluído não se reabre**
-- **Given** um gestor de projeto identificado e um projeto no estado "concluído"
-- **When** o gestor abre as opções de estado do projeto
-- **Then** não está disponível nenhuma mudança de estado.
-- **When** é pedida a mudança de estado por outra via
-- **Then** a mudança é recusada, com uma mensagem a explicar que um projeto concluído não pode ser reaberto, e o estado mantém-se.
+**Cenário 1.22: confirmação antes de concluir um projeto**
+- **Given** um gestor de projeto identificado e um projeto "em andamento"
+- **When** o gestor escolhe o estado "concluído"
+- **Then** é pedida uma confirmação, a avisar que o projeto deixa de poder ser alterado ou reaberto.
+- **When** o gestor cancela
+- **Then** o projeto mantém o estado "em andamento".
+- **When** o gestor volta a escolher "concluído" e confirma
+- **Then** o projeto passa a "concluído".
+
+**Cenário 1.23: data de início não está no passado**
+- **Given** a data atual 2026-01-10 e um gestor de projeto identificado
+- **When** tenta criar um projeto com data de início 2026-01-09
+- **Then** o projeto não é criado e é indicado que a data de início não pode estar no passado.
+- **When** cria um projeto com data de início 2026-01-10
+- **Then** o projeto é criado.
 
 ### US02 — Criar tarefa
 
@@ -660,9 +676,10 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 ### Cenário de aceitação do MVP
 
 **Cenário MVP-1: do projeto ao progresso**
-- **Given** a data atual 2026-01-10, as contas de demonstração da gestora "Marta" e da membro "Ana", que não está em nenhum projeto em aberto
+- **Given** a data atual 2026-01-01, as contas de demonstração da gestora "Marta" e da membro "Ana", que não está em nenhum projeto em aberto
 - **When** a Marta inicia sessão, cria o projeto "Website" (início 2026-01-01, fim 2026-01-31, fase "iniciação", estado "não iniciado"), adiciona a Ana e passa o estado para "em andamento"
-- **And** a Ana inicia sessão e cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3), e passa a primeira para "concluído"
+- **And** a Ana inicia sessão e cria a tarefa "Escrever relatório" (prazo 2026-01-20, urgência 4, importância 4) e a tarefa "Rever texto" (prazo 2026-01-25, urgência 1, importância 3)
+- **And** a 2026-01-10 a Ana passa a primeira para "concluído"
 - **And** a Ana adiciona à tarefa "Rever texto" o comentário "Falta o capítulo 2"
 - **Then** a Matriz mostra "Rever texto" no quadrante "Schedule" e não mostra "Escrever relatório"
 - **And** a Lista mostra as duas tarefas, com "Rever texto" primeiro, e ao filtrar a Lista pelo estado "por fazer" aparece só "Rever texto"
@@ -711,8 +728,10 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC34 | Adicionar, editar ou apagar um comentário num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 11.10) | [R24](requirements.md#4-regras-de-negócio), [P28](constraints.md#2-pressupostos-assumidos) |
 | EC35 | Editar, mudar de estado ou apagar uma tarefa num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem. Num projeto suspenso estas ações são aceites (cenário 2.13) | [R27](requirements.md#4-regras-de-negócio) |
 | EC36 | Um membro tenta recuperar um projeto apagado | A reciclagem não lhe mostra o projeto; só o gestor o recupera (cenário 7.3) | [R9](requirements.md#4-regras-de-negócio) |
-| EC37 | Reabrir um projeto concluído | A mudança de estado não está disponível; um pedido por outra via é recusado, com mensagem (cenário 1.21) | [R28](requirements.md#4-regras-de-negócio) |
+| EC37 | Alterar, reabrir ou apagar um projeto concluído (dados, membros, estado) | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 1.21) | [R28](requirements.md#4-regras-de-negócio) |
 | EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão (cenário 10.6) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
+| EC39 | Marcar um projeto como concluído sem querer | É pedida uma confirmação antes; ao cancelar, o estado mantém-se (cenário 1.22) | [R28](requirements.md#4-regras-de-negócio) |
+| EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

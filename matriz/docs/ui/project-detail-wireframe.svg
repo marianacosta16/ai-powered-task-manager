@@ -72,7 +72,7 @@
   <text x="30" y="562" class="s g">Open tasks come first, then closed ones, each group by earliest deadline. Levels: 1 Low, 2 Medium, 3 High, 4 Critical.</text>
   <text x="30" y="580" class="s g">Only main tasks are listed; subtasks appear inside the task. The Matrix tab shows the same tasks by quadrant.</text>
   <text x="30" y="598" class="s g">In a Suspended project the + New task button and the form do not appear (tasks can still be edited).</text>
-  <text x="30" y="616" class="s g">In a Completed project nothing can be created, edited or deleted.</text>
+  <text x="30" y="616" class="s g">In a Completed project nothing can be created, edited or deleted, and Edit project, Team and Delete project do not appear.</text>
 
   <!-- New task form -->
   <rect class="box" x="790" y="262" width="380" height="408" fill="#fafafa"/>

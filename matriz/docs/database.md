@@ -6,7 +6,7 @@
 ## 1. Âmbito e convenções
 
 - **Âmbito:** só a v1 (F01 a F10, F17 e F22). O que a v2 e a v3 acrescentam está na secção 8 e não entra no diagrama.
-- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R28. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
+- **Origem:** o modelo sai da secção 3.1 de [requirements.md](requirements.md#31-informação-gerida) e das regras R1 a R29. Tudo o que o modelo acrescenta e não está documentado fica na secção 7, como ponto **por confirmar** (códigos **M1 a M10**, locais a este documento).
 - **Nomes:** as entidades e os atributos estão em inglês, como a interface (NF01). A tabela da secção 2 faz a correspondência com os termos em português. Os valores dos domínios usam os rótulos da interface ([requirements.md](requirements.md#34-termos-da-interface)). A escolha de nomes é uma proposta.
 - **Identificadores:** cada entidade tem um identificador interno (`id`). As tabelas de associação usam como identificador o par de chaves das duas entidades que ligam (M9).
 - **Módulos:** cada entidade pertence a um módulo de [architecture.md](architecture.md#4-componentes-e-responsabilidades) e só esse módulo a altera.
@@ -213,7 +213,8 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R24 | **Modelo:** `content` até 2000 caracteres; `author_id` e `created_at` obrigatórios. **Aplicação:** só quem tem acesso ao projeto comenta, atribui autor e data, só o autor edita ou apaga (apagar elimina a linha), nada disto num projeto `Completed`, e os comentários seguem o `deleted_at` da tarefa |
 | R26 | **Aplicação:** cada tarefa mantém pelo menos uma linha em `TASK_ASSIGNEE`; remover a última é recusado |
 | R27 | **Aplicação:** o `status` do projeto decide as ações sobre tarefas e comentários: `Suspended` permite editar, mudar de estado e apagar, mas não criar; `Completed` não permite nenhuma |
-| R28 | **Aplicação:** o `status` `Completed` do projeto nunca volta a mudar |
+| R28 | **Aplicação:** um projeto com `status` `Completed` fica congelado: nada do projeto, dos membros, das tarefas, dos responsáveis nem dos comentários muda, e o projeto não se apaga |
+| R29 | **Aplicação:** ao definir ou alterar `start_date`, esta não pode ser anterior à data atual |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também, com o mesmo `deleted_at`, as suas tarefas ainda não apagadas; recuperar o projeto restaura só essas, e a eliminação definitiva corre ao fim de 30 dias. Recuperam projetos só os gestores; recuperam tarefas os membros do projeto e o seu gestor |
 | R18, R15, R23, R25 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance`; filtros por `status` e por quadrante; pesquisa de projetos por `name` |
 
