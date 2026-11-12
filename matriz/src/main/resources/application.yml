@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: matriz
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/matriz}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-components: always
+
+matriz:
+  demo:
+    # Demo accounts' password; set in the local .env, never in versioned files.
+    # Without it, the demo data is not created.
+    password: ${DEMO_PASSWORD:}

@@ -27,7 +27,7 @@ Como atualizar: ao terminar um incremento, passar o estado a **Concluído**, ind
 
 | # | Incremento | Estado | Concluído em | Verificado por |
 |---|---|---|---|---|
-| 0 | Fundações | Por fazer | | |
+| 0 | Fundações | Concluído | 2026-11-12 | `mvn test`: 12 testes verdes (contrato OpenAPI válido com 28 operações, 9 regras de fronteira ArchUnit, health check e seed idempotente contra `matriz_test`). Aplicação arrancada duas vezes contra `matriz`: health `UP` com `db` UP; 10 utilizadores, 4 projetos, 14 tarefas e 5 comentários nas duas vezes, sem duplicar |
 | 1 | Contas e sessão | Por fazer | | |
 | 2 | Projetos e equipa | Por fazer | | |
 | 3 | Tarefas, subtarefas e responsáveis | Por fazer | | |

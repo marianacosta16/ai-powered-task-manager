@@ -5,3 +5,7 @@ plan.md
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local environment and build output
+.env
+target/

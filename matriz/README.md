@@ -64,6 +64,70 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 - Os documentos estão em português; a interface da aplicação é em inglês.
 - Estes documentos servem de contexto para as fases seguintes. Quando se usar IA para apoiar a escrita ou o desenvolvimento, convém rever a consistência entre eles.
 
+## Como executar (incremento 0)
+
+Pré-requisitos na VM Ubuntu: Java 21, Maven 3.8+ e PostgreSQL 16 (`java -version`, `mvn -v`, `psql --version`).
+
+Todos os comandos abaixo correm na pasta `matriz/` do repositório (onde estão o `pom.xml` e o `.env.example`):
+
+```bash
+cd matriz
+```
+
+**1. Instalar o PostgreSQL** (uma vez):
+
+```bash
+sudo apt install postgresql postgresql-client
+```
+
+```bash
+sudo systemctl enable --now postgresql
+```
+
+**2. Criar o utilizador e as bases de dados** (uma vez). O primeiro comando abre o terminal do PostgreSQL como administrador (`postgres`); pede a palavra-passe de sudo da VM e o prompt passa a `postgres=#`. A palavra-passe de `matriz_app` é escolhida por quem executa e não se guarda no repositório. Para sair, `\q`:
+
+```bash
+sudo -u postgres psql
+```
+
+Dentro do `psql`, um comando de cada vez (cada um deve responder `CREATE ROLE` ou `CREATE DATABASE`):
+
+```sql
+CREATE ROLE matriz_app LOGIN PASSWORD '<escolher-palavra-passe>';
+CREATE DATABASE matriz OWNER matriz_app;
+CREATE DATABASE matriz_test OWNER matriz_app;
+```
+
+**3. Configurar o ambiente.** Copiar o exemplo e preencher com as credenciais reais; o `.env` não é versionado:
+
+```bash
+cp .env.example .env
+```
+
+**4. Testar** (usa a base `matriz_test`, que os testes esvaziam):
+
+```bash
+set -a; . ./.env; set +a; mvn test
+```
+
+**5. Arrancar a aplicação.** O Flyway cria o esquema e, se ainda não houver utilizadores, cria as 10 contas e 4 projetos de demonstração (a palavra-passe das contas é `DEMO_PASSWORD`). Arrancar de novo não apaga nem duplica dados:
+
+```bash
+set -a; . ./.env; set +a; mvn spring-boot:run
+```
+
+Se a porta 8080 estiver ocupada por outro serviço, usar outra: `SERVER_PORT=8081 mvn spring-boot:run` (e `localhost:8081` abaixo).
+
+**6. Confirmar o estado e a base de dados:**
+
+```bash
+curl -s localhost:8080/actuator/health
+```
+
+```bash
+PGPASSWORD="$DB_PASSWORD" psql -h localhost -U matriz_app -d matriz -c "SELECT (SELECT count(*) FROM app_user) AS users, (SELECT count(*) FROM project) AS projects, (SELECT count(*) FROM task) AS tasks"
+```
+
 ## Estado atual
 
 | Fase | Estado |
@@ -76,6 +140,6 @@ A lista completa, com justificações, está em [docs/requirements.md](docs/requ
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões do incremento 0 (ver T1, T8, T10, T11 e T13 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Por iniciar |
+| Implementação | Em curso: incremento 0 concluído (projeto, esquema e dados de demonstração verificados); próximo, o incremento 1 (contas e sessão) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.
