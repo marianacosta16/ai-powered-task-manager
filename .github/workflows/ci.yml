@@ -1,0 +1,64 @@
+name: CI
+
+# Runs the tests of the Matriz backend on every pull request and on every push to main.
+# The database below only exists while the job runs, so its credentials are fake values
+# (AGENTS.md, section 7): nothing here is a real secret.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: matriz
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: matriz_ci
+          POSTGRES_PASSWORD: ci-only-fake-password
+          POSTGRES_DB: matriz_test # the tests only run against a database whose name ends with _test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U matriz_ci -d matriz_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DB_URL: jdbc:postgresql://localhost:5432/matriz_test
+      TEST_DB_USER: matriz_ci
+      TEST_DB_PASSWORD: ci-only-fake-password
+      DB_URL: jdbc:postgresql://localhost:5432/matriz_test
+      DB_USER: matriz_ci
+      DB_PASSWORD: ci-only-fake-password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: matriz/pom.xml
+
+      - name: Build and test
+        run: mvn -B verify
