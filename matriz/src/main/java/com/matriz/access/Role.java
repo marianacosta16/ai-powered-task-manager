@@ -1,7 +1,9 @@
 package com.matriz.access;
 
+import com.matriz.shared.Labelled;
+
 /** Global role of a user (M10): a user is either a team member or a project manager. */
-public enum Role {
+public enum Role implements Labelled {
     TEAM_MEMBER("Team member"),
     PROJECT_MANAGER("Project manager");
 
@@ -12,16 +14,13 @@ public enum Role {
     }
 
     /** Value used by the interface and the contract. */
+    @Override
     public String label() {
         return label;
     }
 
     public static Role fromLabel(String label) {
-        for (Role r : values()) {
-            if (r.label.equals(label)) {
-                return r;
-            }
-        }
-        throw new IllegalArgumentException("Unknown role: " + label);
+        return Labelled.find(Role.class, label)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown role: " + label));
     }
 }

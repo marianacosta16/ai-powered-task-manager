@@ -5,69 +5,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jayway.jsonpath.JsonPath;
-import com.matriz.testsupport.MutableClock;
-import com.matriz.testsupport.TestDatabase;
-import com.matriz.usecases.DemoDataSeeder;
+import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
  * US01 (scenarios 1.1 to 1.23, 1.29, 1.30) and US08, through real HTTP requests. Increment 2:
  * removing a member who has open tasks needs substitutes and arrives with the tasks (increment 3).
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Import(ProjectsAndTeamIntegrationTest.TestClock.class)
-class ProjectsAndTeamIntegrationTest {
-
-    @TestConfiguration
-    static class TestClock {
-        @Bean
-        @Primary
-        MutableClock testClock() {
-            return new MutableClock();
-        }
-    }
-
-    @Autowired TestRestTemplate http;
-    @Autowired JdbcTemplate jdbc;
-    @Autowired DemoDataSeeder seeder;
-    @Autowired MutableClock clock;
-    @Autowired PlatformTransactionManager transactions;
-
-    private final String password = UUID.randomUUID().toString();
-
-    @BeforeEach
-    void freshDemoDataAndDate() {
-        TestDatabase.wipe(jdbc);
-        seeder.seed(password);
-        clock.set("2026-06-01T10:00:00Z");
-    }
+class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
 
     // ---- creating projects (1.1, 1.2, 1.9, 1.10, 1.15, 1.19, 1.20, 1.23, M10) ----
 
@@ -494,7 +450,7 @@ class ProjectsAndTeamIntegrationTest {
                 jdbc.queryForObject("SELECT id FROM project WHERE id = ? FOR UPDATE", Long.class, website);
                 Future<ResponseEntity<String>> pending = pool.submit(
                         () -> patch("/projects/" + website, marta, Map.of("name", "Renamed")));
-                pause(1000);
+                awaitLockWaiters(1);
                 jdbc.update("UPDATE project SET status = 'Suspended' WHERE id = ?", website);
                 return pending;
             });
@@ -525,7 +481,7 @@ class ProjectsAndTeamIntegrationTest {
                         () -> post("/projects/" + website + "/members", marta, Map.of("userId", diana)));
                 Future<ResponseEntity<String>> toIntranet = pool.submit(
                         () -> post("/projects/" + intranet + "/members", pedro, Map.of("userId", diana)));
-                pause(1000);
+                awaitLockWaiters(2);
                 return List.of(toWebsite, toIntranet);
             });
 
@@ -665,14 +621,6 @@ class ProjectsAndTeamIntegrationTest {
         jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", task, userId(username));
     }
 
-    private static void pause(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
     /** A valid body to create a project; the manager is Marta unless the test changes it. */
     private Map<String, Object> project(String name, String start, String end) {
         Map<String, Object> body = new HashMap<>();
@@ -683,39 +631,6 @@ class ProjectsAndTeamIntegrationTest {
         body.put("status", "Not started");
         body.put("managerId", userId("marta"));
         return body;
-    }
-
-    private ResponseEntity<String> signIn(String username) {
-        return exchange("/auth/login", HttpMethod.POST, null, Map.of("username", username, "password", password));
-    }
-
-    private String sessionOf(String username) {
-        String setCookie = signIn(username).getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-        assertThat(setCookie).as("session cookie of " + username).isNotNull();
-        return setCookie.substring(0, setCookie.indexOf(';'));
-    }
-
-    private ResponseEntity<String> get(String path, String cookie) {
-        return exchange(path, HttpMethod.GET, cookie, null);
-    }
-
-    private ResponseEntity<String> post(String path, String cookie, Object body) {
-        return exchange(path, HttpMethod.POST, cookie, body);
-    }
-
-    private ResponseEntity<String> patch(String path, String cookie, Object body) {
-        return exchange(path, HttpMethod.PATCH, cookie, body);
-    }
-
-    private ResponseEntity<String> exchange(String path, HttpMethod method, String cookie, Object body) {
-        HttpHeaders headers = new HttpHeaders();
-        if (cookie != null) {
-            headers.add(HttpHeaders.COOKIE, cookie);
-        }
-        if (body != null) {
-            headers.setContentType(MediaType.APPLICATION_JSON);
-        }
-        return http.exchange(path, method, new HttpEntity<>(body, headers), String.class);
     }
 
     private List<String> projectNames(String username) {
@@ -730,21 +645,5 @@ class ProjectsAndTeamIntegrationTest {
         List<Boolean> flags = JsonPath.read(get("/projects/" + projectId + "/members", cookie).getBody(),
                 "$[?(@.name=='" + name + "')].inOtherOpenProject");
         return flags.get(0);
-    }
-
-    private long projectId(String name) {
-        return jdbc.queryForObject("SELECT id FROM project WHERE name = ?", Long.class, name);
-    }
-
-    private long userId(String username) {
-        return jdbc.queryForObject("SELECT id FROM app_user WHERE username = ?", Long.class, username);
-    }
-
-    private int count(String table) {
-        return jdbc.queryForObject("SELECT count(*) FROM " + table, Integer.class);
-    }
-
-    private static Object json(ResponseEntity<String> response, String path) {
-        return JsonPath.read(response.getBody(), path);
     }
 }

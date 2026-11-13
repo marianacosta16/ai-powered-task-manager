@@ -187,6 +187,29 @@ curl -s -b /tmp/marta.txt -H 'Content-Type: application/json' -d '{"name":"Demo"
 curl -s -b /tmp/marta.txt localhost:8081/projects/1/members
 ```
 
+## Tarefas (incremento 3a)
+
+Operações: `createTask`, `getTask`, `updateTask`, `addAssignee`, `removeAssignee` e `listAssignableUsers`. Quem faz o pedido vem sempre da sessão, e o acesso ao projeto (403) e o estado do projeto são verificados antes dos valores do pedido.
+
+| Regra | Como se aplica |
+|---|---|
+| Criar (R1, R13, R14, R22) | Qualquer membro ou o gestor, num projeto em aberto (422 `PROJECT_NOT_OPEN` se concluído ou suspenso). Prazo obrigatório (400) e não no passado, sendo hoje aceite (422 `DEADLINE_IN_PAST`). Estado inicial "To do" |
+| Responsáveis (R21, R26) | Membros do projeto ou o gestor (422 `ASSIGNEE_NOT_MEMBER`); há sempre pelo menos um (422 `LAST_ASSIGNEE`) |
+| Subtarefas (R2, R3, A4) | O prazo da subtarefa não é posterior ao da mãe (422 `SUBTASK_DEADLINE_AFTER_PARENT`); antecipar a mãe para antes de uma subtarefa é bloqueado (422 `PARENT_DEADLINE_BEFORE_SUBTASK`); só um nível (422 `PARENT_IS_SUBTASK`); não se cria numa mãe fechada nem se reabre uma subtarefa com a mãe fechada (422 `PARENT_TASK_CLOSED`, P35) |
+| Estados (R4, R5, R6, P8) | A mãe não se conclui nem cancela com subtarefas em aberto (422 `PARENT_HAS_OPEN_SUBTASKS`). "Blocked" exige motivo (422 `BLOCK_REASON_REQUIRED`) e "Duplicate" exige uma original válida (422 `ORIGINAL_TASK_REQUIRED` ou `ORIGINAL_TASK_NOT_VALID`). Reabrir uma tarefa final só o gestor (403) |
+| Projeto concluído (R27, R28) | Nada se altera (422 `PROJECT_COMPLETED`); num projeto suspenso edita-se e atribui-se, mas não se cria |
+| Edições simultâneas (T13, R30) | O `updateTask` leva a `version` lida; se a tarefa mudou entretanto, 409 `TASK_CHANGED` e nada se grava. Uma gravação que não altera nada não sobe a versão (A20) |
+
+Os pressupostos A14 a A20 estão confirmados no [openapi.yaml](openapi.yaml). Apagar tarefas é do incremento 7.
+
+```bash
+curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"title":"Write report","deadline":"2027-01-15","urgency":3,"importance":4,"assigneeIds":[3]}' localhost:8081/projects/1/tasks
+```
+
+```bash
+curl -s -X PATCH -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"version":1,"status":"In progress"}' localhost:8081/tasks/1
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.

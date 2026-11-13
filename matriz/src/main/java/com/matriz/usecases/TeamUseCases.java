@@ -98,6 +98,9 @@ public class TeamUseCases {
         ProjectRecord project = find(projectId);
         permissions.requireManager(user, projectId);
         ProjectUseCases.requireNotCompleted(project); // R28
+        // The same lock as when assigning the person to a task: either the task is assigned first and the
+        // removal sees it, or the removal is done first and the assignment is refused (R21)
+        users.findForUpdate(userId);
         if (!team.isMember(projectId, userId)) {
             throw new NotFoundException("The person is not a member of this project.");
         }
