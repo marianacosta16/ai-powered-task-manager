@@ -76,8 +76,7 @@ public class TeamUseCases {
             throw new NotFoundException("The person was not found.");
         }
         if (userId == project.managerId() || team.isMember(projectId, userId)) {
-            throw new InvalidRequestException("The person is already part of the project.", "userId",
-                    "Already part of this project.");
+            throw new BusinessRuleException("MEMBER_ALREADY_IN_PROJECT", "This person is already part of the project.");
         }
         // R11: one open project per member; managers are exempt, and a suspended project is not open (P4)
         if (isOpen(project) && !isManagerRole(person)

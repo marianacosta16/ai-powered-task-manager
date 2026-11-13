@@ -296,6 +296,21 @@ class ProjectsAndTeamIntegrationTest {
     }
 
     @Test
+    void someoneAlreadyInTheProjectCannotBeAddedAgain() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+
+        ResponseEntity<String> member = post("/projects/" + website + "/members", marta, Map.of("userId", userId("ana")));
+        ResponseEntity<String> manager = post("/projects/" + website + "/members", marta, Map.of("userId", userId("marta")));
+
+        for (ResponseEntity<String> r : List.of(member, manager)) {
+            assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(json(r, "$.code")).isEqualTo("MEMBER_ALREADY_IN_PROJECT");
+        }
+        assertThat(memberNames(website, marta)).containsExactly("Ana", "Rui", "Luís");
+    }
+
+    @Test
     void onlyTheManagerAddsMembers() {
         long website = projectId("Website");
 
