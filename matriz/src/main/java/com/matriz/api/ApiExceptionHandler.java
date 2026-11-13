@@ -36,6 +36,11 @@ class ApiExceptionHandler {
         return reply(HttpStatus.UNAUTHORIZED, ErrorBody.of("INVALID_CREDENTIALS", INVALID_CREDENTIALS));
     }
 
+    @ExceptionHandler(RequestValidationException.class)
+    ResponseEntity<ErrorBody> invalidBody(RequestValidationException ex) {
+        return validation("Some values are missing or not valid. Check them and try again.", ex.details());
+    }
+
     @ExceptionHandler(InvalidRequestException.class)
     ResponseEntity<ErrorBody> invalidValue(InvalidRequestException ex) {
         return validation(ex.getMessage(), List.of(new ErrorBody.Detail(ex.field(), ex.issue())));

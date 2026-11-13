@@ -31,6 +31,10 @@ public class OpenTaskCounts {
     }
 
     public int forAssignee(long projectId, long userId) {
-        return byAssignee(projectId).getOrDefault(userId, 0);
+        return jdbc.queryForObject("""
+                SELECT count(*) FROM task t JOIN task_assignee a ON a.task_id = t.id
+                WHERE t.project_id = ? AND a.user_id = ? AND t.deleted_at IS NULL
+                  AND t.status NOT IN ('Done', 'Cancelled', 'Duplicate')
+                """, Integer.class, projectId, userId);
     }
 }

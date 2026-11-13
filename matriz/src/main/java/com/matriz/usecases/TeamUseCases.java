@@ -1,6 +1,7 @@
 package com.matriz.usecases;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class TeamUseCases {
         ProjectRecord project = find(projectId);
         permissions.requireAccess(user, projectId);
         List<Long> ids = team.memberIds(projectId).stream().filter(id -> id != project.managerId()).toList();
-        return memberViews(project, ids);
+        return memberViews(project, ids, openTasks.byAssignee(projectId));
     }
 
     /** Everyone not in the project yet; a person in another open project is unavailable (R11, scenario 1.5). */
@@ -85,7 +86,7 @@ public class TeamUseCases {
                     "This person is already in another open project.");
         }
         team.add(projectId, userId);
-        return memberViews(project, List.of(userId)).get(0);
+        return memberViews(project, List.of(userId), Map.of(userId, openTasks.forAssignee(projectId, userId))).get(0);
     }
 
     /**
@@ -111,9 +112,8 @@ public class TeamUseCases {
         team.remove(projectId, userId);
     }
 
-    private List<MemberView> memberViews(ProjectRecord project, List<Long> ids) {
+    private List<MemberView> memberViews(ProjectRecord project, List<Long> ids, Map<Long, Integer> counts) {
         var infos = users.findByIds(ids);
-        var counts = openTasks.byAssignee(project.id());
         // The red label: a member of a resumed (open) project who is also in another open project (P22)
         Set<Long> flagged = isOpen(project) ? team.inOtherOpenProject(ids, project.id()) : Set.of();
         return ids.stream().map(infos::get)

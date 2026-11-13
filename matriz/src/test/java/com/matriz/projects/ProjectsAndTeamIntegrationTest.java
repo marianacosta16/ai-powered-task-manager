@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +28,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jayway.jsonpath.JsonPath;
 import com.matriz.testsupport.MutableClock;
@@ -52,6 +58,7 @@ class ProjectsAndTeamIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired DemoDataSeeder seeder;
     @Autowired MutableClock clock;
+    @Autowired PlatformTransactionManager transactions;
 
     private final String password = UUID.randomUUID().toString();
 
@@ -462,7 +469,128 @@ class ProjectsAndTeamIntegrationTest {
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
+    // ---- found by the code review of this increment ----
+
+    @Test
+    void aTeamMemberGets403EvenWithAnInvalidBody() {
+        // The role is checked before the values: no hints about the body for someone who may not create projects
+        Map<String, Object> invalid = project("", "2026-06-10", "2026-09-30");
+
+        ResponseEntity<String> response = post("/projects", sessionOf("ana"), invalid);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(json(post("/projects", sessionOf("marta"), invalid), "$.code")).isEqualTo("VALIDATION_ERROR");
+    }
+
+    @Test
+    void twoUpdatesOfTheSameProjectDoNotOverwriteEachOther() throws Exception {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            // Another update holds the row; meanwhile the rename arrives. It must wait for the lock and then
+            // read the new status, instead of writing back the old one.
+            Future<ResponseEntity<String>> rename = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM project WHERE id = ? FOR UPDATE", Long.class, website);
+                Future<ResponseEntity<String>> pending = pool.submit(
+                        () -> patch("/projects/" + website, marta, Map.of("name", "Renamed")));
+                pause(1000);
+                jdbc.update("UPDATE project SET status = 'Suspended' WHERE id = ?", website);
+                return pending;
+            });
+
+            assertThat(rename.get(15, TimeUnit.SECONDS).getStatusCode()).isEqualTo(HttpStatus.OK);
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(jdbc.queryForObject("SELECT name FROM project WHERE id = ?", String.class, website)).isEqualTo("Renamed");
+        assertThat(jdbc.queryForObject("SELECT status FROM project WHERE id = ?", String.class, website))
+                .isEqualTo("Suspended");
+    }
+
+    @Test
+    void theManagerHandsTheProjectToAnotherProjectManager() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+
+        ResponseEntity<String> notAManager = patch("/projects/" + website, marta, Map.of("managerId", userId("ana")));
+        ResponseEntity<String> handed = patch("/projects/" + website, marta, Map.of("managerId", userId("pedro")));
+
+        assertThat(notAManager.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(json(notAManager, "$.code")).isEqualTo("MANAGER_NOT_A_MANAGER");
+        assertThat(handed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(handed, "$.manager.name")).isEqualTo("Pedro");
+        // the former manager stops seeing the project, the new one sees it and now manages it (A12)
+        assertThat(get("/projects/" + website, marta).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(get("/projects/" + website, sessionOf("pedro")).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(patch("/projects/" + website, sessionOf("pedro"), Map.of("phase", "Planning")).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThat(patch("/projects/" + website, marta, Map.of("phase", "Execution")).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void anInvalidTimeZoneOrValueInAnUpdateIsRefused() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+
+        ResponseEntity<String> zone = patch("/projects/" + website, marta, Map.of("timezone", "Mars/Olympus"));
+        ResponseEntity<String> phase = patch("/projects/" + website, marta, Map.of("phase", "Party"));
+        ResponseEntity<String> date = patch("/projects/" + website, marta, Map.of("endDate", "31/12/2027"));
+        ResponseEntity<String> longName = patch("/projects/" + website, marta, Map.of("name", "n".repeat(101)));
+
+        for (ResponseEntity<String> r : List.of(zone, phase, date, longName)) {
+            assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(json(r, "$.code")).isEqualTo("VALIDATION_ERROR");
+        }
+        assertThat(JsonPath.<List<String>>read(zone.getBody(), "$.details[*].field")).containsExactly("timezone");
+        assertThat(json(get("/projects/" + website, marta), "$.timezone")).isEqualTo("Europe/Lisbon");
+    }
+
+    @Test
+    void reassignmentsForAMemberWithoutOpenTasksAreRefused() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+        post("/projects/" + website + "/members", marta, Map.of("userId", userId("diana")));
+
+        ResponseEntity<String> response = post("/projects/" + website + "/members/" + userId("diana") + "/removal", marta,
+                Map.of("reassignments", List.of(Map.of("taskId", 1, "newAssigneeId", userId("rui")))));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(memberNames(website, marta)).contains("Diana");
+    }
+
+    @Test
+    void inASuspendedProjectEveryoneNotInTheTeamIsAvailable() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+        patch("/projects/" + website, marta, Map.of("status", "Suspended"));
+
+        ResponseEntity<String> response = get("/projects/" + website + "/candidate-members", marta);
+
+        // Sofia is in Intranet (open), but the R11 check does not apply to a suspended project (P4)
+        assertThat(JsonPath.<List<Boolean>>read(response.getBody(), "$[?(@.user.name=='Sofia')].available"))
+                .containsExactly(true);
+        assertThat(JsonPath.<List<Boolean>>read(response.getBody(), "$[*].available")).doesNotContain(false);
+    }
+
+    @Test
+    void aMemberSeesTheTeamOfTheirProject() {
+        ResponseEntity<String> response = get("/projects/" + projectId("Mobile App") + "/members", sessionOf("ines"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(JsonPath.<List<String>>read(response.getBody(), "$[*].name")).containsExactly("Inês", "Tiago");
+    }
+
     // ---- helpers ----
+
+    private static void pause(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /** A valid body to create a project; the manager is Marta unless the test changes it. */
     private Map<String, Object> project(String name, String start, String end) {

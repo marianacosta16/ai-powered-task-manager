@@ -50,11 +50,16 @@ public class ProjectUseCases {
         this.clock = clock;
     }
 
-    @Transactional
-    public ProjectView createProject(AuthenticatedUser creator, NewProjectCommand c) {
+    /** Only a project manager creates projects (F01, R19); checked before the body is looked at. */
+    public void requireCanCreate(AuthenticatedUser creator) {
         if (creator.role() != Role.PROJECT_MANAGER) {
             throw new ForbiddenException("Only a project manager can create projects.");
         }
+    }
+
+    @Transactional
+    public ProjectView createProject(AuthenticatedUser creator, NewProjectCommand c) {
+        requireCanCreate(creator);
         ProjectPhase phase = ProjectPhase.fromLabel("phase", c.phase());
         ProjectStatus status = ProjectStatus.fromLabel("status", c.status());
         String timezone = c.timezone() == null ? DEFAULT_TIMEZONE : c.timezone();
@@ -64,14 +69,17 @@ public class ProjectUseCases {
 
         long id = commands.insert(new NewProject(c.name(), c.description(), c.startDate(), c.startTime(),
                 c.endDate(), c.endTime(), timezone, phase.label(), status.label(), manager.id()));
-        return ProjectView.of(queries.findById(id).orElseThrow(), manager);
+        return ProjectView.of(new ProjectRecord(id, c.name(), c.description(), c.startDate(), c.startTime(),
+                c.endDate(), c.endTime(), timezone, phase.label(), status.label(), manager.id()), manager);
     }
 
     @Transactional
     public ProjectView updateProject(AuthenticatedUser user, long projectId, ProjectPatch patch) {
-        ProjectRecord current = queries.findById(projectId)
-                .orElseThrow(() -> new NotFoundException("The project was not found."));
+        queries.findById(projectId).orElseThrow(() -> new NotFoundException("The project was not found."));
         permissions.requireManager(user, projectId);
+        // Read again with the row locked: two updates at the same time are done one after the other
+        ProjectRecord current = queries.findByIdForUpdate(projectId)
+                .orElseThrow(() -> new NotFoundException("The project was not found."));
         requireNotCompleted(current); // R28: nothing changes, and it is not reopened
 
         String name = patch.has("name") ? patch.name() : current.name();
@@ -93,12 +101,13 @@ public class ProjectUseCases {
         boolean startChanged = !startDate.equals(current.startDate());
         checkDates(startDate, startTime, endDate, endTime, zone(timezone), startChanged); // R29: only when changed
 
-        commands.update(new ProjectRecord(projectId, name, description, startDate, startTime, endDate, endTime,
-                timezone, phase, status, managerId));
+        ProjectRecord updated = new ProjectRecord(projectId, name, description, startDate, startTime, endDate,
+                endTime, timezone, phase, status, managerId);
+        commands.update(updated);
         if (manager == null) {
             manager = users.findByIds(java.util.List.of(managerId)).get(managerId);
         }
-        return ProjectView.of(queries.findById(projectId).orElseThrow(), manager);
+        return ProjectView.of(updated, manager);
     }
 
     static void requireNotCompleted(ProjectRecord project) {

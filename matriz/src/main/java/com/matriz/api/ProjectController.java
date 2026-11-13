@@ -21,7 +21,6 @@ import com.matriz.usecases.ProjectUseCases;
 import com.matriz.usecases.ProjectSummaryView;
 import com.matriz.usecases.ProjectView;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
@@ -35,17 +34,21 @@ class ProjectController {
 
     private final ProjectReadUseCases useCases;
     private final ProjectUseCases projectUseCases;
+    private final RequestValidator validator;
 
-    ProjectController(ProjectReadUseCases useCases, ProjectUseCases projectUseCases) {
+    ProjectController(ProjectReadUseCases useCases, ProjectUseCases projectUseCases, RequestValidator validator) {
         this.useCases = useCases;
         this.projectUseCases = projectUseCases;
+        this.validator = validator;
     }
 
     /** The creator comes from the session; the manager is the one the creator indicates (R19). */
     @PostMapping("/projects")
     @ResponseStatus(HttpStatus.CREATED)
     ProjectView createProject(@AuthenticationPrincipal AuthenticatedUser user,
-            @Valid @RequestBody ProjectCreateRequest body) {
+            @RequestBody ProjectCreateRequest body) {
+        projectUseCases.requireCanCreate(user); // 403 for a member, before the values are checked
+        validator.validate(body);
         return projectUseCases.createProject(user, body.toCommand());
     }
 
