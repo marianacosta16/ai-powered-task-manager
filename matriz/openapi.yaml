@@ -26,6 +26,12 @@ info:
     - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
     - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
     - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10). The new manager loses his member row, if he had one, and keeps his tasks (M5, R19, R21). The former manager stops seeing the project, unless he has tasks in it: then he stays as a member.
+    - A14 (confirmed): a subtask is not created under a parent task that is closed (Done, Cancelled or Duplicate): 422 `PARENT_TASK_CLOSED`, because the closed parent would end up with an open subtask (R4).
+    - A15 (to confirm): R4 applies to main tasks and to the statuses Done and Cancelled; a subtask has no subtasks, and a Duplicate parent is not checked.
+    - A16 (to confirm): assigning someone who is already an assignee is accepted and changes nothing (200 with the assignees).
+    - A17 (to confirm): `blockReason` and `originalTaskId` sent with a status that does not use them are refused with 400; leaving Blocked or Duplicate clears them.
+    - A18 (to confirm): the deadline is validated (R13, R2, R3) only when it is changed; saving the same deadline again is not an error.
+    - A19 (to confirm): creating a task or a subtask in a completed or in a suspended project is refused with 422 `PROJECT_NOT_OPEN` (R22); changing, assigning or removing in a completed project is 422 `PROJECT_COMPLETED` (R27, R28).
     - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
 
 tags:
@@ -395,7 +401,8 @@ paths:
         - R2: a subtask deadline cannot be later than its parent task deadline.
         - R14: title up to 100 characters and description up to 2000.
         - R21: every assignee must be a member of the project or its manager.
-        - R22: tasks can only be created in an open project; a `Completed` or `Suspended` project refuses the creation.
+        - R22: tasks can only be created in an open project; a `Completed` or `Suspended` project refuses the creation (A19).
+        - A14: a subtask is not created under a closed parent task (422 `PARENT_TASK_CLOSED`).
         - R6 does not apply here: a task is never created as `Blocked` or `Duplicate`.
 
         The new task has status `To do` (scenario 2.1). Assumption A3: at least one assignee is required.
@@ -1485,6 +1492,7 @@ components:
         - ASSIGNEE_LIMIT_EXCEEDED
         - CANNOT_RESTORE
         - TASK_CHANGED
+        - PARENT_TASK_CLOSED
 
     Error:
       type: object

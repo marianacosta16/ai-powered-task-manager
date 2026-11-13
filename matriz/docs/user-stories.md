@@ -368,6 +368,11 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o membro altera o prazo da subtarefa para 2026-12-20
 - **Then** a alteração é recusada, com uma mensagem a indicar que o prazo excede o da tarefa-mãe, e o prazo da subtarefa mantém-se em 2026-12-10.
 
+**Cenário 4.6: subtarefa numa tarefa-mãe fechada**
+- **Given** uma tarefa-mãe no estado "concluído"
+- **When** o membro tenta criar uma subtarefa dessa tarefa
+- **Then** a criação é recusada, com uma mensagem a pedir que a tarefa-mãe seja primeiro reaberta, e a tarefa fica sem a nova subtarefa.
+
 ### US05 — Concluir tarefa-mãe
 
 **Cenário 5.1: subtarefa em aberto**
@@ -788,6 +793,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC43 | Duas pessoas editam a mesma tarefa e gravam uma depois da outra | A segunda gravação é recusada, com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; a primeira mantém-se (a verificar no incremento 3) | [R30](requirements.md#4-regras-de-negócio) |
 | EC44 | Dois gestores adicionam, ao mesmo tempo, a mesma pessoa livre a dois projetos em aberto | Só um dos pedidos é aceite; o outro é recusado, com aviso, porque a pessoa já está noutro projeto em aberto (cenário 1.5) | [R11](requirements.md#4-regras-de-negócio) |
 | EC45 | O gestor faz duas alterações ao mesmo projeto ao mesmo tempo (por exemplo, o nome e o estado) | As duas ficam guardadas, uma a seguir à outra, e nenhuma desfaz a outra | [R12](requirements.md#4-regras-de-negócio) |
+| EC46 | Criar uma subtarefa numa tarefa-mãe concluída, cancelada ou duplicada | Recusado, com mensagem a pedir que a mãe seja primeiro reaberta (cenário 4.6) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
