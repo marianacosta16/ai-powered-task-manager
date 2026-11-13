@@ -79,6 +79,20 @@ class PersistenceIntegrationTest {
         assertThat(count("app_user")).isZero();
     }
 
+    @Test
+    void shortDemoPasswordIsIgnoredWhenTheDataAlreadyExists() {
+        // Given a database that already has the demo data
+        seeder.seed(UUID.randomUUID().toString());
+        int users = count("app_user");
+
+        // When the app starts again with a password shorter than 8 characters in the environment
+        boolean created = seeder.seed("abc");
+
+        // Then it starts normally: nothing is created, changed or refused
+        assertThat(created).isFalse();
+        assertThat(count("app_user")).isEqualTo(users);
+    }
+
     private int count(String table) {
         return jdbc.queryForObject("SELECT count(*) FROM " + table, Integer.class);
     }
