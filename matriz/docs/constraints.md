@@ -55,6 +55,7 @@ Propostas aceites para preencher lacunas. Devem ser validadas com um cliente rea
 | P31 | A proteção CSRF está desligada na v1: a API só aceita JSON e o cookie de sessão é `SameSite=Lax`. Reve-se quando se escolher a interface (T1) | Simplifica a API enquanto não há interface; a decisão fica registada para não se perder | Por validar |
 | P32 | As sessões ficam guardadas em memória no servidor: reiniciar a aplicação termina-as e o utilizador tem de iniciar sessão outra vez | Suficiente para uma só instância na v1 (T8); evita uma tabela de sessões | Por validar |
 | P33 | Um pedido sem sessão válida recebe 401. Se trazia o cookie de uma sessão que já terminou (por terminar sessão ou por 3 horas sem atividade), a mensagem diz que a sessão terminou ("Your session has ended. Sign in again to continue."); sem cookie, diz "Sign in to continue.". A interface leva o utilizador ao início de sessão e mostra a mensagem (cenários 10.5 e 10.6, EC31, EC38) | Cumpre o pedido de uma mensagem compreensível quando a sessão deixa de ser válida, sem acrescentar estados novos | Por validar |
+| P34 | Um pedido de um projeto que não existe (ou foi apagado) recebe 404, e o de um projeto que existe mas a que o utilizador não tem acesso recebe 403 (S1). Por isso quem tem sessão pode descobrir que um identificador de projeto existe, sem ver o seu conteúdo | Mantém-se a distinção do contrato para dar mensagens claras (NF08); sem dados reais (C8), o risco é aceitável. Decisão da autora em 2026-11-13 | Confirmado |
 
 ## 3. Requisitos de segurança e privacidade
 
@@ -73,6 +74,7 @@ Propostas aceites para preencher lacunas. Devem ser validadas com um cliente rea
 - As contas de demonstração e as regras de palavra-passe não estão definidas para segurança real (S5, C8).
 - Sem registo de auditoria na v1, não fica registado quem apagou o quê.
 - Sem limite de tentativas de início de sessão (P30) e sem proteção CSRF (P31): aceitável só com dados fictícios num ambiente controlado.
+- Quem tem sessão consegue saber se um identificador de projeto existe, pela diferença entre 404 e 403 (P34).
 
 Mitigação decidida: só dados fictícios num ambiente controlado (C8). Se a aplicação passar a usar dados reais, é preciso definir primeiro as regras de autenticação e de proteção de dados.
 
