@@ -47,7 +47,6 @@ public class ProjectReadUseCases {
                 .orElseThrow(() -> new NotFoundException("The project was not found."));
         permissions.requireAccess(user, projectId);
         UserInfo manager = users.findByIds(List.of(p.managerId())).get(p.managerId());
-        return new ProjectView(p.id(), p.name(), p.phase(), p.status(), manager, p.description(), p.startDate(),
-                p.startTime(), p.endDate(), p.endTime(), p.timezone());
+        return ProjectView.of(p, manager);
     }
 }

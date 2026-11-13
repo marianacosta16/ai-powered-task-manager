@@ -44,6 +44,13 @@ public class ProjectPermissions {
         return roleIn(user.id(), projectId).orElseThrow(() -> new ForbiddenException(NO_ACCESS));
     }
 
+    /** Only the manager of the project (R12, R17, R19); a member is refused with 403. */
+    public void requireManager(AuthenticatedUser user, long projectId) {
+        if (requireAccess(user, projectId) != ProjectRole.MANAGER) {
+            throw new ForbiddenException("Only the manager of the project can do this.");
+        }
+    }
+
     /** Identifiers of the not deleted projects the user manages or belongs to (R8, R25). */
     public Set<Long> accessibleProjectIds(long userId) {
         List<Long> ids = jdbc.queryForList("""
