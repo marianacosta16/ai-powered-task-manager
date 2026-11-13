@@ -23,10 +23,10 @@ info:
     - A7 (confirmed): when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
     - A8 (to confirm): adding someone who is already in the project, or who is its manager, is refused with 400 `VALIDATION_ERROR` and the field `userId`, because the contract has no business code for it.
     - A9 (to confirm): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
-    - A10 (to confirm): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
-    - A11 (to confirm): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
-    - A12 (to confirm): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10); the former manager then stops seeing it.
-    - A13 (to confirm): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
+    - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
+    - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
+    - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10); the former manager then stops seeing it.
+    - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
 
 tags:
   - name: Auth

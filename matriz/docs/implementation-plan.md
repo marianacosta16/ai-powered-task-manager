@@ -202,3 +202,15 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
 | Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |
+
+## 8. Verificações adiadas para a fase da interface
+
+Itens que a API não consegue verificar sozinha e que não se podem esquecer quando a interface for feita. Quando um item for verificado, indica-se aqui a data e como.
+
+| # | Item | Origem | Incremento | Estado |
+|---|---|---|---|---|
+| V1 | Pedir uma confirmação antes de marcar um projeto como concluído, a avisar que deixa de poder ser alterado ou reaberto; ao cancelar, o estado mantém-se | Cenário 1.22, EC39, R28 | 2 | Por verificar na interface |
+| V2 | Os controlos que a pessoa não pode usar não aparecem (criar projeto para membros, alterar o projeto e a equipa para membros, e tudo num projeto concluído). A API já os recusa com 403 ou 422 | Cenários 1.2, 1.3, 1.6, 1.21, NF08 | 2 | Por verificar na interface |
+| V3 | Aviso ao gestor, ao retomar um projeto suspenso, de que há membros noutro projeto em aberto (a API devolve `inOtherOpenProject`) | Cenário 1.8, P22 | 2 | Por verificar na interface |
+| V4 | Encaminhar para o início de sessão quando a sessão deixa de ser válida, mostrando a mensagem do servidor ("Your session has ended..." ou "Sign in to continue.") | Cenários 10.5 e 10.6, EC31, EC38, P33, W16 | 1 | Por verificar na interface |
+| V5 | A expiração às 3 horas sem atividade: hoje só se verifica a configuração do servidor, não uma sessão realmente expirada | Cenário 10.6, EC38, S5 | 1 | Por verificar (esperar o tempo, ou com a interface) |
