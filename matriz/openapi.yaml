@@ -21,8 +21,8 @@ info:
     - A5 (confirmed): a task deadline is a date without time (M3 in docs/database.md).
     - A6 (confirmed): the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
     - A7 (confirmed): when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
-    - A8 (to confirm): adding someone who is already in the project, or who is its manager, is refused with 400 `VALIDATION_ERROR` and the field `userId`, because the contract has no business code for it.
-    - A9 (to confirm): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
+    - A8 (confirmed): adding someone who is already in the project, or who is its manager, is refused with 422 `MEMBER_ALREADY_IN_PROJECT`.
+    - A9 (confirmed): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
     - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
     - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
     - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10); the former manager then stops seeing it.
@@ -271,7 +271,7 @@ paths:
       summary: Add a member to a project
       description: |
         Only the manager of the project adds members, in an open or suspended project; a completed project cannot be changed (R28).
-        In an open project, a person who is already a member of another open project is refused (R11); this does not apply to project managers. Assumption A8: someone already in the project is refused with 400. In a suspended project the check does not apply, because the project is not open (P4); when it is resumed, P22 applies.
+        In an open project, a person who is already a member of another open project is refused (R11); this does not apply to project managers. Assumption A8: someone already in the project, or its manager, is refused with 422 `MEMBER_ALREADY_IN_PROJECT`. In a suspended project the check does not apply, because the project is not open (P4); when it is resumed, P22 applies.
       requestBody:
         required: true
         content:
@@ -1479,6 +1479,7 @@ components:
         - END_BEFORE_START
         - MANAGER_NOT_A_MANAGER
         - MEMBER_IN_OTHER_OPEN_PROJECT
+        - MEMBER_ALREADY_IN_PROJECT
         - REPLACEMENT_REQUIRED
         - REPLACEMENT_NOT_ELIGIBLE
         - ASSIGNEE_LIMIT_EXCEEDED

@@ -177,7 +177,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |
 | Remover membros (R17) | Só membros sem tarefas em aberto; com tarefas, 422 `REPLACEMENT_REQUIRED` até haver substitutos (incremento 3) |
 
-Pressupostos A8 a A13 ficaram no [openapi.yaml](openapi.yaml), por confirmar.
+Os pressupostos A8 a A13 estão confirmados no [openapi.yaml](openapi.yaml). Adicionar alguém que já está no projeto (ou o seu gestor) dá 422 `MEMBER_ALREADY_IN_PROJECT`.
 
 ```bash
 curl -s -b /tmp/marta.txt -H 'Content-Type: application/json' -d '{"name":"Demo","startDate":"2027-01-10","endDate":"2027-03-31","phase":"Initiation","status":"Not started","managerId":1}' localhost:8081/projects
