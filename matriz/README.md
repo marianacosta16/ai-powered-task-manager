@@ -187,6 +187,10 @@ curl -s -b /tmp/marta.txt -H 'Content-Type: application/json' -d '{"name":"Demo"
 curl -s -b /tmp/marta.txt localhost:8081/projects/1/members
 ```
 
+## Verificação automática (CI)
+
+O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
+
 ## Estado atual
 
 | Fase | Estado |
