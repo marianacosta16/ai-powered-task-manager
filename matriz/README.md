@@ -200,7 +200,7 @@ Operações: `createTask`, `getTask`, `updateTask`, `addAssignee`, `removeAssign
 | Projeto concluído (R27, R28) | Nada se altera (422 `PROJECT_COMPLETED`); num projeto suspenso edita-se e atribui-se, mas não se cria |
 | Edições simultâneas (T13, R30) | O `updateTask` leva a `version` lida; se a tarefa mudou entretanto, 409 `TASK_CHANGED` e nada se grava |
 
-Os pressupostos A15 a A19 estão no [openapi.yaml](openapi.yaml), por confirmar. Apagar tarefas é do incremento 7.
+Os pressupostos A15, A18 e A19 estão confirmados no [openapi.yaml](openapi.yaml); o A16 e o A17 estão por confirmar. Apagar tarefas é do incremento 7.
 
 ```bash
 curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"title":"Write report","deadline":"2027-01-15","urgency":3,"importance":4,"assigneeIds":[3]}' localhost:8081/projects/1/tasks
