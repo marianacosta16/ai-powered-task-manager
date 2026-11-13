@@ -17,6 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.matriz.shared.BusinessRuleException;
+import com.matriz.shared.ConflictException;
 import com.matriz.shared.ForbiddenException;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.NotFoundException;
@@ -49,6 +50,11 @@ class ApiExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ResponseEntity<ErrorBody> businessRule(BusinessRuleException ex) {
         return reply(HttpStatus.UNPROCESSABLE_ENTITY, ErrorBody.of(ex.code(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ErrorBody> conflict(ConflictException ex) {
+        return reply(HttpStatus.CONFLICT, ErrorBody.of(ex.code(), ex.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)
