@@ -38,7 +38,7 @@ public class ProjectQueries {
         }
         MapSqlParameterSource params = new MapSqlParameterSource("ids", ids);
         String sql = "SELECT " + COLUMNS + " FROM project WHERE id IN (:ids) AND deleted_at IS NULL";
-        if (search != null && !search.isBlank()) {
+        if (search != null && !search.isEmpty()) { // spaces are text too (P29); an empty value is refused by the API
             sql += " AND name ILIKE :search ESCAPE '\\'";
             params.addValue("search", "%" + escapeLike(search) + "%");
         }

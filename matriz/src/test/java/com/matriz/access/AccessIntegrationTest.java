@@ -228,13 +228,46 @@ class AccessIntegrationTest {
     void searchFindsProjectsByPartOfTheNameIgnoringCase() {
         String marta = sessionOf("marta");
 
-        ResponseEntity<String> found = get("/projects?search=SITE", marta);
-        ResponseEntity<String> none = get("/projects?search=xyz", marta);
-        ResponseEntity<String> wildcard = get("/projects?search=%25", marta);
+        ResponseEntity<String> found = search("SITE", marta);
+        ResponseEntity<String> none = search("xyz", marta);
+        ResponseEntity<String> wildcard = search("%", marta);
 
         assertThat(JsonPath.<List<String>>read(found.getBody(), "$[*].name")).containsExactly("Website");
         assertThat(none.getBody()).isEqualTo("[]");
         assertThat(wildcard.getBody()).isEqualTo("[]"); // "%" is text, not a wildcard
+    }
+
+    @Test
+    void searchTreatsSpacesAsText() {
+        // Given Marta's projects Website and Mobile App, when she searches for a single space
+        ResponseEntity<String> found = search(" ", sessionOf("marta"));
+
+        // Then only the name with a space is returned, not every project
+        assertThat(JsonPath.<List<String>>read(found.getBody(), "$[*].name")).containsExactly("Mobile App");
+    }
+
+    @Test
+    void protocolErrorsKeepTheContractErrorBody() {
+        String ana = sessionOf("ana");
+
+        // A form instead of JSON
+        HttpHeaders form = new HttpHeaders();
+        form.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        ResponseEntity<String> wrongType = http.exchange("/auth/login", HttpMethod.POST,
+                new HttpEntity<>("username=ana&password=x", form), String.class);
+        assertThat(wrongType.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        assertThat(json(wrongType, "$.code")).isEqualTo("VALIDATION_ERROR");
+        assertThat(wrongType.getBody()).doesNotContain("timestamp");
+
+        // A method the path does not accept, and a path that does not exist
+        ResponseEntity<String> wrongMethod = http.exchange("/projects/1", HttpMethod.DELETE,
+                new HttpEntity<>(headers(ana)), String.class);
+        assertThat(wrongMethod.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        assertThat(wrongMethod.getHeaders().getAllow()).contains(HttpMethod.GET);
+        assertThat(json(wrongMethod, "$.code")).isEqualTo("VALIDATION_ERROR");
+        ResponseEntity<String> unknown = get("/no-such-path", ana);
+        assertThat(unknown.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(json(unknown, "$.code")).isEqualTo("NOT_FOUND");
     }
 
     @Test
@@ -257,6 +290,12 @@ class AccessIntegrationTest {
 
     private ResponseEntity<String> get(String path, String cookie) {
         return http.exchange(path, HttpMethod.GET, new HttpEntity<>(headers(cookie)), String.class);
+    }
+
+    /** The text goes as a URI variable, so the client encodes it once (a literal "%20" would be encoded twice). */
+    private ResponseEntity<String> search(String text, String cookie) {
+        return http.exchange("/projects?search={text}", HttpMethod.GET, new HttpEntity<>(headers(cookie)),
+                String.class, text);
     }
 
     private ResponseEntity<String> post(String path, String cookie, Object body) {
