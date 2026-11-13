@@ -68,6 +68,8 @@ Estas regras mantêm o monólito modular e não um monólito comum.
 4. **As regras de negócio vivem nos módulos**, não na interface nem nos casos de uso, que só as combinam.
 5. **A decisão sobre o que o utilizador vê ou pode fazer vem sempre do módulo Acesso e Visibilidade**, para uma mudança futura na autenticação (por exemplo, a criação de contas na v2) mudar só esse módulo. Para decidir, o módulo Acesso lê `manager_id` e a associação de membros do projeto ([database.md](database.md#61-o-que-o-modelo-garante-e-o-que-a-aplicação-valida)): é a única exceção à regra 2, porque é ele que sabe quem tem acesso. Os dados do projeto continuam a ser lidos só pelo módulo Projetos, e os casos de uso juntam as duas respostas (404 se o projeto não existe, 403 se não há acesso).
 
+> **Nota (revisão de código do PR 1, 2026-11-13):** `listProjects` faz várias consultas (os projetos a que o utilizador tem acesso, os projetos e os gestores) em vez de uma só com junções, de propósito. Uma consulta única juntaria dados de módulos diferentes (acesso, projetos e utilizadores), contra a regra 2. Com a dimensão da v1 (NF03) o custo é desprezável, e a coordenação fica no caso de uso. Não juntar numa só consulta sem rever esta regra.
+
 ### Dependências entre componentes
 
 ```
