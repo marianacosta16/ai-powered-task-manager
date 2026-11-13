@@ -26,14 +26,14 @@ info:
     - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
     - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
     - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10). The new manager loses his member row, if he had one, and keeps his tasks (M5, R19, R21). The former manager stops seeing the project, unless he has tasks in it: then he stays as a member.
+    - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
     - A14 (confirmed): a subtask is not created under a parent task that is closed (Done, Cancelled or Duplicate): 422 `PARENT_TASK_CLOSED`, because the closed parent would end up with an open subtask (R4). For the same reason, a closed subtask is not reopened while its parent is closed (the manager reopens the parent first).
     - A15 (confirmed): R4 applies to main tasks and to the statuses Done and Cancelled; a subtask has no subtasks, and a Duplicate parent is not checked.
     - A16 (confirmed): assigning someone who is already an assignee is accepted and changes nothing (200 with the assignees).
     - A17 (confirmed): `blockReason` and `originalTaskId` sent with a status that does not use them are refused with 400; leaving Blocked or Duplicate clears them.
     - A18 (confirmed): the deadline is validated (R13, R2, R3) only when it is changed; saving the same deadline again is not an error.
-    - A20 (to confirm): an update that changes nothing is accepted and does not change the `version`, so it never makes another editor's save fail with `409`; a save that carries an old `version` is still refused.
     - A19 (confirmed): creating a task or a subtask in a completed or in a suspended project is refused with 422 `PROJECT_NOT_OPEN` (R22); changing, assigning or removing in a completed project is 422 `PROJECT_COMPLETED` (R27, R28).
-    - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
+    - A20 (confirmed): an update that changes nothing is accepted and does not change the `version`, so it never makes another editor's save fail with `409`; a save that carries an old `version` is still refused.
 
 tags:
   - name: Auth
