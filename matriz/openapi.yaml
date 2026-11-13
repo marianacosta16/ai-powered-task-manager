@@ -25,7 +25,7 @@ info:
     - A9 (confirmed): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
     - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
     - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
-    - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10); the former manager then stops seeing it.
+    - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10). The new manager loses his member row, if he had one, and keeps his tasks (M5, R19, R21). The former manager stops seeing the project, unless he has tasks in it: then he stays as a member.
     - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
 
 tags:

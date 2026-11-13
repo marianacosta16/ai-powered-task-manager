@@ -173,7 +173,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 |---|---|
 | Criar projetos (F01, R19) | Só um gestor (403 se for membro). Quem cria indica o gestor, que tem de ter o papel de gestor (422 `MANAGER_NOT_A_MANAGER`); se for outra pessoa, o criador deixa de ver o projeto |
 | Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
-| Alterar o projeto (R12) | Só o gestor (403). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
+| Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |
 | Remover membros (R17) | Só membros sem tarefas em aberto; com tarefas, 422 `REPLACEMENT_REQUIRED` até haver substitutos (incremento 3) |
 
