@@ -509,6 +509,41 @@ class ProjectsAndTeamIntegrationTest {
     }
 
     @Test
+    void twoManagersAddingTheSamePersonAtTheSameTimeCannotPutThemInTwoOpenProjects() throws Exception {
+        long website = projectId("Website");
+        long intranet = projectId("Intranet");
+        long diana = userId("diana"); // free: her only project is completed
+        String marta = sessionOf("marta");
+        String pedro = sessionOf("pedro");
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            // Both requests arrive while the row of the person is locked by another operation, and are
+            // then released together: without the lock both would pass the R11 check and both would insert.
+            List<Future<ResponseEntity<String>>> requests = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM app_user WHERE id = ? FOR UPDATE", Long.class, diana);
+                Future<ResponseEntity<String>> toWebsite = pool.submit(
+                        () -> post("/projects/" + website + "/members", marta, Map.of("userId", diana)));
+                Future<ResponseEntity<String>> toIntranet = pool.submit(
+                        () -> post("/projects/" + intranet + "/members", pedro, Map.of("userId", diana)));
+                pause(1000);
+                return List.of(toWebsite, toIntranet);
+            });
+
+            List<HttpStatus> statuses = new java.util.ArrayList<>();
+            for (Future<ResponseEntity<String>> r : requests) {
+                statuses.add(HttpStatus.valueOf(r.get(15, TimeUnit.SECONDS).getStatusCode().value()));
+            }
+            assertThat(statuses).containsExactlyInAnyOrder(HttpStatus.CREATED, HttpStatus.UNPROCESSABLE_ENTITY);
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(jdbc.queryForObject(
+                "SELECT count(*) FROM project_member m JOIN project p ON p.id = m.project_id "
+                        + "WHERE m.user_id = ? AND p.status IN ('Not started', 'In progress')",
+                Integer.class, diana)).isEqualTo(1);
+    }
+
+    @Test
     void theManagerHandsTheProjectToAnotherProjectManager() {
         long website = projectId("Website");
         String marta = sessionOf("marta");

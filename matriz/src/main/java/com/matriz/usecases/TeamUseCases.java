@@ -72,10 +72,10 @@ public class TeamUseCases {
         ProjectRecord project = find(projectId);
         permissions.requireManager(user, projectId);
         ProjectUseCases.requireNotCompleted(project); // R28
-        UserInfo person = users.findByIds(List.of(userId)).get(userId);
-        if (person == null) {
-            throw new NotFoundException("The person was not found.");
-        }
+        // Lock the person first: the checks below and the insert must not be mixed with another
+        // request about the same person (R11 across projects, and the same person added twice)
+        UserInfo person = users.findForUpdate(userId)
+                .orElseThrow(() -> new NotFoundException("The person was not found."));
         if (userId == project.managerId() || team.isMember(projectId, userId)) {
             throw new BusinessRuleException("MEMBER_ALREADY_IN_PROJECT", "This person is already part of the project.");
         }
