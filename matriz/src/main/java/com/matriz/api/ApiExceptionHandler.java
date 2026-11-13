@@ -7,7 +7,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -30,8 +29,8 @@ class ApiExceptionHandler {
     static final String INVALID_CREDENTIALS =
             "Credentials are not correct. Check your username and password and try again.";
 
-    @ExceptionHandler(AuthenticationException.class)
-    ResponseEntity<ErrorBody> invalidCredentials(AuthenticationException ex) {
+    @ExceptionHandler(InvalidCredentialsException.class)
+    ResponseEntity<ErrorBody> invalidCredentials(InvalidCredentialsException ex) {
         return reply(HttpStatus.UNAUTHORIZED, ErrorBody.of("INVALID_CREDENTIALS", INVALID_CREDENTIALS));
     }
 

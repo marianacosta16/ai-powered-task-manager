@@ -13,6 +13,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.matriz.testsupport.TestDatabase;
 import com.matriz.usecases.DemoDataSeeder;
 
 /** Runs against the separate test database (matriz_test); see README. */
@@ -26,8 +27,7 @@ class PersistenceIntegrationTest {
 
     @BeforeEach
     void emptyTestDatabase() {
-        jdbc.execute("TRUNCATE task_comment, task_assignee, task, project_member, project, app_user "
-                + "RESTART IDENTITY CASCADE");
+        TestDatabase.wipe(jdbc);
     }
 
     @Test

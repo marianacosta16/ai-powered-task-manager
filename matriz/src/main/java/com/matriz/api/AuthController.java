@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.matriz.access.AuthenticatedUser;
+import com.matriz.access.UserInfo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,11 +43,15 @@ class AuthController {
     }
 
     @PostMapping("/login")
-    UserResponse signIn(@Valid @RequestBody SignInRequest body, HttpServletRequest request,
+    UserInfo signIn(@Valid @RequestBody SignInRequest body, HttpServletRequest request,
             HttpServletResponse response) {
-        // A wrong user or password raises an AuthenticationException: same 401 for both (scenario 10.2).
-        Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(body.username(), body.password()));
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(body.username(), body.password()));
+        } catch (AuthenticationException ex) {
+            throw new InvalidCredentialsException(); // same 401 for a wrong user or password (scenario 10.2)
+        }
 
         // A new session identifier at every sign in, against session fixation.
         if (request.getSession(false) != null) {
@@ -56,7 +62,7 @@ class AuthController {
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
 
-        return toResponse((AuthenticatedUser) authentication.getPrincipal());
+        return ((AuthenticatedUser) authentication.getPrincipal()).toInfo();
     }
 
     @PostMapping("/logout")
@@ -69,11 +75,7 @@ class AuthController {
     }
 
     @GetMapping("/me")
-    UserResponse getAuthenticatedUser(@AuthenticationPrincipal AuthenticatedUser user) {
-        return toResponse(user);
-    }
-
-    private static UserResponse toResponse(AuthenticatedUser user) {
-        return new UserResponse(user.id(), user.name(), user.role().label());
+    UserInfo getAuthenticatedUser(@AuthenticationPrincipal AuthenticatedUser user) {
+        return user.toInfo();
     }
 }

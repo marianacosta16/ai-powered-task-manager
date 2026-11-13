@@ -22,6 +22,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.jayway.jsonpath.JsonPath;
+import com.matriz.testsupport.TestDatabase;
 import com.matriz.usecases.DemoDataSeeder;
 
 /**
@@ -41,8 +42,7 @@ class AccessIntegrationTest {
 
     @BeforeEach
     void freshDemoData() {
-        jdbc.execute("TRUNCATE task_comment, task_assignee, task, project_member, project, app_user "
-                + "RESTART IDENTITY CASCADE");
+        TestDatabase.wipe(jdbc);
         seeder.seed(password);
     }
 
