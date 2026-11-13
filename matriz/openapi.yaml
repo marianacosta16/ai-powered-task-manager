@@ -21,6 +21,12 @@ info:
     - A5 (confirmed): a task deadline is a date without time (M3 in docs/database.md).
     - A6 (confirmed): the list filters `status` and `quadrant` apply to main tasks and can be combined with `mine` (R25, P29).
     - A7 (confirmed): when a substitute in a member removal is not yet a member, the server adds them to the project in the same transaction (R17).
+    - A8 (to confirm): adding someone who is already in the project, or who is its manager, is refused with 400 `VALIDATION_ERROR` and the field `userId`, because the contract has no business code for it.
+    - A9 (to confirm): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
+    - A10 (to confirm): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
+    - A11 (to confirm): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
+    - A12 (to confirm): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10); the former manager then stops seeing it.
+    - A13 (to confirm): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
 
 tags:
   - name: Auth
@@ -141,7 +147,7 @@ paths:
       summary: Create a project
       description: |
         Only a project manager creates projects (F01, R19). The creator indicates the manager of the project; if it is someone else, the creator stops seeing the project.
-        Rules: name up to 100 and description up to 2000 characters (R14); start and end dates are required and the end is not before the start (R16); the start date is not in the past, and today is accepted (R29); the manager must have the role Project manager (M10).
+        Rules: name up to 100 and description up to 2000 characters (R14); start and end dates are required and the end is not before the start (R16); the start date is not in the past, and today is accepted (R29, A13); the manager must have the role Project manager (M10). A single day with no times is accepted, because the end day counts whole (P26).
       requestBody:
         required: true
         content:
@@ -191,7 +197,7 @@ paths:
       summary: Update a project
       description: |
         Only the manager of the project changes its data, phase and status (R12). The states Attention and Late cannot be set (they are calculated, P5).
-        A completed project cannot be changed or reopened (R28). The start date is validated only when it is changed (R29).
+        A completed project cannot be changed or reopened (R28). The start date is validated only when it is changed (R29). Assumption A12: `managerId` hands the project to another project manager.
       requestBody:
         required: true
         content:
@@ -243,7 +249,7 @@ paths:
       summary: List the members of a project
       description: |
         Returns the members, with the number of open tasks and subtasks of each one. The manager of the project is not listed (M5).
-        `inOtherOpenProject` is the red label of a member of a resumed project who is also in another open project (P22).
+        `inOtherOpenProject` is the red label of a member of a resumed project who is also in another open project (P22, A10). The manager and the members of the project can list the team (A9).
       responses:
         '200':
           description: The members.
@@ -265,7 +271,7 @@ paths:
       summary: Add a member to a project
       description: |
         Only the manager of the project adds members, in an open or suspended project; a completed project cannot be changed (R28).
-        In an open project, a person who is already a member of another open project is refused (R11). In a suspended project the check does not apply, because the project is not open (P4); when it is resumed, P22 applies.
+        In an open project, a person who is already a member of another open project is refused (R11); this does not apply to project managers. Assumption A8: someone already in the project is refused with 400. In a suspended project the check does not apply, because the project is not open (P4); when it is resumed, P22 applies.
       requestBody:
         required: true
         content:
@@ -302,7 +308,7 @@ paths:
         Only the manager of the project removes members (R17), in an open or suspended project; a completed project cannot be changed (R28). The member is freed for another open project.
         Every open task and subtask of the member, including those shared with other assignees, needs a substitute in `reassignments`; they can be split among several substitutes. A substitute cannot already be an assignee of that task (P24).
         Nobody can end up with more than 5 open tasks and subtasks in total (R17, P24). Assumption A7: a substitute who is not yet a member is added to the project in the same transaction.
-        Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25).
+        Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25). Assumption A11: until increment 3, a member with open tasks is refused with `REPLACEMENT_REQUIRED`.
       requestBody:
         required: true
         content:
