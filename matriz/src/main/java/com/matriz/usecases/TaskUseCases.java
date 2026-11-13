@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,28 +45,26 @@ public class TaskUseCases {
         this.rules = rules;
     }
 
-    /** 404, 403 and R22, checked before the body is looked at. */
-    public void requireCanCreateIn(AuthenticatedUser user, long projectId) {
-        TaskRules.requireOpenForCreation(rules.loadProject(user, projectId));
-    }
-
-    /** 404, 403 and R27/R28, checked before the body is looked at. */
-    public void requireCanEdit(AuthenticatedUser user, long taskId) {
-        TaskRules.requireNotCompleted(rules.load(user, taskId).project());
-    }
-
+    /**
+     * The body is given as a supplier and read only after 404, 403 and R22 are checked, so someone
+     * who may not create tasks gets no hints about the values (403 before 400).
+     */
     @Transactional
-    public TaskView createTask(AuthenticatedUser user, long projectId, NewTaskCommand c) {
+    public TaskView createTask(AuthenticatedUser user, long projectId, Supplier<NewTaskCommand> body) {
         ProjectRecord project = rules.loadProject(user, projectId);
         TaskRules.requireOpenForCreation(project);
+        NewTaskCommand c = body.get();
 
         if (c.assigneeIds().size() != new HashSet<>(c.assigneeIds()).size()) {
             throw new InvalidRequestException("An assignee is repeated.", "assigneeIds", "Each person once.");
         }
         TaskRecord parent = null;
         if (c.parentTaskId() != null) {
+            // Check the project before locking, so nobody locks tasks of a project they cannot reach
+            queries.findById(c.parentTaskId()).filter(p -> p.projectId() == projectId)
+                    .orElseThrow(() -> new NotFoundException("The parent task was not found."));
             // The parent row is locked: a subtask cannot appear while its parent's deadline or status changes (R2, R4)
-            parent = queries.findByIdForUpdate(c.parentTaskId()).filter(p -> p.projectId() == projectId)
+            parent = queries.findByIdForUpdate(c.parentTaskId())
                     .orElseThrow(() -> new NotFoundException("The parent task was not found."));
             if (parent.isSubtask()) {
                 throw new BusinessRuleException("PARENT_IS_SUBTASK", "A subtask cannot have subtasks.");
@@ -80,6 +79,7 @@ public class TaskUseCases {
             throw new BusinessRuleException("SUBTASK_DEADLINE_AFTER_PARENT",
                     "The deadline is later than the deadline of the parent task.");
         }
+        rules.lockPeople(c.assigneeIds()); // so none of them can be removed from the project meanwhile (R21)
         c.assigneeIds().forEach(id -> rules.requireEligible(project, id));
 
         long id = commands.insert(new NewTask(projectId, c.parentTaskId(), c.title(), c.description(), c.deadline(),
@@ -92,11 +92,12 @@ public class TaskUseCases {
         return rules.view(rules.load(user, taskId).task(), true);
     }
 
+    /** As createTask, the body is read only after 404, 403 and R27/R28 are checked. */
     @Transactional
-    public TaskView updateTask(AuthenticatedUser user, long taskId, TaskPatch patch) {
-        TaskContext context = rules.load(user, taskId);
+    public TaskView updateTask(AuthenticatedUser user, long taskId, Supplier<TaskPatch> body) {
+        TaskContext context = rules.loadForChange(user, taskId);
         ProjectRecord project = context.project();
-        TaskRules.requireNotCompleted(project);
+        TaskPatch patch = body.get();
 
         // Lock the parent first, then the task: the same order as createTask and the other updates
         Optional<TaskRecord> parent = context.task().isSubtask()
@@ -127,6 +128,12 @@ public class TaskUseCases {
         }
         if (status != task.statusValue()) {
             requireStatusChangeAllowed(context.role(), task.statusValue(), status);
+            // R4, P35: a closed parent never has an open subtask, so a subtask is not reopened under it
+            if (task.isSubtask() && task.statusValue().isFinal() && !status.isFinal()
+                    && parent.map(p -> p.statusValue().isFinal()).orElse(false)) {
+                throw new BusinessRuleException("PARENT_TASK_CLOSED",
+                        "The parent task is closed. Reopen it before reopening this subtask.");
+            }
             if ((status == TaskStatus.DONE || status == TaskStatus.CANCELLED) && !task.isSubtask()
                     && queries.hasOpenSubtasks(taskId)) { // R4
                 throw new BusinessRuleException("PARENT_HAS_OPEN_SUBTASKS",
@@ -136,8 +143,12 @@ public class TaskUseCases {
         String blockReason = blockReasonFor(task, patch, status);
         Long originalTaskId = originalFor(task, patch, status, project);
 
-        TaskRecord updated = new TaskRecord(taskId, task.projectId(), task.parentTaskId(), originalTaskId, title,
-                description, status.label(), deadline, urgency, importance, blockReason, task.version() + 1);
+        TaskRecord unchanged = new TaskRecord(taskId, task.projectId(), task.parentTaskId(), originalTaskId, title,
+                description, status.label(), deadline, urgency, importance, blockReason, task.version());
+        if (unchanged.equals(task)) {
+            return rules.view(task, true); // nothing to save: no new version, so nobody gets a needless 409
+        }
+        TaskRecord updated = unchanged.withVersion(task.version() + 1);
         if (!commands.update(updated, task.version())) {
             throw new ConflictException("TASK_CHANGED", "This task was changed by someone else. Reload it and try again.");
         }

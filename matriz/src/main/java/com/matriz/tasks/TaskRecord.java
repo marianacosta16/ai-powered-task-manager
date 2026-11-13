@@ -11,6 +11,11 @@ public record TaskRecord(long id, long projectId, Long parentTaskId, Long origin
         return parentTaskId != null;
     }
 
+    public TaskRecord withVersion(int newVersion) {
+        return new TaskRecord(id, projectId, parentTaskId, originalTaskId, title, description, status, deadline,
+                urgency, importance, blockReason, newVersion);
+    }
+
     public TaskStatus statusValue() {
         return TaskStatus.ofStored(status);
     }

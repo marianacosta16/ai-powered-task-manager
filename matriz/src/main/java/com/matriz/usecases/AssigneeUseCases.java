@@ -2,6 +2,7 @@ package com.matriz.usecases;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,11 +40,6 @@ public class AssigneeUseCases {
         this.users = users;
     }
 
-    /** 404, 403 and R27/R28, checked before the body is looked at. */
-    public void requireCanChange(AuthenticatedUser user, long taskId) {
-        TaskRules.requireNotCompleted(rules.load(user, taskId).project());
-    }
-
     /** The members of the project and its manager (R21). */
     public List<UserInfo> listAssignableUsers(AuthenticatedUser user, long projectId) {
         ProjectRecord project = rules.loadProject(user, projectId);
@@ -55,11 +51,13 @@ public class AssigneeUseCases {
         return ids.stream().sorted().map(infos::get).toList();
     }
 
+    /** The body is read only after 404, 403 and R27/R28 are checked (403 before 400). */
     @Transactional
-    public List<UserInfo> addAssignee(AuthenticatedUser user, long taskId, long userId) {
-        TaskContext context = rules.load(user, taskId);
-        TaskRules.requireNotCompleted(context.project());
+    public List<UserInfo> addAssignee(AuthenticatedUser user, long taskId, Supplier<Long> body) {
+        TaskContext context = rules.loadForChange(user, taskId);
+        long userId = body.get();
         TaskRecord task = lock(taskId);
+        rules.lockPeople(List.of(userId)); // so the person cannot be removed from the project meanwhile (R21)
         rules.requireEligible(context.project(), userId); // R21 (scenario 2.9)
         commands.addAssignee(task.id(), userId);
         return assignees(task.id());
@@ -67,8 +65,7 @@ public class AssigneeUseCases {
 
     @Transactional
     public void removeAssignee(AuthenticatedUser user, long taskId, long userId) {
-        TaskContext context = rules.load(user, taskId);
-        TaskRules.requireNotCompleted(context.project());
+        rules.loadForChange(user, taskId);
         TaskRecord task = lock(taskId);
         List<Long> current = queries.assigneeIds(task.id());
         if (!current.contains(userId)) {

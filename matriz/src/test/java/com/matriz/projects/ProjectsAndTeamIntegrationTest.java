@@ -450,7 +450,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
                 jdbc.queryForObject("SELECT id FROM project WHERE id = ? FOR UPDATE", Long.class, website);
                 Future<ResponseEntity<String>> pending = pool.submit(
                         () -> patch("/projects/" + website, marta, Map.of("name", "Renamed")));
-                pause(1000);
+                awaitLockWaiters(1);
                 jdbc.update("UPDATE project SET status = 'Suspended' WHERE id = ?", website);
                 return pending;
             });
@@ -481,7 +481,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
                         () -> post("/projects/" + website + "/members", marta, Map.of("userId", diana)));
                 Future<ResponseEntity<String>> toIntranet = pool.submit(
                         () -> post("/projects/" + intranet + "/members", pedro, Map.of("userId", diana)));
-                pause(1000);
+                awaitLockWaiters(2);
                 return List.of(toWebsite, toIntranet);
             });
 

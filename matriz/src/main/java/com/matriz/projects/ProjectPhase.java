@@ -1,11 +1,10 @@
 package com.matriz.projects;
 
-import java.util.Arrays;
-
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Labelled;
 
 /** Phase of a project, set by the manager (P3). */
-public enum ProjectPhase {
+public enum ProjectPhase implements Labelled {
     INITIATION("Initiation"),
     PLANNING("Planning"),
     EXECUTION("Execution"),
@@ -18,12 +17,13 @@ public enum ProjectPhase {
         this.label = label;
     }
 
+    @Override
     public String label() {
         return label;
     }
 
     public static ProjectPhase fromLabel(String field, String label) {
-        return Arrays.stream(values()).filter(p -> p.label.equals(label)).findFirst().orElseThrow(
+        return Labelled.find(ProjectPhase.class, label).orElseThrow(
                 () -> new InvalidRequestException("The phase is not valid.", field,
                         "Must be one of: Initiation, Planning, Execution, Monitoring, Evaluation."));
     }

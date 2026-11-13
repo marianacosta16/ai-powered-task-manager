@@ -505,7 +505,7 @@ class TasksIntegrationTest extends ApiIntegrationTest {
                 jdbc.queryForObject("SELECT id FROM task WHERE id = ? FOR UPDATE", Long.class, copy);
                 Future<ResponseEntity<String>> a = pool.submit(() -> patch("/tasks/" + copy, ana, Map.of("version", 1, "title", "By Ana")));
                 Future<ResponseEntity<String>> b = pool.submit(() -> patch("/tasks/" + copy, rui, Map.of("version", 1, "title", "By Rui")));
-                pause(1000);
+                awaitLockWaiters(2);
                 return List.of(a, b);
             });
 
@@ -530,7 +530,7 @@ class TasksIntegrationTest extends ApiIntegrationTest {
                 jdbc.queryForObject("SELECT id FROM task WHERE id = ? FOR UPDATE", Long.class, copy);
                 Future<ResponseEntity<String>> a = pool.submit(() -> delete("/tasks/" + copy + "/assignees/" + userId("rui"), ana));
                 Future<ResponseEntity<String>> b = pool.submit(() -> delete("/tasks/" + copy + "/assignees/" + userId("luis"), ana));
-                pause(1000);
+                awaitLockWaiters(2);
                 return List.of(a, b);
             });
 
@@ -543,6 +543,154 @@ class TasksIntegrationTest extends ApiIntegrationTest {
             pool.shutdownNow();
         }
         assertThat(assigneeNames(copy)).hasSize(1);
+    }
+
+    // ---- found by the code review of this increment ----
+
+    @Test
+    void aSubtaskIsNotReopenedUnderAClosedParent() {
+        long parent = taskId("Design homepage");
+        long wireframes = taskId("Draft wireframes"); // Done
+        String ana = sessionOf("ana");
+        String marta = sessionOf("marta");
+        // close the other subtask and then the parent
+        patch("/tasks/" + taskId("Pick colour palette"), ana, Map.of("version", 1, "status", "Cancelled"));
+        patch("/tasks/" + parent, ana, Map.of("version", 1, "status", "Done"));
+
+        ResponseEntity<String> refused = patch("/tasks/" + wireframes, marta, Map.of("version", 1, "status", "In progress"));
+        patch("/tasks/" + parent, marta, Map.of("version", version(parent), "status", "In progress")); // reopen the parent first
+        ResponseEntity<String> accepted = patch("/tasks/" + wireframes, marta, Map.of("version", 1, "status", "In progress"));
+
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(json(refused, "$.code")).isEqualTo("PARENT_TASK_CLOSED");
+        assertThat(accepted.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void anUpdateThatChangesNothingKeepsTheVersion() {
+        long copy = taskId("Write contact page copy");
+        String ana = sessionOf("ana");
+
+        ResponseEntity<String> same = patch("/tasks/" + copy, ana, Map.of("version", 1, "title", "Write contact page copy", "urgency", 2));
+        // Rui read version 1 too, and his real change is not refused because of the no-op
+        ResponseEntity<String> real = patch("/tasks/" + copy, sessionOf("rui"), Map.of("version", 1, "title", "A real change"));
+        ResponseEntity<String> staleNoOp = patch("/tasks/" + copy, ana, Map.of("version", 1, "title", "A real change"));
+
+        assertThat(same.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(same, "$.version")).isEqualTo(1);
+        assertThat(real.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(real, "$.version")).isEqualTo(2);
+        assertThat(staleNoOp.getStatusCode()).isEqualTo(HttpStatus.CONFLICT); // an old version is still refused
+    }
+
+    @Test
+    void assigningSomeoneWhoIsAlreadyAnAssigneeChangesNothing() { // A16
+        long copy = taskId("Write contact page copy"); // Rui and Luís
+
+        ResponseEntity<String> again = post("/tasks/" + copy + "/assignees", sessionOf("ana"), Map.of("userId", userId("rui")));
+
+        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(JsonPath.<List<String>>read(again.getBody(), "$[*].name")).containsExactly("Rui", "Luís");
+        assertThat(assigneeNames(copy)).containsExactly("Rui", "Luís");
+    }
+
+    @Test
+    void theReasonAndTheOriginalBelongOnlyToBlockedAndDuplicateTasks() { // A17
+        long copy = taskId("Write contact page copy");
+        String rui = sessionOf("rui");
+
+        ResponseEntity<String> reason = patch("/tasks/" + copy, rui,
+                Map.of("version", 1, "status", "In progress", "blockReason", "Waiting for access"));
+        ResponseEntity<String> original = patch("/tasks/" + copy, rui,
+                Map.of("version", 1, "status", "In progress", "originalTaskId", taskId("Set up hosting")));
+        // "Contact page text" is a Duplicate of the copy task; the manager reopens it and the original is cleared
+        ResponseEntity<String> reopened = patch("/tasks/" + taskId("Contact page text"), sessionOf("marta"),
+                Map.of("version", 1, "status", "To do"));
+
+        for (ResponseEntity<String> r : List.of(reason, original)) {
+            assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(json(r, "$.code")).isEqualTo("VALIDATION_ERROR");
+        }
+        assertThat(JsonPath.<List<String>>read(reason.getBody(), "$.details[*].field")).containsExactly("blockReason");
+        assertThat(JsonPath.<List<String>>read(original.getBody(), "$.details[*].field")).containsExactly("originalTaskId");
+        assertThat(reopened.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(reopened, "$.originalTaskId")).isNull();
+        assertThat(status(copy)).isEqualTo("To do");
+    }
+
+    @Test
+    void anUnchangedDeadlineThatIsNowInThePastIsNotAnError() { // A18
+        clock.set("2027-02-01T10:00:00Z"); // after the deadline 2027-01-15
+        long copy = taskId("Write contact page copy");
+
+        ResponseEntity<String> sameDeadline = patch("/tasks/" + copy, sessionOf("rui"),
+                Map.of("version", 1, "title", "Still fine", "deadline", "2027-01-15"));
+        ResponseEntity<String> newPastDeadline = patch("/tasks/" + copy, sessionOf("rui"),
+                Map.of("version", 2, "deadline", "2027-01-20"));
+
+        assertThat(sameDeadline.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(newPastDeadline.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(json(newPastDeadline, "$.code")).isEqualTo("DEADLINE_IN_PAST");
+    }
+
+    @Test
+    void aMemberCannotBlockATaskOfAnotherProjectByUsingItAsAParent() throws Exception {
+        long foreign = taskId("Define app navigation"); // a task of Mobile App
+        long website = projectId("Website");
+        String ana = sessionOf("ana"); // a member of Website only
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            // while another operation holds the row of that task, the request must be answered at once: it is
+            // refused before the row is locked
+            ResponseEntity<String> response = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM task WHERE id = ? FOR UPDATE", Long.class, foreign);
+                Future<ResponseEntity<String>> request = pool.submit(
+                        () -> post("/projects/" + website + "/tasks", ana, subtask("Probe", "2026-12-20", foreign)));
+                try {
+                    return request.get(5, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    throw new AssertionError("The request waited for the lock of a task of another project", ex);
+                }
+            });
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    void assigningAPersonAndRemovingThemFromTheProjectAtTheSameTimeNeverLeavesATaskWithANonMember() throws Exception {
+        long website = projectId("Website");
+        long diana = userId("diana"); // free
+        long copy = taskId("Write contact page copy");
+        String marta = sessionOf("marta");
+        String ana = sessionOf("ana");
+        post("/projects/" + website + "/members", marta, Map.of("userId", diana)); // a member without tasks
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            List<Future<ResponseEntity<String>>> requests = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM app_user WHERE id = ? FOR UPDATE", Long.class, diana);
+                Future<ResponseEntity<String>> removal = pool.submit(() -> post(
+                        "/projects/" + website + "/members/" + diana + "/removal", marta, Map.of("reassignments", List.of())));
+                Future<ResponseEntity<String>> assignment = pool.submit(
+                        () -> post("/tasks/" + copy + "/assignees", ana, Map.of("userId", diana)));
+                awaitLockWaiters(2);
+                return List.of(removal, assignment);
+            });
+
+            for (Future<ResponseEntity<String>> r : requests) {
+                r.get(15, TimeUnit.SECONDS);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        // R21: whoever is assigned to a task of the project is a member of it (or its manager)
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM task_assignee a JOIN task t ON t.id = a.task_id
+                WHERE t.project_id = ? AND a.user_id = ?
+                  AND NOT EXISTS (SELECT 1 FROM project_member m WHERE m.project_id = t.project_id AND m.user_id = a.user_id)
+                """, Integer.class, website, diana)).isZero();
     }
 
     // ---- helpers ----

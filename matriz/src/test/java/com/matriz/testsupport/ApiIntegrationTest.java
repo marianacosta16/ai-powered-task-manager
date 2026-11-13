@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,6 +115,24 @@ public abstract class ApiIntegrationTest {
 
     protected static Object json(ResponseEntity<String> response, String path) {
         return JsonPath.read(response.getBody(), path);
+    }
+
+    /**
+     * Waits until at least this many database sessions are waiting for a lock, that is, until the
+     * requests of the test have reached the row that the test holds. Fails if they never do, so a
+     * test cannot pass without having tested the lock.
+     */
+    protected void awaitLockWaiters(int expected) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
+        while (System.nanoTime() < deadline) {
+            Integer waiting = jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity "
+                    + "WHERE datname = current_database() AND wait_event_type = 'Lock'", Integer.class);
+            if (waiting != null && waiting >= expected) {
+                return;
+            }
+            pause(50);
+        }
+        throw new AssertionError("The requests did not reach the lock: expected " + expected + " waiting sessions");
     }
 
     protected static void pause(long millis) {

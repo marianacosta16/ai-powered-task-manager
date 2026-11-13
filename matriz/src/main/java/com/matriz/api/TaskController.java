@@ -25,8 +25,9 @@ import jakarta.validation.constraints.Min;
 
 /**
  * createTask, getTask, updateTask, addAssignee, removeAssignee and listAssignableUsers. The user
- * comes from the session. For the operations with a body, who may do it (404, 403 and the state
- * of the project) is checked before the values, so someone who may not gets no hints about them.
+ * comes from the session. For the operations with a body, the use case checks who may do it (404,
+ * 403 and the state of the project) before it reads the body, so someone who may not gets no hints
+ * about the values.
  */
 @Validated
 @RestController
@@ -46,9 +47,10 @@ class TaskController {
     @ResponseStatus(HttpStatus.CREATED)
     TaskView createTask(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable @Min(1) long projectId,
             @RequestBody TaskCreateRequest body) {
-        tasks.requireCanCreateIn(user, projectId);
-        validator.validate(body);
-        return tasks.createTask(user, projectId, body.toCommand());
+        return tasks.createTask(user, projectId, () -> {
+            validator.validate(body);
+            return body.toCommand();
+        });
     }
 
     @GetMapping("/tasks/{taskId}")
@@ -59,16 +61,16 @@ class TaskController {
     @PatchMapping("/tasks/{taskId}")
     TaskView updateTask(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable @Min(1) long taskId,
             @RequestBody JsonNode body) {
-        tasks.requireCanEdit(user, taskId);
-        return tasks.updateTask(user, taskId, TaskPatchParser.parse(body));
+        return tasks.updateTask(user, taskId, () -> TaskPatchParser.parse(body));
     }
 
     @PostMapping("/tasks/{taskId}/assignees")
     List<UserInfo> addAssignee(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable @Min(1) long taskId,
             @RequestBody AddAssigneeRequest body) {
-        assignees.requireCanChange(user, taskId);
-        validator.validate(body);
-        return assignees.addAssignee(user, taskId, body.userId());
+        return assignees.addAssignee(user, taskId, () -> {
+            validator.validate(body);
+            return body.userId();
+        });
     }
 
     @DeleteMapping("/tasks/{taskId}/assignees/{userId}")
