@@ -1,6 +1,7 @@
 package com.matriz.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.matriz.testsupport.TestDatabase;
 import com.matriz.usecases.DemoDataSeeder;
 
 /** Runs against the separate test database (matriz_test); see README. */
@@ -25,8 +27,7 @@ class PersistenceIntegrationTest {
 
     @BeforeEach
     void emptyTestDatabase() {
-        jdbc.execute("TRUNCATE task_comment, task_assignee, task, project_member, project, app_user "
-                + "RESTART IDENTITY CASCADE");
+        TestDatabase.wipe(jdbc);
     }
 
     @Test
@@ -68,6 +69,28 @@ class PersistenceIntegrationTest {
         assertThat(projectsOf("sofia")).containsExactlyInAnyOrder("Intranet");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM app_user WHERE password = ?", Integer.class, password))
                 .isZero();
+    }
+
+    @Test
+    void demoPasswordShorterThanEightCharactersIsRefused() {
+        // Given an empty database, when the demo data is created with a 7-character password (S5)
+        // Then it is refused and nothing is created
+        assertThatThrownBy(() -> seeder.seed("1234567")).isInstanceOf(IllegalArgumentException.class);
+        assertThat(count("app_user")).isZero();
+    }
+
+    @Test
+    void shortDemoPasswordIsIgnoredWhenTheDataAlreadyExists() {
+        // Given a database that already has the demo data
+        seeder.seed(UUID.randomUUID().toString());
+        int users = count("app_user");
+
+        // When the app starts again with a password shorter than 8 characters in the environment
+        boolean created = seeder.seed("abc");
+
+        // Then it starts normally: nothing is created, changed or refused
+        assertThat(created).isFalse();
+        assertThat(count("app_user")).isEqualTo(users);
     }
 
     private int count(String table) {

@@ -585,7 +585,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 **Cenário 10.6: sessão sem atividade**
 - **Given** a Ana com sessão iniciada, que deixou a aplicação sem qualquer atividade durante 3 horas
 - **When** tenta abrir um projeto
-- **Then** a sessão já terminou, é pedido o início de sessão e o projeto não é mostrado.
+- **Then** a sessão já terminou, é pedido o início de sessão, com uma mensagem a dizer que a sessão terminou (P33), e o projeto não é mostrado.
 
 ### US11 — Comentários nas tarefas
 
@@ -768,11 +768,12 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC35 | Editar, mudar de estado ou apagar uma tarefa num projeto concluído | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem. Num projeto suspenso estas ações são aceites (cenário 2.13) | [R27](requirements.md#4-regras-de-negócio) |
 | EC36 | Um membro tenta recuperar um projeto apagado | A reciclagem não lhe mostra o projeto; só o gestor o recupera (cenário 7.3) | [R9](requirements.md#4-regras-de-negócio) |
 | EC37 | Alterar, reabrir ou apagar um projeto concluído (dados, membros, estado) | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem (cenário 1.21) | [R28](requirements.md#4-regras-de-negócio) |
-| EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão (cenário 10.6) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
+| EC38 | Sessão sem atividade durante 3 horas | A sessão termina e é pedido o início de sessão, com uma mensagem a dizer que a sessão terminou (cenário 10.6, P33) | [S5](constraints.md#3-requisitos-de-segurança-e-privacidade) |
 | EC39 | Marcar um projeto como concluído sem querer | É pedida uma confirmação antes; ao cancelar, o estado mantém-se (cenário 1.22) | [R28](requirements.md#4-regras-de-negócio) |
 | EC40 | Criar ou alterar um projeto com data de início no passado | Recusado, com mensagem; o dia de hoje é aceite (cenário 1.23) | [R29](requirements.md#4-regras-de-negócio) |
 | EC41 | Um substituto ficaria com mais de 5 tarefas e subtarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenários 1.25 e 1.28) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC42 | Adicionar a um projeto suspenso um membro que está noutro projeto em aberto | Aceite; ao retomar o projeto aplica-se a etiqueta vermelha (cenário 1.29) | [R11](requirements.md#4-regras-de-negócio), [P22](constraints.md#2-pressupostos-assumidos) |
+| EC43 | Duas pessoas editam a mesma tarefa e gravam uma depois da outra | A segunda gravação é recusada, com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; a primeira mantém-se (a verificar no incremento 3) | [R30](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

@@ -35,7 +35,7 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | `id` | inteiro | Sim | Identificador |
 | `name` | texto | Sim | Nome do utilizador |
 | `username` | texto | Sim | Identificador de início de sessão; único (M11) |
-| `password` | texto | Sim | Credencial da conta de demonstração, guardada de forma protegida; o mecanismo é decisão técnica (T3, M11) |
+| `password` | texto | Sim | Credencial da conta de demonstração, guardada como hash BCrypt (60 caracteres, coluna de 100), nunca em texto simples (S5, T12, M11) |
 | `role` | texto | Sim | `Team member` ou `Project manager`. Atributo do utilizador, não do projeto (secção 3.1 de requirements) |
 
 ### 3.2 `PROJECT`
@@ -80,6 +80,7 @@ A linha mantém-se quando o projeto é concluído ou suspenso (P20, P22). O gest
 | `block_reason` | texto | Só se `Blocked` | R6. Máximo 100 caracteres (R14, M8) |
 | `original_task_id` | inteiro | Só se `Duplicate` | Chave para `TASK`: a tarefa original, escolhida à mão (R6) |
 | `deleted_at` | data e hora | Não | Vazio = não apagada (R9, R20, M4) |
+| `version` | inteiro | Sim | Começa em 1 e sobe 1 de cada vez que os dados da tarefa são alterados; serve para recusar gravações desatualizadas (R30, M13). A coluna é acrescentada no incremento 3 |
 
 ### 3.5 `TASK_ASSIGNEE`
 
@@ -175,6 +176,7 @@ erDiagram
         int importance
         string block_reason
         datetime deleted_at
+        int version
     }
 
     TASK_ASSIGNEE {
@@ -215,6 +217,7 @@ O modelo só expressa a estrutura. As regras que comparam várias linhas ou depe
 | R27 | **Aplicação:** o `status` do projeto decide as ações sobre tarefas e comentários: `Suspended` permite editar, mudar de estado e apagar, mas não criar; `Completed` não permite nenhuma |
 | R28 | **Aplicação:** um projeto com `status` `Completed` fica congelado: nada do projeto, dos membros, das tarefas, dos responsáveis nem dos comentários muda, e o projeto não se apaga |
 | R29 | **Aplicação:** ao definir ou alterar `start_date`, esta não pode ser anterior à data atual |
+| R30 | **Modelo:** `TASK.version`. **Aplicação:** ao editar uma tarefa compara a `version` recebida com a atual, recusa se forem diferentes e, se forem iguais, grava e sobe a versão, numa só transação |
 | R20, R9 | **Modelo:** `deleted_at`. **Aplicação:** apagar um projeto marca também, com o mesmo `deleted_at`, as suas tarefas ainda não apagadas; recuperar o projeto restaura só essas, e a eliminação definitiva corre ao fim de 30 dias. Recuperam projetos só os gestores; recuperam tarefas os membros do projeto e o seu gestor |
 | R18, R15, R23, R25 | **Consultas de leitura:** só tarefas principais (`parent_task_id` vazio), ordenadas por `deadline`, depois `urgency` e `importance`; filtros por `status` e por quadrante; pesquisa de projetos por `name` |
 
@@ -252,12 +255,13 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M8 | Limite do motivo de bloqueio | Máximo 100 caracteres, como o título (R14) | Decisão |
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Confirmado |
 | M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Confirmado |
-| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5) | Confirmado |
+| M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5). Implementado com `username` em minúsculas e comparado exatamente, e palavra-passe de pelo menos 8 caracteres, guardada como hash BCrypt (incremento 1) | Confirmado |
 | M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
+| M13 | Edições simultâneas da mesma tarefa | Cada tarefa tem uma `version`; ao gravar, se a versão enviada já não é a atual, a gravação é recusada (R30, T13). Decidido em 2026-11-12 | Decisão |
 
 Não há pressupostos por validar neste modelo.
 
-**Não modelado por não estar definido:** ligação das tarefas a uma fase do projeto (questão em aberto em [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
+**Não modelado por decisão:** ligação das tarefas a uma fase do projeto (as tarefas pertencem só ao projeto; fechado em 2026-11-12, ver [constraints.md](constraints.md#questões-funcionais-em-aberto)). A ordem das tarefas (R23) não se guarda: resulta de `deadline`, `urgency` e `importance`.
 
 ## 8. Evolução prevista (v2 e v3)
 

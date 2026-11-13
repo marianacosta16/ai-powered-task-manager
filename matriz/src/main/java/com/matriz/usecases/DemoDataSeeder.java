@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,15 +23,18 @@ public class DemoDataSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
 
+    private static final int MIN_PASSWORD_LENGTH = 8; // S5
     private static final String MANAGER = "Project manager";
     private static final String MEMBER = "Team member";
 
     private final JdbcTemplate jdbc;
     private final String demoPassword;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder encoder;
 
-    public DemoDataSeeder(JdbcTemplate jdbc, @Value("${matriz.demo.password:}") String demoPassword) {
+    public DemoDataSeeder(JdbcTemplate jdbc, PasswordEncoder encoder,
+            @Value("${matriz.demo.password:}") String demoPassword) {
         this.jdbc = jdbc;
+        this.encoder = encoder; // the same encoder that checks the password at sign in
         this.demoPassword = demoPassword;
     }
 
@@ -56,7 +59,11 @@ public class DemoDataSeeder implements ApplicationRunner {
         jdbc.execute("SELECT pg_advisory_xact_lock(7301001)");
         Integer users = jdbc.queryForObject("SELECT count(*) FROM app_user", Integer.class);
         if (users != null && users > 0) {
-            return false;
+            return false; // nothing to create, so the password is not used (and not checked)
+        }
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("The demo password must have at least " + MIN_PASSWORD_LENGTH
+                    + " characters (S5).");
         }
 
         String hash = encoder.encode(password);

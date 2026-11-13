@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: Matriz API (MVP contract)
-  version: 0.2.0
+  version: 0.3.0
   description: |
     REST contract for the MVP (v1) of Matriz: sign in and out, projects, team, tasks, assignees, comments, search and filters, dashboard and recycle bin.
 
@@ -46,7 +46,7 @@ paths:
       operationId: signIn
       summary: Sign in
       description: |
-        Starts a session with a demonstration account (F10, S5). The session ends on sign out or after 3 hours without activity.
+        Starts a session with a demonstration account (F10, S5). The session ends on sign out or after 3 hours without activity (see the session cycle in the `session` security scheme).
         The same error is returned when the username or the password is wrong, without saying which one (scenario 10.2).
       security: []
       requestBody:
@@ -84,7 +84,7 @@ paths:
       tags: [Auth]
       operationId: signOut
       summary: Sign out
-      description: Ends the current session (scenario 10.4).
+      description: Ends the current session and asks the client to drop the cookie (`Set-Cookie` with `Max-Age=0`) (scenario 10.4).
       responses:
         '204':
           description: Signed out.
@@ -547,6 +547,7 @@ paths:
         Edits the data, status, priority and deadline. Allowed in an open or suspended project, never in a completed one (R27, R28).
         Rules: R13 and R2 apply whenever a deadline is set or changed; R3 blocks moving the deadline of a parent before one of its subtasks; a task with open subtasks cannot be completed or cancelled (R4); a `Blocked` task needs a reason of up to 100 characters; a `Duplicate` task needs its original, from the same project, different from itself and not a duplicate (R6).
         Reopening a task in a final status is allowed only to the manager of the project (P8).
+        Simultaneous edits (R30, T13): the body carries the `version` of the task that was read. If someone saved the task in the meantime, the update is refused with `409` and nothing is changed; the client reloads the task and tries again. On success the `version` goes up by one.
       requestBody:
         required: true
         content:
@@ -568,6 +569,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/TaskChanged'
         '422':
           $ref: '#/components/responses/BusinessRuleViolation'
     delete:
@@ -840,8 +843,16 @@ components:
       in: cookie
       name: SESSION
       description: |
-        The user signs in with a demonstration account (F10, S5, P21) and the server keeps the session, identified by a cookie. The session ends on sign out or after 3 hours without activity.
-        The cookie name is a placeholder for this contract.
+        The user signs in with a demonstration account (F10, S5, P21) and the server keeps the session, identified by a cookie.
+
+        Session cycle:
+        1. `POST /auth/login` with valid credentials starts the session. The server answers with `Set-Cookie: SESSION=...; HttpOnly; SameSite=Lax; Path=/` and a new identifier at every sign in (a cookie sent by the client is never adopted).
+        2. The client sends the cookie in every later request (a browser does it by itself). The server takes the identity of the user from the session, never from the request: who is asking and the author of a comment are set by the server. The manager of a new project is chosen by its creator (R19) and validated by the server (M10).
+        3. Each request restarts the 3 hours of inactivity. After 3 hours without any request, or after `POST /auth/logout`, the session no longer exists.
+        4. A request without a valid session gets `401` with the code `UNAUTHENTICATED`. If it carried a session cookie, the message says that the session has ended ("Your session has ended. Sign in again to continue."); otherwise it says "Sign in to continue.". The client should then send the user to the sign in screen and show the message.
+        5. A signed in user without access to a project gets `403` (`FORBIDDEN`) on any operation on it, also by direct link.
+
+        Requests that change data are not protected by a CSRF token for now: the API only accepts JSON and the cookie is `SameSite=Lax`. To review when the interface is chosen (T1).
 
   parameters:
     ProjectId:
@@ -891,14 +902,23 @@ components:
               - field: title
                 issue: Longer than 100 characters.
     Unauthorized:
-      description: 'There is no valid session, because the user has not signed in or the session ended (F10).'
+      description: |
+        There is no valid session, because the user has not signed in or the session ended (F10). When the request carried a session cookie, the message is "Your session has ended. Sign in again to continue."; the code is the same.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: UNAUTHENTICATED
-            message: Sign in to continue.
+          examples:
+            notSignedIn:
+              summary: No session cookie
+              value:
+                code: UNAUTHENTICATED
+                message: Sign in to continue.
+            sessionEnded:
+              summary: The session cookie is no longer valid
+              value:
+                code: UNAUTHENTICATED
+                message: Your session has ended. Sign in again to continue.
     Forbidden:
       description: The user has no access to this project, or the action is not allowed to their role (R8, S1, section 2.1 of docs/requirements.md).
       content:
@@ -917,6 +937,15 @@ components:
           example:
             code: NOT_FOUND
             message: The item was not found.
+    TaskChanged:
+      description: The task was changed by someone else after it was read (R30, T13). Nothing was saved.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: TASK_CHANGED
+            message: This task was changed by someone else. Reload it and try again.
     BusinessRuleViolation:
       description: The request is well formed but breaks a business rule. The `code` says which one.
       content:
@@ -1193,10 +1222,15 @@ components:
 
     TaskUpdate:
       type: object
-      minProperties: 1
+      required: [version]
+      minProperties: 2
       additionalProperties: false
-      description: Only the fields to change.
+      description: The `version` read, and the fields to change (at least one).
       properties:
+        version:
+          type: integer
+          minimum: 1
+          description: The `version` of the task as the client read it (R30).
         title:
           type: string
           minLength: 1
@@ -1224,10 +1258,14 @@ components:
     Task:
       type: object
       description: A task or a subtask.
-      required: [id, projectId, parentTaskId, title, status, deadline, urgency, importance, assignees]
+      required: [id, version, projectId, parentTaskId, title, status, deadline, urgency, importance, assignees]
       properties:
         id:
           type: integer
+        version:
+          type: integer
+          minimum: 1
+          description: Starts at 1 and goes up by one each time the data of the task is changed. Send it back in `updateTask` (R30).
         projectId:
           type: integer
         parentTaskId:
@@ -1439,6 +1477,7 @@ components:
         - REPLACEMENT_NOT_ELIGIBLE
         - ASSIGNEE_LIMIT_EXCEEDED
         - CANNOT_RESTORE
+        - TASK_CHANGED
 
     Error:
       type: object

@@ -33,12 +33,13 @@ Ficheiro: [sign-in-wireframe.svg](sign-in-wireframe.svg). Mostra dois estados: c
 | 4 | Mensagem de campo vazio | Por baixo do campo em falta: "Enter your username." ou "Enter your password." | NF08, W6 |
 | 5 | Botão *Sign in* | Inicia a sessão e abre o painel inicial | Cenário 10.1 |
 | 6 | Aviso de ambiente de demonstração | Só dados fictícios | C8 |
+| 7 | Mensagem de sessão terminada | Por cima do formulário, quando a pessoa chega ao ecrã por a sessão ter deixado de ser válida: "Your session has ended. Sign in again to continue." (não está desenhada no SVG) | Cenário 10.6, P33, W16 |
 
 | De | Ação | Para |
 |---|---|---|
 | Início de sessão | Credenciais corretas | Painel inicial (cenário 10.1) |
 | Qualquer ecrã sem sessão | Abrir uma ligação direta | Início de sessão (cenário 10.5, EC31) |
-| Qualquer ecrã | *Sign out*, ou 3 horas sem atividade | Início de sessão (cenários 10.4 e 10.6) |
+| Qualquer ecrã | *Sign out*, ou 3 horas sem atividade | Início de sessão (cenários 10.4 e 10.6); no segundo caso, com a mensagem de sessão terminada (W16) |
 
 Não há ligações de registo nem de recuperação de palavra-passe: são extensões opcionais, fora do MVP.
 
@@ -224,4 +225,5 @@ O código **W** é local aos wireframes e continua a numeração de [matrix-wire
 | W12 | Wireframe Matrix | Passou a ser o separador *Matrix* do detalhe do projeto, com a mesma barra, caminho e cabeçalho | Confirmado |
 | W13 | Regras do calendário | Prazos e início de projeto a partir de hoje; fim do projeto não anterior ao início; prazo de subtarefa não posterior ao da mãe (R2); prazo da mãe não anterior ao de uma subtarefa (R3). Os campos só se preenchem pelo calendário | Confirmado |
 | W14 | Tarefa cujo projeto está na reciclagem | Só se recupera depois de o projeto ser recuperado ("Cannot restore: restore the project first.") | Confirmado |
+| W16 | Mensagem quando a sessão deixa de ser válida | A interface leva ao início de sessão e mostra a mensagem que o servidor devolve no 401 ("Your session has ended. Sign in again to continue.", ou "Sign in to continue." se nunca houve sessão). Depende do P33 | Por confirmar |
 | W15 | Equipa: pessoas indisponíveis e substituição | Quem já está noutro projeto em aberto aparece desativado ao adicionar, com o motivo. Na remoção, as tarefas podem ser repartidas por substitutos já no projeto ou novos, até 5 tarefas em aberto cada (R17). O aviso de projeto retomado fica no topo | Confirmado |
