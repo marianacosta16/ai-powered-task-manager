@@ -21,10 +21,12 @@ import com.matriz.projects.ProjectPhase;
 import com.matriz.projects.ProjectQueries;
 import com.matriz.projects.ProjectRecord;
 import com.matriz.projects.ProjectStatus;
+import com.matriz.projects.TeamRepository;
 import com.matriz.shared.BusinessRuleException;
 import com.matriz.shared.ForbiddenException;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.NotFoundException;
+import com.matriz.tasks.TaskAssignments;
 
 /**
  * createProject and updateProject (F01, US01). Who is asking always comes from the session; the
@@ -39,14 +41,18 @@ public class ProjectUseCases {
     private final ProjectCommands commands;
     private final ProjectPermissions permissions;
     private final UserDirectory users;
+    private final TeamRepository team;
+    private final TaskAssignments assignments;
     private final Clock clock;
 
     public ProjectUseCases(ProjectQueries queries, ProjectCommands commands, ProjectPermissions permissions,
-            UserDirectory users, Clock clock) {
+            UserDirectory users, TeamRepository team, TaskAssignments assignments, Clock clock) {
         this.queries = queries;
         this.commands = commands;
         this.permissions = permissions;
         this.users = users;
+        this.team = team;
+        this.assignments = assignments;
         this.clock = clock;
     }
 
@@ -104,10 +110,27 @@ public class ProjectUseCases {
         ProjectRecord updated = new ProjectRecord(projectId, name, description, startDate, startTime, endDate,
                 endTime, timezone, phase, status, managerId);
         commands.update(updated);
+        if (managerId != current.managerId()) {
+            handOver(projectId, current.managerId(), managerId);
+        }
         if (manager == null) {
             manager = users.findByIds(java.util.List.of(managerId)).get(managerId);
         }
         return ProjectView.of(updated, manager);
+    }
+
+    /**
+     * The project changes manager (A12). The manager does not need a row in the team of his own
+     * project (M5), so the new manager loses his member row if he had one; his tasks stay valid,
+     * because a manager can be responsible for tasks of his project (R19, R21). The former manager
+     * stops seeing the project, unless he has tasks in it: then he stays as a member, so that no
+     * task is left with someone who cannot see it (R21).
+     */
+    private void handOver(long projectId, long formerManagerId, long newManagerId) {
+        team.remove(projectId, newManagerId);
+        if (assignments.hasTasks(projectId, formerManagerId) && !team.isMember(projectId, formerManagerId)) {
+            team.add(projectId, formerManagerId);
+        }
     }
 
     static void requireNotCompleted(ProjectRecord project) {

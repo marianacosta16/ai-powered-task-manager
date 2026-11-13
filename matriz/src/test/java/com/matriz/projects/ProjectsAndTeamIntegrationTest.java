@@ -565,6 +565,44 @@ class ProjectsAndTeamIntegrationTest {
     }
 
     @Test
+    void aNewManagerWhoWasAMemberLosesTheMemberRowAndKeepsTheTasks() {
+        long website = projectId("Website");
+        String marta = sessionOf("marta");
+        // Pedro manages other projects and is added as a member of Website (R19), with a task there
+        post("/projects/" + website + "/members", marta, Map.of("userId", userId("pedro")));
+        assignTask(website, "Review the layout", "pedro");
+
+        ResponseEntity<String> handed = patch("/projects/" + website, marta, Map.of("managerId", userId("pedro")));
+
+        assertThat(handed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        // a manager does not need a row in his own project (M5), and his task is still his (R21)
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM project_member WHERE project_id = ? AND user_id = ?",
+                Integer.class, website, userId("pedro"))).isZero();
+        assertThat(memberNames(website, sessionOf("pedro"))).doesNotContain("Pedro");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM task_assignee a JOIN task t ON t.id = a.task_id "
+                + "WHERE t.project_id = ? AND a.user_id = ?", Integer.class, website, userId("pedro"))).isEqualTo(1);
+    }
+
+    @Test
+    void aFormerManagerWithTasksStaysAsAMemberAndOneWithoutTasksLeaves() {
+        long website = projectId("Website");
+        long mobile = projectId("Mobile App");
+        String marta = sessionOf("marta");
+        assignTask(website, "Own task", "marta"); // Marta has a task in Website, none in Mobile App
+
+        patch("/projects/" + website, marta, Map.of("managerId", userId("pedro")));
+        patch("/projects/" + mobile, marta, Map.of("managerId", userId("pedro")));
+
+        // with tasks: she stays, as a member, and still sees the project (A12)
+        assertThat(get("/projects/" + website, marta).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(memberNames(website, sessionOf("pedro"))).contains("Marta");
+        assertThat(patch("/projects/" + website, marta, Map.of("phase", "Planning")).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN); // but she no longer manages it
+        // without tasks: she stops seeing it
+        assertThat(get("/projects/" + mobile, marta).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void anInvalidTimeZoneOrValueInAnUpdateIsRefused() {
         long website = projectId("Website");
         String marta = sessionOf("marta");
@@ -618,6 +656,14 @@ class ProjectsAndTeamIntegrationTest {
     }
 
     // ---- helpers ----
+
+    private void assignTask(long projectId, String title, String username) {
+        long task = jdbc.queryForObject("""
+                INSERT INTO task (project_id, title, status, deadline, urgency, importance)
+                VALUES (?, ?, 'To do', DATE '2027-01-15', 2, 2) RETURNING id
+                """, Long.class, projectId, title);
+        jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", task, userId(username));
+    }
 
     private static void pause(long millis) {
         try {
