@@ -373,6 +373,13 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o membro tenta criar uma subtarefa dessa tarefa
 - **Then** a criação é recusada, com uma mensagem a pedir que a tarefa-mãe seja primeiro reaberta, e a tarefa fica sem a nova subtarefa.
 
+**Cenário 4.7: reabrir uma subtarefa numa tarefa-mãe fechada**
+- **Given** uma tarefa-mãe "concluído", com uma subtarefa "concluído"
+- **When** o gestor tenta reabrir a subtarefa
+- **Then** a mudança é recusada, com uma mensagem a pedir que a tarefa-mãe seja primeiro reaberta, e a subtarefa mantém o estado.
+- **When** o gestor reabre a tarefa-mãe e depois a subtarefa
+- **Then** as duas mudanças são aceites.
+
 ### US05 — Concluir tarefa-mãe
 
 **Cenário 5.1: subtarefa em aberto**
@@ -793,7 +800,8 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC43 | Duas pessoas editam a mesma tarefa e gravam uma depois da outra | A segunda gravação é recusada, com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; a primeira mantém-se (a verificar no incremento 3) | [R30](requirements.md#4-regras-de-negócio) |
 | EC44 | Dois gestores adicionam, ao mesmo tempo, a mesma pessoa livre a dois projetos em aberto | Só um dos pedidos é aceite; o outro é recusado, com aviso, porque a pessoa já está noutro projeto em aberto (cenário 1.5) | [R11](requirements.md#4-regras-de-negócio) |
 | EC45 | O gestor faz duas alterações ao mesmo projeto ao mesmo tempo (por exemplo, o nome e o estado) | As duas ficam guardadas, uma a seguir à outra, e nenhuma desfaz a outra | [R12](requirements.md#4-regras-de-negócio) |
-| EC46 | Criar uma subtarefa numa tarefa-mãe concluída, cancelada ou duplicada | Recusado, com mensagem a pedir que a mãe seja primeiro reaberta (cenário 4.6) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
+| EC46 | Criar uma subtarefa numa tarefa-mãe concluída, cancelada ou duplicada, ou reabrir uma subtarefa fechada com a mãe fechada | Recusado, com mensagem a pedir que a mãe seja primeiro reaberta (cenários 4.6 e 4.7) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
+| EC47 | Atribuir uma pessoa a uma tarefa ao mesmo tempo que o gestor a remove do projeto | Uma das duas ações é recusada: a tarefa nunca fica atribuída a alguém que já não é membro do projeto | [R21](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
