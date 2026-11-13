@@ -121,6 +121,7 @@ Escolhida em 2026-11-12 com a autora do projeto, por ser a mais simples que serv
 | Datas e horas | `java.time` com o fuso do projeto | Proposta | Cumpre o P26 e o cálculo do tempo decorrido (T5) |
 | Segurança | Spring Security, com um serviço de utilizadores sobre `app_user`, hash BCrypt e filtros que devolvem 401 e 403 em JSON | Adotado (incremento 1) | Entrou só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 |
 | Proteção CSRF e sessões | CSRF desligado (API só JSON e cookie `SameSite=Lax`); sessões em memória | Pressuposto (P31, P32) | Simples para a v1; rever com a interface (T1) |
+| Verificação automática | GitHub Actions: `mvn verify` com um PostgreSQL de teste (`.github/workflows/ci.yml`) | Adotado | Corre os testes em cada pull request e em cada push à `main`, sem depender da máquina de quem desenvolve (T9) |
 
 **Como a stack respeita a arquitetura**
 - Cada módulo da secção 4 é um pacote da aplicação, e os casos de uso são serviços que coordenam os módulos numa só transação.
