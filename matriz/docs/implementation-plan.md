@@ -29,7 +29,7 @@ Como atualizar: ao terminar um incremento, passar o estado a **Concluído**, ind
 |---|---|---|---|---|
 | 0 | Fundações | Concluído | 2026-11-12 | `mvn test`: 12 testes verdes (contrato OpenAPI válido com 28 operações, 9 regras de fronteira ArchUnit, health check e seed idempotente contra `matriz_test`). Aplicação arrancada duas vezes contra `matriz`: health `UP` com `db` UP; 10 utilizadores, 4 projetos, 14 tarefas e 5 comentários nas duas vezes, sem duplicar |
 | 1 | Contas e sessão | Concluído | 2026-11-12 | Cenários 10.1 a 10.6, EC31 e EC38 em testes HTTP (15 testes de acesso, 28 no total, verdes): credenciais certas e erradas com a mesma resposta, 401 sem sessão, logout, identificador de sessão novo a cada início, e Ana, Inês, Marta e Pedro com acessos distintos (200 no seu projeto, 403 no alheio, 404 se não existe ou foi apagado). Confirmado com `curl` na aplicação a correr; nenhuma palavra-passe nem hash nos logs. Expiração às 3 horas verificada só pela configuração do servidor (não se espera 3 horas). Também já feitas, só em leitura, `listProjects` e `getProject` (incremento 2) para provar o acesso por projeto |
-| 2 | Projetos e equipa | Por fazer | | |
+| 2 | Projetos e equipa | Concluído | 2026-11-13 | Cenários 1.1 a 1.23, 1.29 a 1.32 e 8.1 a 8.3 (os de tarefas, 1.12 a 1.14 e 1.24 a 1.28, ficam para o incremento 3); EC8, EC12 a EC14, EC17, EC25, EC27, EC37, EC39 (é da interface), EC40, EC42, EC44 e EC45, em testes HTTP com relógio controlável (38 testes novos; 70 no total, verdes). `removeMember` só remove membros sem tarefas em aberto (A11). Pressupostos A8 a A13 do contrato confirmados em 2026-11-13. Não verificado: a confirmação antes de concluir um projeto (1.22) é da interface |
 | 3 | Tarefas, subtarefas e responsáveis | Por fazer | | |
 | 4 | Lista, Matriz, pesquisa e filtros | Por fazer | | |
 | 5 | Painel e progresso | Por fazer | | |
@@ -61,7 +61,7 @@ src/test/java/...                         testes por cenário Given / When / The
 |---|---|
 | Java 21, Spring Boot, PostgreSQL, sessão com cookie, API primeiro | **Decidido** |
 | Build com Maven | Adotado (incremento 0) |
-| Migrações com Flyway; acesso aos dados por JDBC (`JdbcTemplate`) até agora, com o Spring Data JPA instalado e sem entidades | Flyway adotado; JPA por decidir no incremento 2 |
+| Migrações com Flyway e acesso aos dados por JDBC (`JdbcTemplate`); o Spring Data JPA não se usa e foi retirado | Adotado (JDBC decidido em 2026-11-13, incremento 2) |
 | Testes com JUnit 5 e Spring Boot Test, contra o PostgreSQL da VM Ubuntu, numa base de dados de teste separada | Adotado (incremento 0) |
 | Datas e horas com `java.time` e o fuso do projeto (T5) | Proposta |
 | Spring Security, com hash BCrypt, 401 e 403 em JSON | Adotado (incremento 1) |
@@ -97,7 +97,7 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Componentes e ficheiros** | `projects/`, `usecases/` (R11, R17 sem tarefas, P22), `access/` (permissões por projeto, R8, R19), `shared/` (datas, fuso, R16, R29), migrações de `PROJECT` e `PROJECT_MEMBER` |
 | **API** | `listProjects`, `createProject`, `getProject`, `updateProject`, `listMembers`, `addMember`, `removeMember` (sem tarefas por concluir), `listCandidateMembers` |
 | **Depende de** | Incremento 1 |
-| **Aceitação** | Cenários 1.1 a 1.23, 1.29, 1.30 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39, EC40 e EC42 |
+| **Aceitação** | Cenários 1.1 a 1.23, 1.29 a 1.32 e 8.1 a 8.3; EC8, EC12 a EC14, EC16, EC17, EC25, EC27, EC37, EC39, EC40, EC42, EC44 e EC45 |
 | **Verificação** | Testes com relógio controlável; acesso a um projeto alheio recusado no servidor (403), também por ligação direta; conclusão de um projeto congela-o (R28) |
 
 > **R19 confirmado em 2026-11-12:** em `createProject`, quem cria vem da sessão e tem de ser gestor (403 se não for); o `managerId` é indicado por quem cria (R19) e o servidor valida que tem o papel de gestor (M10, `MANAGER_NOT_A_MANAGER`). Se for outra pessoa, o criador deixa de ver o projeto. O exercício pede para inferir o proprietário no servidor: aqui, é o criador (sessão) que decide quem gere, e nunca um valor que prove identidade.
@@ -113,6 +113,8 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Depende de** | Incremento 2 e do wireframe da tarefa |
 | **Aceitação** | Cenários 2.1 a 2.13, 4.x, 5.x e 1.24 a 1.28; EC2 a EC5, EC10, EC15, EC18, EC19, EC22, EC28 a EC30, EC35, EC41 e EC43 (edições simultâneas, R30) |
 | **Verificação** | Testes de contrato contra o [openapi.yaml](../openapi.yaml); distinguir 400 de 422 e os códigos de erro; limite de 5 tarefas na substituição; duas gravações da mesma versão: a segunda dá 409 `TASK_CHANGED` e nada se perde (R30, T13) |
+
+> **Passagem da gestão (A12), decidida em 2026-11-13:** o novo gestor, se já era membro, perde a linha de membro (M5) e mantém as suas tarefas (R19, R21). O antigo gestor deixa de ver o projeto, exceto se tiver tarefas nele: então fica como membro, para nenhuma tarefa ficar com quem já não a vê (R21). Está implementado no incremento 2 (sem código de erro novo). Como um gestor pode ser membro de projetos de outros gestores, a exceção da R11 aos gestores mantém-se.
 
 > **T13 decidido em 2026-11-12:** a tarefa tem uma `version` (contrato 0.3.0, modelo M13). Como a migração V1 já foi aplicada, a coluna `version` entra numa migração nova (V2), que não altera a V1. O `updateTask` compara a versão recebida com a atual.
 
@@ -184,7 +186,7 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 
 | Tema | Nota | Estado |
 |---|---|---|
-| Ferramentas | Maven, Spring Boot (Web, Validation, Data JPA, Actuator), Flyway, JUnit 5 e Spring Boot Test, pacote base `com.matriz`, `java.time`. A autora disse não ter preferência | Aceites |
+| Ferramentas | Maven, Spring Boot (Web, Validation, JDBC, Actuator; o Data JPA, previsto aqui, foi retirado no incremento 2), Flyway, JUnit 5 e Spring Boot Test, pacote base `com.matriz`, `java.time`. A autora disse não ter preferência | Aceites |
 | Spring Boot | Usar a última versão 3.5.x estável (a verificar no Maven Central); evitar a linha 4.x até ser necessária, por ter mudanças de módulos e de bibliotecas | Proposta |
 | Segurança | Adicionar o Spring Security só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 | Proposta |
 | Base de dados | PostgreSQL da VM, ligação por variáveis de ambiente (`DB_URL`, `DB_USER`, `DB_PASSWORD`), carregadas de um `.env` que não se versiona, com um `.env.example` de valores fictícios | Proposta |
@@ -202,3 +204,15 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
 | Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |
+
+## 8. Verificações adiadas para a fase da interface
+
+Itens que a API não consegue verificar sozinha e que não se podem esquecer quando a interface for feita. Quando um item for verificado, indica-se aqui a data e como.
+
+| # | Item | Origem | Incremento | Estado |
+|---|---|---|---|---|
+| V1 | Pedir uma confirmação antes de marcar um projeto como concluído, a avisar que deixa de poder ser alterado ou reaberto; ao cancelar, o estado mantém-se | Cenário 1.22, EC39, R28 | 2 | Por verificar na interface |
+| V2 | Os controlos que a pessoa não pode usar não aparecem (criar projeto para membros, alterar o projeto e a equipa para membros, e tudo num projeto concluído). A API já os recusa com 403 ou 422 | Cenários 1.2, 1.3, 1.6, 1.21, NF08 | 2 | Por verificar na interface |
+| V3 | Aviso ao gestor, ao retomar um projeto suspenso, de que há membros noutro projeto em aberto (a API devolve `inOtherOpenProject`) | Cenário 1.8, P22 | 2 | Por verificar na interface |
+| V4 | Encaminhar para o início de sessão quando a sessão deixa de ser válida, mostrando a mensagem do servidor ("Your session has ended..." ou "Sign in to continue.") | Cenários 10.5 e 10.6, EC31, EC38, P33, W16 | 1 | Por verificar na interface |
+| V5 | A expiração às 3 horas sem atividade: hoje só se verifica a configuração do servidor, não uma sessão realmente expirada | Cenário 10.6, EC38, S5 | 1 | Por verificar (esperar o tempo, ou com a interface) |

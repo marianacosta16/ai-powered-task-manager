@@ -165,6 +165,28 @@ curl -s -b /tmp/ana.txt localhost:8081/projects
 curl -i -b /tmp/ana.txt -X POST localhost:8081/auth/logout
 ```
 
+## Projetos e equipa (incremento 2)
+
+Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `removeMember` e `listCandidateMembers` (mais `listProjects` e `getProject`, do incremento 1). Quem faz o pedido vem sempre da sessão.
+
+| Regra | Como se aplica |
+|---|---|
+| Criar projetos (F01, R19) | Só um gestor (403 se for membro). Quem cria indica o gestor, que tem de ter o papel de gestor (422 `MANAGER_NOT_A_MANAGER`); se for outra pessoa, o criador deixa de ver o projeto |
+| Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
+| Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
+| Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |
+| Remover membros (R17) | Só membros sem tarefas em aberto; com tarefas, 422 `REPLACEMENT_REQUIRED` até haver substitutos (incremento 3) |
+
+Os pressupostos A8 a A13 estão confirmados no [openapi.yaml](openapi.yaml). Adicionar alguém que já está no projeto (ou o seu gestor) dá 422 `MEMBER_ALREADY_IN_PROJECT`.
+
+```bash
+curl -s -b /tmp/marta.txt -H 'Content-Type: application/json' -d '{"name":"Demo","startDate":"2027-01-10","endDate":"2027-03-31","phase":"Initiation","status":"Not started","managerId":1}' localhost:8081/projects
+```
+
+```bash
+curl -s -b /tmp/marta.txt localhost:8081/projects/1/members
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
@@ -181,6 +203,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incrementos 0 (fundações) e 1 (contas e sessão) concluídos; próximo, o incremento 2 (projetos e equipa) |
+| Implementação | Em curso: incrementos 0 (fundações), 1 (contas e sessão) e 2 (projetos e equipa) concluídos; próximo, o incremento 3 (tarefas, subtarefas e responsáveis) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.

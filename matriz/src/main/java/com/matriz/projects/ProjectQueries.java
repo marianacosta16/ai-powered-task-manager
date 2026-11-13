@@ -31,6 +31,15 @@ public class ProjectQueries {
                 new MapSqlParameterSource("id", id), ProjectQueries::map).stream().findFirst();
     }
 
+    /**
+     * Reads the project and locks its row until the end of the transaction, so a concurrent update
+     * waits and then reads the fresh values instead of overwriting them with stale ones.
+     */
+    public Optional<ProjectRecord> findByIdForUpdate(long id) {
+        return jdbc.query("SELECT " + COLUMNS + " FROM project WHERE id = :id AND deleted_at IS NULL FOR UPDATE",
+                new MapSqlParameterSource("id", id), ProjectQueries::map).stream().findFirst();
+    }
+
     /** The given projects, optionally only those whose name contains the text, ignoring case (P29). */
     public List<ProjectRecord> findAmong(Collection<Long> ids, String search) {
         if (ids.isEmpty()) {

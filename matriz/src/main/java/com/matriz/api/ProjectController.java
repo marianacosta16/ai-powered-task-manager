@@ -2,15 +2,22 @@ package com.matriz.api;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.matriz.access.AuthenticatedUser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.matriz.usecases.ProjectReadUseCases;
+import com.matriz.usecases.ProjectUseCases;
 import com.matriz.usecases.ProjectSummaryView;
 import com.matriz.usecases.ProjectView;
 
@@ -26,9 +33,29 @@ import jakarta.validation.constraints.Size;
 class ProjectController {
 
     private final ProjectReadUseCases useCases;
+    private final ProjectUseCases projectUseCases;
+    private final RequestValidator validator;
 
-    ProjectController(ProjectReadUseCases useCases) {
+    ProjectController(ProjectReadUseCases useCases, ProjectUseCases projectUseCases, RequestValidator validator) {
         this.useCases = useCases;
+        this.projectUseCases = projectUseCases;
+        this.validator = validator;
+    }
+
+    /** The creator comes from the session; the manager is the one the creator indicates (R19). */
+    @PostMapping("/projects")
+    @ResponseStatus(HttpStatus.CREATED)
+    ProjectView createProject(@AuthenticationPrincipal AuthenticatedUser user,
+            @RequestBody ProjectCreateRequest body) {
+        projectUseCases.requireCanCreate(user); // 403 for a member, before the values are checked
+        validator.validate(body);
+        return projectUseCases.createProject(user, body.toCommand());
+    }
+
+    @PatchMapping("/projects/{projectId}")
+    ProjectView updateProject(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable @Min(1) long projectId,
+            @RequestBody JsonNode body) {
+        return projectUseCases.updateProject(user, projectId, ProjectPatchParser.parse(body));
     }
 
     @GetMapping("/projects")

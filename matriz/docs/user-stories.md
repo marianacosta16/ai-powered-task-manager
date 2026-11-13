@@ -214,6 +214,18 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor remove a Ana
 - **Then** a Ana deixa de fazer parte da equipa.
 
+**Cenário 1.31: passar a gestão do projeto a outro gestor**
+- **Given** o projeto "Website", gerido pelo Pedro, com a gestora "Marta" na lista de membros e responsável por uma tarefa desse projeto
+- **When** o Pedro passa a gestão do projeto "Website" à Marta
+- **Then** a Marta passa a ser a gestora do projeto, deixa de constar da lista de membros (o gestor não precisa de ser membro do seu projeto) e mantém a tarefa que tinha, e o Pedro, que não tem tarefas nesse projeto, deixa de o ver.
+
+**Cenário 1.32: o antigo gestor com tarefas fica como membro**
+- **Given** o projeto "Website", gerido pela Marta, que é responsável por uma tarefa desse projeto, e o projeto "Mobile App", também da Marta, onde ela não tem tarefas
+- **When** a Marta passa a gestão do projeto "Website" ao Pedro
+- **Then** o Pedro passa a ser o gestor, e a Marta fica na lista de membros com a tarefa: continua a ver o projeto, mas já não o gere.
+- **When** a Marta passa a gestão do projeto "Mobile App" ao Pedro
+- **Then** o Pedro passa a ser o gestor e a Marta, sem tarefas nesse projeto, deixa de o ver.
+
 ### US02 — Criar tarefa
 
 **Cenário 2.1: criação com sucesso**
@@ -774,6 +786,8 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC41 | Um substituto ficaria com mais de 5 tarefas e subtarefas em aberto | Ação recusada, com mensagem; a remoção não é concluída (cenários 1.25 e 1.28) | [R17](requirements.md#4-regras-de-negócio), [P24](constraints.md#2-pressupostos-assumidos) |
 | EC42 | Adicionar a um projeto suspenso um membro que está noutro projeto em aberto | Aceite; ao retomar o projeto aplica-se a etiqueta vermelha (cenário 1.29) | [R11](requirements.md#4-regras-de-negócio), [P22](constraints.md#2-pressupostos-assumidos) |
 | EC43 | Duas pessoas editam a mesma tarefa e gravam uma depois da outra | A segunda gravação é recusada, com uma mensagem a pedir para recarregar a tarefa e tentar outra vez; a primeira mantém-se (a verificar no incremento 3) | [R30](requirements.md#4-regras-de-negócio) |
+| EC44 | Dois gestores adicionam, ao mesmo tempo, a mesma pessoa livre a dois projetos em aberto | Só um dos pedidos é aceite; o outro é recusado, com aviso, porque a pessoa já está noutro projeto em aberto (cenário 1.5) | [R11](requirements.md#4-regras-de-negócio) |
+| EC45 | O gestor faz duas alterações ao mesmo projeto ao mesmo tempo (por exemplo, o nome e o estado) | As duas ficam guardadas, uma a seguir à outra, e nenhuma desfaz a outra | [R12](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

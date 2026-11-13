@@ -16,7 +16,9 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.matriz.shared.BusinessRuleException;
 import com.matriz.shared.ForbiddenException;
+import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.NotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -34,6 +36,21 @@ class ApiExceptionHandler {
         return reply(HttpStatus.UNAUTHORIZED, ErrorBody.of("INVALID_CREDENTIALS", INVALID_CREDENTIALS));
     }
 
+    @ExceptionHandler(RequestValidationException.class)
+    ResponseEntity<ErrorBody> invalidBody(RequestValidationException ex) {
+        return validation("Some values are missing or not valid. Check them and try again.", ex.details());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    ResponseEntity<ErrorBody> invalidValue(InvalidRequestException ex) {
+        return validation(ex.getMessage(), List.of(new ErrorBody.Detail(ex.field(), ex.issue())));
+    }
+
+    @ExceptionHandler(BusinessRuleException.class)
+    ResponseEntity<ErrorBody> businessRule(BusinessRuleException ex) {
+        return reply(HttpStatus.UNPROCESSABLE_ENTITY, ErrorBody.of(ex.code(), ex.getMessage()));
+    }
+
     @ExceptionHandler(ForbiddenException.class)
     ResponseEntity<ErrorBody> forbidden(ForbiddenException ex) {
         return reply(HttpStatus.FORBIDDEN, ErrorBody.of("FORBIDDEN", ex.getMessage()));
@@ -47,8 +64,8 @@ class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ErrorBody> invalidBody(MethodArgumentNotValidException ex) {
         List<ErrorBody.Detail> details = ex.getBindingResult().getFieldErrors().stream()
-                .map(e -> new ErrorBody.Detail(e.getField(), "Is required.")).toList();
-        return validation("A required field is missing. Fill it in and try again.", details);
+                .map(e -> new ErrorBody.Detail(e.getField(), e.getDefaultMessage())).toList();
+        return validation("Some values are missing or not valid. Check them and try again.", details);
     }
 
     @ExceptionHandler({ HttpMessageNotReadableException.class, HandlerMethodValidationException.class,
