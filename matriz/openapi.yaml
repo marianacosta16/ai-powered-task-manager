@@ -29,7 +29,7 @@ info:
     - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
     - A14 (confirmed): a subtask is not created under a parent task that is closed (Done, Cancelled or Duplicate): 422 `PARENT_TASK_CLOSED`, because the closed parent would end up with an open subtask (R4). For the same reason, a closed subtask is not reopened while its parent is closed (the manager reopens the parent first).
     - A15 (confirmed): R4 applies to main tasks and to the statuses Done and Cancelled; a subtask has no subtasks, and a Duplicate parent is not checked.
-    - A16 (confirmed): assigning someone who is already an assignee is accepted and changes nothing (200 with the assignees).
+    - A16 (confirmed, changed on 2026-11-14): assigning someone who is already an assignee is refused with 409 `ASSIGNEE_ALREADY_ASSIGNED` and changes nothing, so the same task and user are never associated twice. At first it was accepted with 200; it was changed to follow the exercise ("prevent the repetition").
     - A17 (confirmed): `blockReason` and `originalTaskId` sent with a status that does not use them are refused with 400; leaving Blocked or Duplicate clears them.
     - A18 (confirmed): the deadline is validated (R13, R2, R3) only when it is changed; saving the same deadline again is not an error.
     - A19 (confirmed): creating a task or a subtask in a completed or in a suspended project is refused with 422 `PROJECT_NOT_OPEN` (R22); changing, assigning or removing in a completed project is 422 `PROJECT_COMPLETED` (R27, R28).
@@ -58,7 +58,9 @@ info:
     - A42 (confirmed): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36). With the body and nobody who left, the answer is 400: the body is not ignored in silence.
     - A43 (confirmed): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
     - A44 (confirmed): the creator of a project is its manager. `createProject` has no `managerId`, and one sent is refused with 400, like any field the contract does not list. The manager only changes with `updateProject` (A12), and the new manager must be a project manager (M10). This replaces the first decision of R19, in which the creator indicated the manager (2026-11-14, to follow the exercise: the owner is inferred by the server).
-    - A45 (confirmed): the name of a project has 3 to 100 characters and its description up to 1000, following the example of the exercise; text is counted in characters (R14). The titles and descriptions of tasks keep 100 and 2000.
+    - A45 (confirmed): the name of a project has 3 to 100 characters and its description up to 1000, following the example of the exercise; text is counted in characters (R14). The description of a task keeps 2000, and its title is in A46.
+    - A46 (confirmed): the title of a task or subtask has 3 to 150 characters and is not only spaces, following the example of the exercise; the name of a project is not only spaces either. A text made only of blank characters is refused with 400, when creating and when updating; spaces inside a text are kept as written.
+    - A47 (confirmed): the 409 of A16 is a conflict with what already exists, like `TASK_CHANGED`; the message says the person is already assigned.
 
 tags:
   - name: Auth
@@ -647,6 +649,7 @@ paths:
       summary: Assign a user to a task
       description: |
         Adds an assignee. The user must be a member of the project or its manager (R21, scenario 2.9). Allowed in an open or suspended project (R27).
+        The same person is not assigned twice: a person who is already an assignee of the task is refused with 409 `ASSIGNEE_ALREADY_ASSIGNED` (A16, scenario 2.15).
       requestBody:
         required: true
         content:
@@ -670,6 +673,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: The person is already an assignee of the task (A16).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/BusinessRuleViolation'
 
@@ -1224,6 +1233,7 @@ components:
           type: string
           minLength: 3
           maxLength: 100
+          pattern: '\S'
         description:
           type: string
           maxLength: 1000
@@ -1259,6 +1269,7 @@ components:
           type: string
           minLength: 3
           maxLength: 100
+          pattern: '\S'
         description:
           type: [string, 'null']
           maxLength: 1000
@@ -1292,9 +1303,10 @@ components:
       properties:
         title:
           type: string
-          minLength: 1
-          maxLength: 100
-          description: Task title (R14).
+          minLength: 3
+          maxLength: 150
+          pattern: '\S'
+          description: Task title, 3 to 150 characters and not only spaces (R14, A46).
         description:
           type: string
           maxLength: 2000
@@ -1335,8 +1347,9 @@ components:
           description: The `version` of the task as the client read it (R30).
         title:
           type: string
-          minLength: 1
-          maxLength: 100
+          minLength: 3
+          maxLength: 150
+          pattern: '\S'
         description:
           type: [string, 'null']
           maxLength: 2000
@@ -1375,7 +1388,7 @@ components:
           description: Empty for a main task; the parent task for a subtask.
         title:
           type: string
-          maxLength: 100
+          maxLength: 150
         description:
           type: [string, 'null']
           maxLength: 2000
@@ -1588,6 +1601,7 @@ components:
         - CANNOT_RESTORE
         - ASSIGNEE_REQUIRED
         - TASK_CHANGED
+        - ASSIGNEE_ALREADY_ASSIGNED
         - PARENT_TASK_CLOSED
         - TASK_CLOSED
 

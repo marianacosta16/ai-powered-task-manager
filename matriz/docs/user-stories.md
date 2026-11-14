@@ -127,7 +127,9 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** tenta criar um projeto com um nome de 101 caracteres ou uma descrição de 1001 caracteres
 - **Then** o projeto não é criado e é indicado o limite excedido.
 - **When** tenta criar um projeto com um nome de 2 caracteres, ou vazio
-- **Then** o projeto não é criado e é indicado que o nome tem de ter de 3 a 100 caracteres. A mesma regra vale ao alterar o nome ou a descrição de um projeto.
+- **Then** o projeto não é criado e é indicado que o nome tem de ter de 3 a 100 caracteres.
+- **When** tenta criar um projeto com um nome só com espaços (por exemplo, três espaços)
+- **Then** o projeto não é criado e é indicado que o nome não pode ter só espaços. A mesma regra vale ao alterar o nome ou a descrição de um projeto.
 
 **Cenário 1.16: a etiqueta vermelha desaparece**
 - **Given** o projeto "Website" retomado, com a Ana na lista de membros com etiqueta vermelha por estar também no projeto "Intranet", que está em aberto
@@ -259,9 +261,9 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 
 **Cenário 2.6: tamanho máximo de título e descrição**
 - **Given** um membro da equipa a criar uma tarefa
-- **When** guarda uma tarefa com um título de 100 caracteres e uma descrição de 2000 caracteres
+- **When** guarda uma tarefa com um título de 150 caracteres e uma descrição de 2000 caracteres
 - **Then** a tarefa é criada.
-- **When** tenta guardar uma tarefa com um título de 101 caracteres ou uma descrição de 2001 caracteres
+- **When** tenta guardar uma tarefa com um título de 151 caracteres ou uma descrição de 2001 caracteres
 - **Then** a tarefa não é criada e é indicado o limite excedido.
 
 **Cenário 2.7: editar o prazo para o passado**
@@ -312,6 +314,18 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **Then** vê os dados da tarefa, mas não estão disponíveis as ações de editar, mudar de estado, atribuir ou remover responsáveis, nem apagar.
 - **When** é pedida uma dessas ações por outra via
 - **Then** a ação é recusada, com uma mensagem a explicar que o projeto está concluído, e a tarefa não muda.
+
+**Cenário 2.14: título só com espaços ou demasiado curto**
+- **Given** um membro da equipa a criar ou a alterar uma tarefa ou subtarefa
+- **When** indica um título só com espaços (de qualquer tipo, por exemplo "   "), vazio ou com menos de 3 caracteres
+- **Then** a tarefa não é criada nem alterada, e é indicado que o título tem de ter de 3 a 150 caracteres e não pode ter só espaços.
+- **When** indica o título "abc", ou " a b " (com espaços no meio e nas pontas)
+- **Then** a tarefa é criada, com o texto tal como foi escrito.
+
+**Cenário 2.15: atribuir quem já é responsável**
+- **Given** uma tarefa com os responsáveis "Rui" e "Luís"
+- **When** o membro atribui a tarefa ao Rui outra vez
+- **Then** a ação é recusada, com uma mensagem a dizer que o Rui já é responsável da tarefa, e a tarefa continua com os responsáveis "Rui" e "Luís", cada um uma só vez.
 
 ### US03 — Matriz do projeto
 
@@ -702,6 +716,11 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **Then** o comentário é criado.
 - **And** a regra é a mesma nos estados "cancelado" e "duplicado" e para subtarefas.
 
+**Cenário 11.12: reabrir uma tarefa mantém os comentários e os responsáveis**
+- **Given** uma tarefa com os responsáveis "Rui" e "Luís" e dois comentários, um de cada um
+- **When** a tarefa é concluída e o gestor a reabre
+- **Then** a tarefa continua com os responsáveis "Rui" e "Luís", e os dois comentários continuam lá, com os mesmos autores e datas, e pode voltar a comentar-se.
+
 ### US12 — Pesquisa e filtros
 
 **Cenário 12.1: pesquisar projetos pelo nome**
@@ -835,6 +854,8 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC49 | Recuperar uma tarefa ou subtarefa cujo responsável já não é membro do projeto | Recusado, a dizer quem saiu; recupera-se indicando quem o substitui (cenário 7.9) | [P36](constraints.md#2-pressupostos-assumidos), [R21](requirements.md#4-regras-de-negócio), [R26](requirements.md#4-regras-de-negócio) |
 | EC50 | Recuperar uma subtarefa em curso cuja tarefa-mãe foi concluída entretanto | Recusado, a pedir que se reabra primeiro a tarefa-mãe (cenário 7.10) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
 | EC51 | Recuperar uma tarefa de um projeto que está na reciclagem ou que foi concluído | Recusado, com o motivo (cenário 7.10) | [R9](requirements.md#4-regras-de-negócio), [R28](requirements.md#4-regras-de-negócio) |
+| EC52 | Nome de projeto ou título de tarefa só com espaços, vazio ou demasiado curto | Recusado, com a indicação do limite (cenários 1.15 e 2.14) | [R14](requirements.md#4-regras-de-negócio), [P17](constraints.md#2-pressupostos-assumidos) |
+| EC53 | Atribuir uma tarefa a quem já é responsável dela | Recusado, sem alterar a tarefa (cenário 2.15) | [R21](requirements.md#4-regras-de-negócio), [R26](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 
@@ -848,7 +869,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | A5 | "Fechada" para subtarefas | Concluída, cancelada ou duplicada ([R5](requirements.md#4-regras-de-negócio)) |
 | A6 | Prazo no passado | Não é aceite na criação ([R13](requirements.md#4-regras-de-negócio)) |
 | A7 | Progresso sem tarefas contáveis | Etiqueta "sem tarefas" em vez de 0% ([P16](constraints.md#2-pressupostos-assumidos)) |
-| A8 | Tamanho de título e descrição | Tarefas: 100 e 2000 caracteres; projetos: nome de 3 a 100 e descrição até 1000, desde 2026-11-14 ([R14](requirements.md#4-regras-de-negócio), [P17](constraints.md#2-pressupostos-assumidos)) |
+| A8 | Tamanho de título e descrição | Tarefas: título de 3 a 150 e descrição até 2000; projetos: nome de 3 a 100 e descrição até 1000; nunca só espaços; desde 2026-11-14 ([R14](requirements.md#4-regras-de-negócio), [P17](constraints.md#2-pressupostos-assumidos)) |
 | A9 | "Recusada" e "não disponível" | Definidos na secção 1 ([NF08](requirements.md#5-requisitos-não-funcionais)) |
 | A10 | Quando se aplicam R2 e R13 | Sempre que o prazo é definido ou alterado (cenários 2.7 e 4.5) |
 | A11 | Apagar tarefas-mãe, estados finais e subtarefas apagadas | [R9](requirements.md#4-regras-de-negócio), [P8](constraints.md#2-pressupostos-assumidos) |

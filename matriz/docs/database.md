@@ -43,7 +43,7 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | Atributo | Tipo | Obr. | Notas |
 |---|---|---|---|
 | `id` | inteiro | Sim | Identificador |
-| `name` | texto | Sim | De 3 a 100 caracteres (R14, P17) |
+| `name` | texto | Sim | De 3 a 100 caracteres e não só espaços (R14, P17, A46) |
 | `description` | texto | Não | Máximo 1000 caracteres (R14, P17); a coluna admite mais, o limite é da aplicação. Se é obrigatória, não está definido (M7) |
 | `start_date` | data | Sim | R16 |
 | `start_time` | hora | Não | Sem hora, conta a partir das 00:00 (P26) |
@@ -71,7 +71,7 @@ A linha mantém-se quando o projeto é concluído ou suspenso (P20, P22). O gest
 | `id` | inteiro | Sim | Identificador |
 | `project_id` | inteiro | Sim | Chave para `PROJECT`. Uma subtarefa fica no projeto da tarefa-mãe |
 | `parent_task_id` | inteiro | Não | Chave para `TASK`. Vazio = tarefa principal; preenchido = subtarefa (M1) |
-| `title` | texto | Sim | Máximo 100 caracteres (R14) |
+| `title` | texto | Sim | De 3 a 150 caracteres e não só espaços (R14, A46); a coluna passou a 150 na migração V3 |
 | `description` | texto | Não | Máximo 2000 caracteres (R14, M7) |
 | `status` | texto | Sim | `To do`, `In progress`, `In review`, `Blocked`, `Done`, `Cancelled` ou `Duplicate`. Os três últimos são finais |
 | `deadline` | data | Sim | R1. Se tem hora, não está definido (M3) |
