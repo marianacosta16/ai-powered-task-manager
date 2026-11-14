@@ -106,7 +106,26 @@ public class TaskQueries {
         return result;
     }
 
-    private static TaskRecord map(ResultSet rs, int row) throws SQLException {
+    /** The subtasks of these main tasks, by task and then by id (R18). */
+    public List<TaskRecord> subtasksOfAll(Collection<Long> parentIds) {
+        if (parentIds.isEmpty()) {
+            return List.of();
+        }
+        return named.query("SELECT " + COLUMNS + " FROM task WHERE parent_task_id IN (:ids) AND deleted_at IS NULL "
+                + "ORDER BY parent_task_id, id", new MapSqlParameterSource("ids", parentIds), TaskQueries::map);
+    }
+
+    /** The columns of a task, prefixed with the alias of the table, for queries that join other tables. */
+    public static String columns(String alias) {
+        StringBuilder prefixed = new StringBuilder();
+        for (String column : COLUMNS.split(",")) {
+            prefixed.append(prefixed.isEmpty() ? "" : ", ").append(alias).append('.').append(column.strip());
+        }
+        return prefixed.toString();
+    }
+
+    /** Builds a task from a row that has the columns above. */
+    public static TaskRecord map(ResultSet rs, int row) throws SQLException {
         return new TaskRecord(rs.getLong("id"), rs.getLong("project_id"), (Long) rs.getObject("parent_task_id"),
                 (Long) rs.getObject("original_task_id"), rs.getString("title"), rs.getString("description"),
                 rs.getString("status"), rs.getObject("deadline", LocalDate.class), rs.getInt("urgency"),
