@@ -54,7 +54,7 @@ info:
     - A38 (confirmed): the bin lists a task that was deleted on its own while its project is in the bin, with `restorable: false` and the reason `PROJECT_IN_RECYCLE_BIN`; likewise `PARENT_IN_RECYCLE_BIN` for a subtask whose parent is in the bin, and `PROJECT_COMPLETED` when the project was completed meanwhile. What was deleted together with a project or a parent is not listed on its own.
     - A39 (confirmed): an item that has been in the bin exactly 30 days is already gone. `daysLeft` is rounded up, so it goes from 30 down to 1.
     - A40 (confirmed): when a parent task is eliminated for good, its subtasks that were still in the bin are gone too, each by its own 30 days: a subtask deleted before its parent is older, so it expires first. Restoring an item that is gone is 404. The reason `PARENT_MISSING` of the first draft of the contract never happens and was removed.
-    - A41 (confirmed): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty). The task then has `originalEliminated: true`, so the client can show a note saying that the original was eliminated. A duplicate is still edited while its original is in the recycle bin or eliminated; the original is only checked when the task becomes a duplicate or its original is changed.
+    - A41 (confirmed): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty). The task then has `originalEliminated: true`, so the client can show a note saying that the original was eliminated. While the original is only in the recycle bin the link stays and the task has `originalInRecycleBin: true`, because opening the original gives 404 until it is restored. A duplicate is still edited while its original is in the recycle bin or eliminated; the original is only checked when the task becomes a duplicate or its original is changed.
     - A42 (confirmed): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36).
     - A43 (confirmed): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
 
@@ -1359,7 +1359,7 @@ components:
     Task:
       type: object
       description: A task or a subtask.
-      required: [id, version, projectId, parentTaskId, title, status, deadline, urgency, importance, originalEliminated, assignees]
+      required: [id, version, projectId, parentTaskId, title, status, deadline, urgency, importance, originalEliminated, originalInRecycleBin, assignees]
       properties:
         id:
           type: integer
@@ -1399,6 +1399,9 @@ components:
         originalEliminated:
           type: boolean
           description: True for a duplicate whose original task was eliminated from the recycle bin; the client shows a note saying so (A41). False otherwise.
+        originalInRecycleBin:
+          type: boolean
+          description: True for a duplicate whose original task is in the recycle bin for now, so `originalTaskId` cannot be opened until the original is restored; the client shows a note saying so (A41). False otherwise.
         assignees:
           type: array
           items:

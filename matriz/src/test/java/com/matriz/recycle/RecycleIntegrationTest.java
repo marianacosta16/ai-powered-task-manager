@@ -569,10 +569,16 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
 
         assertThat(edited.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(json(edited, "$.originalEliminated")).isEqualTo(false); // it is only in the bin: the link stays
+        assertThat(json(edited, "$.originalInRecycleBin")).isEqualTo(true); // and the client is told it leads nowhere for now
         assertThat(((Number) json(edited, "$.originalTaskId")).longValue()).isEqualTo(original);
+        assertThat(JsonPath.<List<Boolean>>read(get("/projects/" + project + "/tasks", sessionOf("ana")).getBody(),
+                "$[?(@.title=='Renamed')].originalInRecycleBin")).containsExactly(true); // also in the list
         ResponseEntity<String> noOriginal = patch("/tasks/" + duplicate, sessionOf("ana"), Map.of("version", 2, "originalTaskId", original));
         assertThat(noOriginal.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY); // choosing a deleted original is still refused
         assertThat(json(noOriginal, "$.code")).isEqualTo("ORIGINAL_TASK_NOT_VALID");
+
+        post("/recycle-bin/tasks/" + original + "/restore", sessionOf("ana"), null);
+        assertThat(json(get("/tasks/" + duplicate, sessionOf("ana")), "$.originalInRecycleBin")).isEqualTo(false); // back
     }
 
     @Test

@@ -8,10 +8,11 @@ import com.matriz.access.UserInfo;
 
 /**
  * Task of the contract: a task or a subtask, with its assignees; a main task also lists its subtasks (R18).
- * {@code originalEliminated} is true for a duplicate whose original was eliminated for good (A41).
+ * {@code originalEliminated} is true for a duplicate whose original was eliminated for good, and
+ * {@code originalInRecycleBin} for one whose original is in the recycle bin for now (A41).
  */
 public record TaskView(long id, int version, long projectId, Long parentTaskId, String title, String description,
         String status, LocalDate deadline, int urgency, int importance, String quadrant, String blockReason,
-        Long originalTaskId, boolean originalEliminated, List<UserInfo> assignees,
+        Long originalTaskId, boolean originalEliminated, boolean originalInRecycleBin, List<UserInfo> assignees,
         @JsonInclude(JsonInclude.Include.NON_NULL) List<TaskView> subtasks) {
 }

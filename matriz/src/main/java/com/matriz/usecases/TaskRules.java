@@ -24,6 +24,8 @@ import com.matriz.tasks.TaskRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -125,11 +127,12 @@ class TaskRules {
     }
 
     private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
-            List<TaskView> subtasks) {
+            Set<Long> originalsInTheBin, List<TaskView> subtasks) {
         List<UserInfo> assignees = assigneeIds == null ? List.of() : assigneeIds.stream().map(infos::get).toList();
         return new TaskView(t.id(), t.version(), t.projectId(), t.parentTaskId(), t.title(), t.description(), t.status(),
                 t.deadline(), t.urgency(), t.importance(), Quadrant.of(t.urgency(), t.importance()).label(), t.blockReason(),
-                t.originalTaskId(), isDuplicateWithoutOriginal(t), assignees, subtasks);
+                t.originalTaskId(), isDuplicateWithoutOriginal(t),
+                t.originalTaskId() != null && originalsInTheBin.contains(t.originalTaskId()), assignees, subtasks);
     }
 
     /**
@@ -148,9 +151,12 @@ class TaskRules {
         subtasksByParent.values().forEach(list -> list.forEach(s -> ids.add(s.id())));
         var assignees = tasks.assigneeIdsByTask(ids);
         var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
-        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, t.isSubtask() ? null
+        List<TaskRecord> all = new ArrayList<>(roots);
+        subtasksByParent.values().forEach(all::addAll);
+        Set<Long> inTheBin = tasks.deletedAmong(all.stream().map(TaskRecord::originalTaskId).filter(Objects::nonNull).toList());
+        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, inTheBin, t.isSubtask() ? null
                 : subtasksByParent.getOrDefault(t.id(), List.of()).stream()
-                        .map(s -> toView(s, assignees.get(s.id()), infos, null)).toList())).toList();
+                        .map(s -> toView(s, assignees.get(s.id()), infos, inTheBin, null)).toList())).toList();
     }
 
     private static ProjectStatus status(ProjectRecord project) {
