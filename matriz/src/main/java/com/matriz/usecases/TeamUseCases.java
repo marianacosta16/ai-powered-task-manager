@@ -20,6 +20,8 @@ import com.matriz.shared.BusinessRuleException;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.NotFoundException;
 import com.matriz.tasks.OpenTaskCounts;
+import com.matriz.tasks.TaskCommands;
+import com.matriz.tasks.TaskQueries;
 
 /**
  * The team of a project (F01, F06, US01): list, candidates, add and remove members. R11 compares
@@ -29,17 +31,23 @@ import com.matriz.tasks.OpenTaskCounts;
 @Service
 public class TeamUseCases {
 
+    static final int MAX_OPEN_TASKS_OF_A_SUBSTITUTE = 5; // R17, P24
+
     private final ProjectQueries projects;
     private final TeamRepository team;
     private final OpenTaskCounts openTasks;
+    private final TaskQueries tasks;
+    private final TaskCommands taskCommands;
     private final ProjectPermissions permissions;
     private final UserDirectory users;
 
-    public TeamUseCases(ProjectQueries projects, TeamRepository team, OpenTaskCounts openTasks,
-            ProjectPermissions permissions, UserDirectory users) {
+    public TeamUseCases(ProjectQueries projects, TeamRepository team, OpenTaskCounts openTasks, TaskQueries tasks,
+            TaskCommands taskCommands, ProjectPermissions permissions, UserDirectory users) {
         this.projects = projects;
         this.team = team;
         this.openTasks = openTasks;
+        this.tasks = tasks;
+        this.taskCommands = taskCommands;
         this.permissions = permissions;
         this.users = users;
     }
@@ -90,28 +98,84 @@ public class TeamUseCases {
     }
 
     /**
-     * Removes a member without open tasks. A member with open tasks needs substitutes (R17), which
-     * arrive with the tasks (increment 3); until then the removal is refused.
+     * Removes a member (R17, P24). Every open task and subtask of the member, also the shared ones,
+     * needs a substitute in {@code reassignments}; the tasks can be split among several substitutes,
+     * a substitute who is not in the project yet is added to it (A7), and nobody ends up with more
+     * than 5 open tasks in this project (A21). Everything is done in one transaction: if a check fails
+     * nothing changes.
+     *
+     * <p>Locks, here and in the other operations that assign people: the people first (by id), then
+     * the tasks (by id). With one order, two requests never wait for each other in a circle.
      */
     @Transactional
-    public void removeMember(AuthenticatedUser user, long projectId, long userId, int reassignments) {
+    public void removeMember(AuthenticatedUser user, long projectId, long userId, List<TaskReassignment> reassignments) {
         ProjectRecord project = find(projectId);
         permissions.requireManager(user, projectId);
         ProjectUseCases.requireNotCompleted(project); // R28
-        // The same lock as when assigning the person to a task: either the task is assigned first and the
-        // removal sees it, or the removal is done first and the assignment is refused (R21)
-        users.findForUpdate(userId);
+
+        List<Long> substituteIds = reassignments.stream().map(TaskReassignment::newAssigneeId).distinct().toList();
+        java.util.TreeSet<Long> people = new java.util.TreeSet<>(substituteIds);
+        people.add(userId);
+        people.forEach(users::findForUpdate); // the person removed and the substitutes, by id
         if (!team.isMember(projectId, userId)) {
             throw new NotFoundException("The person is not a member of this project.");
         }
-        if (openTasks.forAssignee(projectId, userId) > 0) {
+        List<Long> openTaskIds = tasks.lockOpenTaskIdsOf(projectId, userId); // then the tasks, by id
+
+        // The list must name each open task of the person exactly once (A23)
+        Set<Long> named = new java.util.HashSet<>();
+        for (TaskReassignment r : reassignments) {
+            if (!openTaskIds.contains(r.taskId())) {
+                throw new InvalidRequestException("A task in the list is not an open task of this person.", "reassignments",
+                        "Task " + r.taskId() + " is not an open task of this person in this project.");
+            }
+            if (!named.add(r.taskId())) {
+                throw new InvalidRequestException("A task is repeated in the list.", "reassignments",
+                        "Task " + r.taskId() + " appears more than once.");
+            }
+        }
+        if (named.size() < openTaskIds.size()) {
             throw new BusinessRuleException("REPLACEMENT_REQUIRED",
-                    "This person has open tasks in the project. Reassign them to someone else before removing them.");
+                    "This person has open tasks in the project. Choose a substitute for each of them before removing the person.");
         }
-        if (reassignments > 0) {
-            throw new InvalidRequestException("There is nothing to reassign.", "reassignments",
-                    "This person has no open tasks to reassign.");
+
+        // Who can take over: not the person removed, and not already responsible for that task (P24)
+        var substitutes = users.findByIds(substituteIds);
+        var assignees = tasks.assigneeIdsByTask(openTaskIds);
+        for (TaskReassignment r : reassignments) {
+            UserInfo substitute = substitutes.get(r.newAssigneeId());
+            if (substitute == null || r.newAssigneeId() == userId
+                    || assignees.getOrDefault(r.taskId(), List.of()).contains(r.newAssigneeId())) {
+                throw new BusinessRuleException("REPLACEMENT_NOT_ELIGIBLE",
+                        "Person " + r.newAssigneeId() + " cannot take over task " + r.taskId()
+                                + ": choose someone who is not already responsible for it.");
+            }
         }
+        // A substitute who is not in the project yet is added to it, so the one open project per member
+        // rule applies (R11, EC18); managers are exempt and a suspended project is not open (P4)
+        List<Long> newMembers = substituteIds.stream()
+                .filter(id -> id != project.managerId() && !team.isMember(projectId, id)).toList();
+        for (Long id : newMembers) {
+            if (isOpen(project) && !isManagerRole(substitutes.get(id))
+                    && !team.inOtherOpenProject(List.of(id), projectId).isEmpty()) {
+                throw new BusinessRuleException("MEMBER_IN_OTHER_OPEN_PROJECT",
+                        substitutes.get(id).name() + " is already in another open project.");
+            }
+        }
+        // Nobody ends up with more than 5 open tasks and subtasks in the project (R17, P24, A21)
+        var current = openTasks.byAssignee(projectId);
+        var received = new java.util.HashMap<Long, Integer>();
+        reassignments.forEach(r -> received.merge(r.newAssigneeId(), 1, Integer::sum));
+        for (var entry : received.entrySet()) {
+            if (current.getOrDefault(entry.getKey(), 0) + entry.getValue() > MAX_OPEN_TASKS_OF_A_SUBSTITUTE) {
+                throw new BusinessRuleException("ASSIGNEE_LIMIT_EXCEEDED", substitutes.get(entry.getKey()).name()
+                        + " would have more than " + MAX_OPEN_TASKS_OF_A_SUBSTITUTE
+                        + " open tasks. Choose someone else or split the tasks.");
+            }
+        }
+
+        reassignments.forEach(r -> taskCommands.replaceAssignee(r.taskId(), userId, r.newAssigneeId()));
+        newMembers.forEach(id -> team.add(projectId, id));
         team.remove(projectId, userId);
     }
 

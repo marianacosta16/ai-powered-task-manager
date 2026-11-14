@@ -58,6 +58,7 @@ public class TaskUseCases {
         if (c.assigneeIds().size() != new HashSet<>(c.assigneeIds()).size()) {
             throw new InvalidRequestException("An assignee is repeated.", "assigneeIds", "Each person once.");
         }
+        rules.lockPeople(c.assigneeIds()); // locks: people first, then tasks, always by id (see TeamUseCases)
         TaskRecord parent = null;
         if (c.parentTaskId() != null) {
             // Check the project before locking, so nobody locks tasks of a project they cannot reach
@@ -79,7 +80,6 @@ public class TaskUseCases {
             throw new BusinessRuleException("SUBTASK_DEADLINE_AFTER_PARENT",
                     "The deadline is later than the deadline of the parent task.");
         }
-        rules.lockPeople(c.assigneeIds()); // so none of them can be removed from the project meanwhile (R21)
         c.assigneeIds().forEach(id -> rules.requireEligible(project, id));
 
         long id = commands.insert(new NewTask(projectId, c.parentTaskId(), c.title(), c.description(), c.deadline(),

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.matriz.access.AuthenticatedUser;
 import com.matriz.usecases.CandidateView;
 import com.matriz.usecases.MemberView;
+import com.matriz.usecases.TaskReassignment;
 import com.matriz.usecases.TeamUseCases;
 
 import jakarta.validation.Valid;
@@ -48,7 +49,8 @@ class TeamController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void removeMember(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable @Min(1) long projectId,
             @PathVariable @Min(1) long userId, @Valid @RequestBody MemberRemovalRequest body) {
-        team.removeMember(user, projectId, userId, body.reassignments().size());
+        team.removeMember(user, projectId, userId, body.reassignments().stream()
+                .map(r -> new TaskReassignment(r.taskId(), r.newAssigneeId())).toList());
     }
 
     @GetMapping("/projects/{projectId}/candidate-members")

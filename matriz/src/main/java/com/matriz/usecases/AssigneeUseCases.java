@@ -56,8 +56,8 @@ public class AssigneeUseCases {
     public List<UserInfo> addAssignee(AuthenticatedUser user, long taskId, Supplier<Long> body) {
         TaskContext context = rules.loadForChange(user, taskId);
         long userId = body.get();
+        rules.lockPeople(List.of(userId)); // locks: people first, then tasks, always by id (see TeamUseCases)
         TaskRecord task = lock(taskId);
-        rules.lockPeople(List.of(userId)); // so the person cannot be removed from the project meanwhile (R21)
         rules.requireEligible(context.project(), userId); // R21 (scenario 2.9)
         commands.addAssignee(task.id(), userId);
         return assignees(task.id());

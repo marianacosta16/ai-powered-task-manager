@@ -35,6 +35,12 @@ public class TaskCommands {
         jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING", taskId, userId);
     }
 
+    /** The substitute takes the place of the person in the task (R17); the other assignees stay. */
+    public void replaceAssignee(long taskId, long formerUserId, long newUserId) {
+        removeAssignee(taskId, formerUserId);
+        addAssignee(taskId, newUserId);
+    }
+
     public boolean removeAssignee(long taskId, long userId) {
         return jdbc.update("DELETE FROM task_assignee WHERE task_id = ? AND user_id = ?", taskId, userId) == 1;
     }
