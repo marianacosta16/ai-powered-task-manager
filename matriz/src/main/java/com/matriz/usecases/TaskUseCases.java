@@ -32,8 +32,6 @@ import com.matriz.tasks.TaskStatus;
 @Service
 public class TaskUseCases {
 
-    static final int TITLE_MAX = 150;
-    static final int DESCRIPTION_MAX = 2000;
     static final int BLOCK_REASON_MAX = 100;
 
     private final TaskQueries queries;

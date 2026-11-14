@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.Texts;
 import com.matriz.usecases.ProjectPatch;
@@ -37,7 +38,8 @@ final class ProjectPatchParser {
             present.add(field);
         }
         return new ProjectPatch(present,
-                text(body, "name", false, 3, 100), text(body, "description", true, 0, 1000),
+                text(body, "name", false, Limits.PROJECT_NAME_MIN, Limits.PROJECT_NAME_MAX),
+                text(body, "description", true, 0, Limits.PROJECT_DESCRIPTION_MAX),
                 date(body, "startDate", false), time(body, "startTime"), date(body, "endDate", false),
                 time(body, "endTime"), text(body, "timezone", false, 1, 100),
                 text(body, "phase", false, 1, 100), text(body, "status", false, 1, 100), managerId(body));

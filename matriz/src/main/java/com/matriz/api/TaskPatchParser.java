@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.Texts;
 import com.matriz.usecases.TaskPatch;
@@ -44,7 +45,8 @@ final class TaskPatchParser {
             throw invalid("body", "Send at least one field to change.");
         }
         return new TaskPatch(version.asInt(), present,
-                text(body, "title", false, 3, 150), text(body, "description", true, 0, 2000), text(body, "status", false, 0, 100),
+                text(body, "title", false, Limits.TASK_TITLE_MIN, Limits.TASK_TITLE_MAX),
+                text(body, "description", true, 0, Limits.TASK_DESCRIPTION_MAX), text(body, "status", false, 0, 100),
                 date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, 0, Integer.MAX_VALUE),
                 originalTaskId(body));
     }

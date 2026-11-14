@@ -72,7 +72,7 @@ public class ProjectUseCases {
         ProjectStatus status = ProjectStatus.fromLabel("status", c.status());
         String timezone = c.timezone() == null ? DEFAULT_TIMEZONE : c.timezone();
         ZoneId zone = zone(timezone);
-        UserInfo manager = requireManagerRole(creator.id()); // the creator manages the new project (R19)
+        UserInfo manager = creator.toInfo(); // the creator manages the new project (R19); requireCanCreate checked the role
         checkDates(c.startDate(), c.startTime(), c.endDate(), c.endTime(), zone, true);
 
         long id = commands.insert(new NewProject(c.name(), c.description(), c.startDate(), c.startTime(),

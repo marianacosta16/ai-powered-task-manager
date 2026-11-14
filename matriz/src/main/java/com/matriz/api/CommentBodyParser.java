@@ -3,6 +3,7 @@ package com.matriz.api;
 import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.Texts;
 
@@ -13,7 +14,7 @@ import com.matriz.shared.Texts;
  */
 final class CommentBodyParser {
 
-    static final int MAX_CHARACTERS = 2000; // R14, P28
+    static final int MAX_CHARACTERS = Limits.COMMENT_MAX; // R14, P28
 
     private CommentBodyParser() {
     }

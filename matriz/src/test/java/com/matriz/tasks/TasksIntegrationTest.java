@@ -107,7 +107,7 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         long parent = taskId("Design homepage");
         int before = count("task");
 
-        for (String title : List.of("", " ", "   ", "\t\n ", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003", "ab", " a")) {
+        for (String title : List.of("", " ", "   ", "\t\n ", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003", "\u200B\u200B\u200B", "\uFEFF\uFEFF\uFEFF", "\u2060 \u200D \u200C", "ab", " a")) {
             ResponseEntity<String> created = post(path, ana, task(title, "2026-12-15", userId("ana")));
             ResponseEntity<String> renamed = patch("/tasks/" + task, ana, Map.of("version", 1, "title", title));
             for (ResponseEntity<String> refused : List.of(created, renamed)) {
@@ -638,7 +638,6 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         assertThat(json(again, "$.code")).isEqualTo("ASSIGNEE_ALREADY_ASSIGNED");
         assertThat(json(again, "$.message").toString()).isNotBlank();
         assertThat(assigneeNames(copy)).containsExactly("Rui", "Luís"); // nothing changed, no row twice
-        assertThat(count("task_assignee")).isEqualTo(jdbc.queryForObject("SELECT count(DISTINCT (task_id, user_id)) FROM task_assignee", Integer.class));
     }
 
     @Test

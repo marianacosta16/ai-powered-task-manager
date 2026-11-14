@@ -1,0 +1,26 @@
+package com.matriz.shared;
+
+/**
+ * The limits of the text that users type, in characters (R14, P17, A45, A46), in one place: the requests, the
+ * parsers of the updates and the messages use them, so a limit is changed once. The title of a task and the name of
+ * a project also may not be only spaces ({@link Texts#isOnlySpaces}). The contract (openapi.yaml) and the database
+ * columns say the same numbers and are changed with these.
+ */
+public final class Limits {
+
+    public static final int PROJECT_NAME_MIN = 3;
+    public static final int PROJECT_NAME_MAX = 100;
+    public static final int PROJECT_DESCRIPTION_MAX = 1000;
+    public static final int TASK_TITLE_MIN = 3;
+    public static final int TASK_TITLE_MAX = 150;
+    public static final int TASK_DESCRIPTION_MAX = 2000;
+    public static final int COMMENT_MAX = 2000;
+
+    public static final String PROJECT_NAME_MESSAGE = "Must have " + PROJECT_NAME_MIN + " to " + PROJECT_NAME_MAX + " characters.";
+    public static final String PROJECT_DESCRIPTION_MESSAGE = "Longer than " + PROJECT_DESCRIPTION_MAX + " characters.";
+    public static final String TASK_TITLE_MESSAGE = "Must have " + TASK_TITLE_MIN + " to " + TASK_TITLE_MAX + " characters.";
+    public static final String TASK_DESCRIPTION_MESSAGE = "Longer than " + TASK_DESCRIPTION_MAX + " characters.";
+
+    private Limits() {
+    }
+}

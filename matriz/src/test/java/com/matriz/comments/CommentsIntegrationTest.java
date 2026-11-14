@@ -114,7 +114,7 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
         assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(JsonPath.<List<String>>read(tooLong.getBody(), "$.details[*].field")).containsExactly("content");
         long id = idOf(exact);
-        for (String blank : List.of("   ", "\t\n", "\u00A0\u00A0", "\u2003")) { // spaces of any kind, A25
+        for (String blank : List.of("   ", "\t\n", "\u00A0\u00A0", "\u2003", "\u200B\u200B", "\uFEFF")) { // spaces of any kind and invisible ones, A25
             assertThat(comment("ana", design, blank).getStatusCode()).as("[" + blank + "]").isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(patch("/comments/" + id, sessionOf("ana"), Map.of("content", blank)).getStatusCode())
                     .as("edit [" + blank + "]").isEqualTo(HttpStatus.BAD_REQUEST);
