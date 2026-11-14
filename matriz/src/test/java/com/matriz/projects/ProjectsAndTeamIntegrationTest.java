@@ -50,27 +50,30 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
-    void theCreatorChoosesTheManagerAndStopsSeeingTheProject() {
-        Map<String, Object> body = project("For Pedro", "2026-06-10", "2026-09-30");
-        body.put("managerId", userId("pedro"));
+    void theCreatorManagesTheProjectTheyCreate() { // 1.19, R19: the owner comes from the session
+        ResponseEntity<String> byMarta = post("/projects", sessionOf("marta"), project("By Marta", "2026-06-10", "2026-09-30"));
+        ResponseEntity<String> byPedro = post("/projects", sessionOf("pedro"), project("By Pedro", "2026-06-10", "2026-09-30"));
 
-        ResponseEntity<String> created = post("/projects", sessionOf("marta"), body);
-
-        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(json(created, "$.manager.name")).isEqualTo("Pedro");
-        assertThat(projectNames("pedro")).contains("For Pedro");
-        assertThat(projectNames("marta")).doesNotContain("For Pedro");
+        assertThat(byMarta.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(json(byMarta, "$.manager.name")).isEqualTo("Marta");
+        assertThat(json(byPedro, "$.manager.name")).isEqualTo("Pedro");
+        assertThat(projectNames("marta")).contains("By Marta").doesNotContain("By Pedro");
+        assertThat(projectNames("pedro")).contains("By Pedro").doesNotContain("By Marta");
     }
 
     @Test
-    void theManagerMustHaveTheRoleProjectManager() {
-        Map<String, Object> body = project("Bad manager", "2026-06-10", "2026-09-30");
-        body.put("managerId", userId("ana"));
+    void theManagerIsNeverTakenFromTheRequest() { // R19: handing a project over is done with updateProject
+        for (String chosen : List.of("pedro", "ana", "marta")) {
+            Map<String, Object> body = project("Chosen " + chosen, "2026-06-10", "2026-09-30");
+            body.put("managerId", userId(chosen));
 
-        ResponseEntity<String> response = post("/projects", sessionOf("marta"), body);
+            ResponseEntity<String> response = post("/projects", sessionOf("marta"), body);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(json(response, "$.code")).isEqualTo("MANAGER_NOT_A_MANAGER");
+            assertThat(response.getStatusCode()).as(chosen).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(json(response, "$.code")).isEqualTo("VALIDATION_ERROR");
+        }
+        assertThat(projectNames("marta")).noneMatch(n -> n.startsWith("Chosen"));
+        assertThat(count("project")).isEqualTo(4);
     }
 
     @Test
@@ -132,7 +135,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
         String emoji = "\uD83D\uDC4D"; // one character, two UTF-16 units
         String marta = sessionOf("marta");
         Map<String, Object> fits = project(emoji.repeat(100), "2026-06-10", "2026-09-30");
-        fits.put("description", emoji.repeat(2000));
+        fits.put("description", emoji.repeat(1000));
 
         ResponseEntity<String> created = post("/projects", marta, fits);
         ResponseEntity<String> renamed = patch("/projects/" + projectId("Website"), marta, Map.of("name", emoji.repeat(100)));
@@ -147,16 +150,47 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
     void nameAndDescriptionHaveMaximumLengths() {
         String marta = sessionOf("marta");
         Map<String, Object> ok = project("n".repeat(100), "2026-06-10", "2026-09-30");
-        ok.put("description", "d".repeat(2000));
+        ok.put("description", "d".repeat(1000));
         assertThat(post("/projects", marta, ok).getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         ResponseEntity<String> longName = post("/projects", marta, project("n".repeat(101), "2026-06-10", "2026-09-30"));
         Map<String, Object> longDescription = project("Long description", "2026-06-10", "2026-09-30");
-        longDescription.put("description", "d".repeat(2001));
+        longDescription.put("description", "d".repeat(1001));
+        ResponseEntity<String> longDescriptionResponse = post("/projects", marta, longDescription);
 
         assertThat(longName.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(JsonPath.<List<String>>read(longName.getBody(), "$.details[*].field")).contains("name");
-        assertThat(post("/projects", marta, longDescription).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(longDescriptionResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(JsonPath.<List<String>>read(longDescriptionResponse.getBody(), "$.details[*].field")).contains("description");
+    }
+
+    @Test
+    void theNameHasAtLeastThreeCharacters() { // 1.15
+        String marta = sessionOf("marta");
+
+        ResponseEntity<String> two = post("/projects", marta, project("ab", "2026-06-10", "2026-09-30"));
+        ResponseEntity<String> empty = post("/projects", marta, project("", "2026-06-10", "2026-09-30"));
+        ResponseEntity<String> three = post("/projects", marta, project("abc", "2026-06-10", "2026-09-30"));
+        ResponseEntity<String> renamedTooShort = patch("/projects/" + projectId("Website"), marta, Map.of("name", "ab"));
+        ResponseEntity<String> renamed = patch("/projects/" + projectId("Website"), marta, Map.of("name", "abc"));
+
+        for (ResponseEntity<String> refused : List.of(two, empty, renamedTooShort)) {
+            assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(JsonPath.<List<String>>read(refused.getBody(), "$.details[*].field")).contains("name");
+        }
+        assertThat(three.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(renamed.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void aDescriptionOfUpTo1000CharactersIsKeptWhenTheProjectIsUpdated() { // 1.15
+        String marta = sessionOf("marta");
+        long website = projectId("Website");
+
+        assertThat(patch("/projects/" + website, marta, Map.of("description", "d".repeat(1000))).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(patch("/projects/" + website, marta, Map.of("description", "d".repeat(1001))).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(patch("/projects/" + website, marta, Map.of("description", "")).getStatusCode()).isEqualTo(HttpStatus.OK); // may be empty
     }
 
     // ---- updating projects (1.3, 1.18, 1.21, 1.22) ----
@@ -444,7 +478,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
     void missingProjectsAndPeopleAreNotFound() {
         String marta = sessionOf("marta");
         assertThat(get("/projects/999999/members", marta).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(patch("/projects/999999", marta, Map.of("name", "X")).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(patch("/projects/999999", marta, Map.of("name", "Xyz")).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(post("/projects/" + projectId("Website") + "/members", marta, Map.of("userId", 999999)).getStatusCode())
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -645,7 +679,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
         jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", task, userId(username));
     }
 
-    /** A valid body to create a project; the manager is Marta unless the test changes it. */
+    /** A valid body to create a project; its manager is whoever creates it (R19). */
     private Map<String, Object> project(String name, String start, String end) {
         Map<String, Object> body = new HashMap<>();
         body.put("name", name);
@@ -653,7 +687,6 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
         body.put("endDate", end);
         body.put("phase", "Initiation");
         body.put("status", "Not started");
-        body.put("managerId", userId("marta"));
         return body;
     }
 

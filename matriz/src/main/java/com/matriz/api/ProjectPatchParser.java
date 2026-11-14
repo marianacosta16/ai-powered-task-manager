@@ -36,13 +36,13 @@ final class ProjectPatchParser {
             present.add(field);
         }
         return new ProjectPatch(present,
-                text(body, "name", false, 100), text(body, "description", true, 2000),
+                text(body, "name", false, 3, 100), text(body, "description", true, 0, 1000),
                 date(body, "startDate", false), time(body, "startTime"), date(body, "endDate", false),
-                time(body, "endTime"), text(body, "timezone", false, 100),
-                text(body, "phase", false, 100), text(body, "status", false, 100), managerId(body));
+                time(body, "endTime"), text(body, "timezone", false, 1, 100),
+                text(body, "phase", false, 1, 100), text(body, "status", false, 1, 100), managerId(body));
     }
 
-    private static String text(JsonNode body, String field, boolean nullable, int max) {
+    private static String text(JsonNode body, String field, boolean nullable, int min, int max) {
         JsonNode node = body.get(field);
         if (node == null) {
             return null;
@@ -54,10 +54,11 @@ final class ProjectPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        if (value.isEmpty() && !"description".equals(field)) {
-            throw invalid(field, "Must have at least 1 character.");
+        int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
+        if (length < min) {
+            throw invalid(field, min == 1 ? "Must have at least 1 character." : "Must have " + min + " to " + max + " characters.");
         }
-        if (value.codePointCount(0, value.length()) > max) { // characters, not UTF-16 units (R14)
+        if (length > max) {
             throw invalid(field, "Longer than " + max + " characters.");
         }
         return value;

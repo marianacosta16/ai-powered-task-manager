@@ -102,10 +102,12 @@ class ContractConformanceIntegrationTest extends ApiIntegrationTest {
         calls.call("listProjects", martaCookie, Map.of(), null);
         ResponseEntity<String> created = calls.call("createProject", martaCookie, Map.of(), Map.of("name", "Conformance",
                 "description", "Checks the contract", "startDate", "2026-12-01", "endDate", "2027-03-31", "phase", "Initiation",
-                "status", "Not started", "managerId", marta));
+                "status", "Not started"));
         long project = id(created);
         calls.call("createProject", anaCookie, Map.of(), Map.of("name", "No", "startDate", "2026-12-01", "endDate", "2027-03-31",
-                "phase", "Initiation", "status", "Not started", "managerId", marta)); // 403
+                "phase", "Initiation", "status", "Not started")); // 403
+        calls.call("createProject", martaCookie, Map.of(), Map.of("name", "Chosen manager", "startDate", "2026-12-01",
+                "endDate", "2027-03-31", "phase", "Initiation", "status", "Not started", "managerId", ana)); // 400: the manager is the creator
         calls.call("getProject", martaCookie, Map.of("projectId", project), null);
         calls.call("getProject", sofiaCookie, Map.of("projectId", website), null); // 403
         calls.call("getProject", martaCookie, Map.of("projectId", 999999), null); // 404
