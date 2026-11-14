@@ -246,7 +246,7 @@ Operação nova: `listProjectTasks` (a pesquisa de projetos, `listProjects` com 
 | Matriz (P10) | A API devolve também as tarefas fechadas, com o estado; é a interface que as esconde na Matriz (V10) |
 | Valor de filtro desconhecido (A28) | 400, depois da verificação de acesso |
 
-Os pressupostos A28 e A29 estão por confirmar no [openapi.yaml](openapi.yaml).
+Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml).
 
 ```bash
 curl -s -b /tmp/ana.txt 'localhost:8081/projects/1/tasks?mine=true&status=To%20do&quadrant=Do%20first'

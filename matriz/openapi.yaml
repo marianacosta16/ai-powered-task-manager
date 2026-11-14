@@ -41,8 +41,8 @@ info:
     - A25 (confirmed): a comment made only of spaces is refused with 400.
     - A26 (confirmed): only the author edits or deletes a comment, not even the manager of the project (403). In a completed project the answer is 422 `PROJECT_COMPLETED`, and on a closed task 422 `TASK_CLOSED`, both before the author is checked.
     - A27 (confirmed): the date of a comment is set by the server clock when it is created and never changes; the body accepts only `content`, and an `authorId` or `createdAt` is refused with 400.
-    - A28 (to confirm): `status` and `quadrant` of `listProjectTasks` accept only the exact labels of `TaskStatus` and `Quadrant`; any other value, or a `mine` that is not `true` or `false`, is refused with 400 (after the 403 check).
-    - A29 (to confirm): tasks that tie on status group, deadline, urgency and importance are listed in the order they were created (by id), so the list never changes order between two requests.
+    - A28 (confirmed): `status` and `quadrant` of `listProjectTasks` accept only the exact labels of `TaskStatus` and `Quadrant`; any other value, or a `mine` that is not `true` or `false`, is refused with 400 (after the 403 check).
+    - A29 (confirmed): tasks that tie on status group, deadline, urgency and importance are listed in the order they were created (by id), so the list never changes order between two requests.
 
 tags:
   - name: Auth
