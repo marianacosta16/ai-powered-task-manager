@@ -181,7 +181,7 @@ Ficheiro: [recycle-bin-wireframe.svg](recycle-bin-wireframe.svg). Qualquer utili
 | 2 | Tipo | *Project*, *Task* ou *Subtask* | F09 |
 | 3 | Linha de projeto (só gestor) | Projeto apagado, com o número de tarefas que foram apagadas com ele. Só o gestor vê e recupera projetos | R9, cenário 7.3 |
 | 4 | *Restore* | Recupera o item para onde estava. O membro recupera tarefas e subtarefas dos seus projetos; o gestor recupera também projetos | R9, cenários 7.2 e 7.3 |
-| 5 | *Restore* indisponível | Subtarefa cuja tarefa-mãe já foi eliminada de vez: "Cannot restore: the parent task no longer exists." | R9, cenário 7.8 |
+| 5 | *Restore* indisponível | Item que não pode voltar já, com o motivo: o projeto está na reciclagem ("Restore the project first."), a tarefa-mãe está na reciclagem ("Restore the parent task first.") ou o projeto está concluído | R9, R28, cenários 7.7, 7.8 e 7.10 |
 | 6 | Dias restantes | Quanto falta para a eliminação definitiva | R20, cenário 7.6 |
 
 Quando um projeto é recuperado, voltam as tarefas apagadas com ele; as apagadas antes continuam na reciclagem (cenário 7.7). Sem itens, o ecrã mostra "The recycle bin is empty."

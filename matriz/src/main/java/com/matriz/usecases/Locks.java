@@ -1,5 +1,6 @@
 package com.matriz.usecases;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.matriz.access.UserDirectory;
 import com.matriz.access.UserInfo;
+import com.matriz.recycle.DeletedTask;
+import com.matriz.recycle.RecycleBin;
 import com.matriz.tasks.TaskQueries;
 import com.matriz.tasks.TaskRecord;
 
@@ -28,10 +31,12 @@ class Locks {
 
     private final UserDirectory users;
     private final TaskQueries tasks;
+    private final RecycleBin recycleBin;
 
-    Locks(UserDirectory users, TaskQueries tasks) {
+    Locks(UserDirectory users, TaskQueries tasks, RecycleBin recycleBin) {
         this.users = users;
         this.tasks = tasks;
+        this.recycleBin = recycleBin;
     }
 
     /** Locks one person and returns them, if they exist. */
@@ -49,6 +54,18 @@ class Locks {
     Optional<TaskRecord> task(long id) {
         taskLockTaken();
         return tasks.findByIdForUpdate(id);
+    }
+
+    /** The tasks and subtasks of a project that are not deleted, locked, by id (R9). */
+    List<Long> tasksOfProject(long projectId) {
+        taskLockTaken();
+        return tasks.lockTaskIdsOfProject(projectId);
+    }
+
+    /** A task in the recycle bin, locked: a restore and the purge of it do not cross (R9, R20). */
+    Optional<DeletedTask> deletedTask(long id, Instant now) {
+        taskLockTaken();
+        return recycleBin.lockTask(id, now);
     }
 
     /** The open tasks and subtasks of a person in a project, locked, by id (R17). */

@@ -199,25 +199,13 @@ class DashboardIntegrationTest extends ApiIntegrationTest {
 
     // ---- helpers ----
 
-    /** A project, named "name#unique" so that names never clash; manager and members given by username. */
     private long newProject(String name, String status, String start, String end, String manager, String... members) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO project (name, start_date, end_date, phase, status, manager_id)
-                VALUES (?, CAST(? AS date), CAST(? AS date), 'Execution', ?, ?) RETURNING id
-                """, Long.class, name + "#" + System.nanoTime(), start, end, status, userId(manager));
-        for (String member : members) {
-            jdbc.update("INSERT INTO project_member (project_id, user_id) VALUES (?, ?)", id, userId(member));
-        }
-        return id;
+        return insertProject(name, status, start, end, manager, members);
     }
 
+    /** A task, or a subtask, called "T", assigned to Ana. */
     private long newTask(long projectId, String status, Long parentTaskId) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO task (project_id, parent_task_id, title, status, deadline, urgency, importance)
-                VALUES (?, ?, 'T', ?, DATE '2026-12-31', 3, 3) RETURNING id
-                """, Long.class, projectId, parentTaskId, status);
-        jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", id, userId("ana"));
-        return id;
+        return insertTask(projectId, parentTaskId, "T", status, "2026-12-31", 3, 3, "ana");
     }
 
     private List<Map<String, Object>> dashboard(String username) {

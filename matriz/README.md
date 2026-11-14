@@ -274,6 +274,32 @@ Os pressupostos A32 a A34 estão confirmados no [openapi.yaml](openapi.yaml).
 curl -s -b /tmp/marta.txt localhost:8081/dashboard
 ```
 
+## Reciclagem (incremento 7)
+
+Operações: `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject` e `restoreTask`. A reciclagem não tem tabela própria: `deleted_at` em projetos e tarefas (M4). Tudo o que se apaga numa ação leva o mesmo instante, e é isso que liga um item ao que foi apagado com ele.
+
+| Regra | Como se aplica |
+|---|---|
+| Quem apaga (R9) | O gestor apaga o projeto (não um concluído, R28). Os membros e o gestor apagam tarefas e subtarefas (A35), em projetos em aberto e suspensos (R27) |
+| Tarefa-mãe (R9) | Com subtarefas em aberto não se apaga (422 `PARENT_HAS_OPEN_SUBTASKS`); as fechadas vão com ela, e os comentários seguem a tarefa |
+| O que volta (R9) | Só o que tem o mesmo instante: ao recuperar um projeto voltam as tarefas apagadas com ele e as apagadas antes ficam na reciclagem; o mesmo para as subtarefas |
+| O que cada um vê | O gestor vê os seus projetos apagados; os membros e o gestor vêem as tarefas e subtarefas dos seus projetos, e só o gestor recupera projetos (403 aos outros) |
+| Não se recupera já (A38) | Se o projeto ou a tarefa-mãe está na reciclagem (`CANNOT_RESTORE`), ou o projeto foi concluído (`PROJECT_COMPLETED`); a lista mostra `restorable: false` e o motivo |
+| Subtarefa (A43) | Em curso sob uma mãe fechada: 422 `PARENT_TASK_CLOSED`; com prazo depois do da mãe: 422 `SUBTASK_DEADLINE_AFTER_PARENT` |
+| Responsável que saiu (P36, A42) | 422 `ASSIGNEE_REQUIRED` com o nome de quem saiu; volta-se a recuperar com `{"assigneeIds": [...]}`, que substitui só quem saiu; se ninguém saiu, o corpo é recusado com 400 |
+| 30 dias (R20, A39) | Com 30 dias exatos já não existe; a lista e a recuperação ignoram o que expirou, mesmo que a eliminação ainda não tenha corrido; `daysLeft` arredonda para cima |
+| Eliminação definitiva (M14) | `RecyclePurgeJob`, todos os dias às 03:00 (`matriz.recycle.purge.cron`), apaga também comentários, responsáveis e membros; um duplicado cujo original sai fica `Duplicate` sem original e com `originalEliminated: true`, para a interface mostrar uma nota, e `originalInRecycleBin: true` enquanto o original só está na reciclagem (A41); continua a poder editar-se |
+
+Os pressupostos A35 a A43 estão no [openapi.yaml](openapi.yaml): todos confirmados.
+
+```bash
+curl -s -b /tmp/ana.txt -X DELETE localhost:8081/tasks/1
+```
+
+```bash
+curl -s -b /tmp/ana.txt localhost:8081/recycle-bin
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
@@ -290,6 +316,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incrementos 0 a 6 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários); próximo, o incremento 7 (reciclagem e eliminações) |
+| Implementação | Em curso: incrementos 0 a 7 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem); próximo, o incremento 8 (fecho do MVP) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.

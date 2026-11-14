@@ -193,6 +193,11 @@ public class TaskUseCases {
             }
             return null;
         }
+        if (task.statusValue() == TaskStatus.DUPLICATE && !patch.has("originalTaskId")) {
+            // Still a duplicate and the original not touched: nothing to check. Its original may be in the recycle
+            // bin or eliminated for good meanwhile (A41), and that does not stop the task from being edited.
+            return task.originalTaskId();
+        }
         Long original = patch.has("originalTaskId") ? patch.originalTaskId() : task.originalTaskId();
         if (original == null) {
             throw new BusinessRuleException("ORIGINAL_TASK_REQUIRED", "A duplicate needs the task it duplicates. Choose the original.");

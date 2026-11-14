@@ -527,13 +527,28 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** o gestor apaga o projeto e depois o recupera
 - **Then** o projeto volta com as tarefas T2 e T3, e a T1 continua na reciclagem, onde pode ser recuperada.
 
-**Cenário 7.8: subtarefa cuja tarefa-mãe foi eliminada de vez**
-- **Given** uma tarefa-mãe com uma subtarefa que foi apagada antes dela, e a tarefa-mãe apagada há 31 dias (eliminada definitivamente)
-- **When** o gestor tenta recuperar a subtarefa
-- **Then** a subtarefa não pode ser recuperada, porque a tarefa-mãe já não existe.
-- **Given** a mesma situação, mas com a tarefa-mãe apagada há 5 dias
+**Cenário 7.8: subtarefa apagada antes da tarefa-mãe**
+- **Given** uma tarefa-mãe com uma subtarefa que foi apagada antes dela, e a tarefa-mãe apagada há 5 dias
 - **When** o gestor recupera a tarefa-mãe
 - **Then** a tarefa-mãe volta sem essa subtarefa, que continua na reciclagem e pode ser recuperada.
+- **Given** a mesma situação, mas com a subtarefa apagada há 31 dias e a tarefa-mãe apagada há 17
+- **When** o gestor tenta recuperar a subtarefa
+- **Then** a subtarefa já foi eliminada de vez, com os seus 30 dias, e não pode ser recuperada, embora a tarefa-mãe ainda esteja na reciclagem. Quando a tarefa-mãe é eliminada de vez, as subtarefas que ainda estavam na reciclagem já tinham sido eliminadas, porque foram apagadas antes dela.
+
+**Cenário 7.9: recuperar uma tarefa cujo responsável saiu do projeto**
+- **Given** uma tarefa apagada, atribuída ao Rui e à Ana, e o Rui retirado do projeto entretanto
+- **When** a Ana tenta recuperar a tarefa
+- **Then** a recuperação é recusada, com uma mensagem a dizer que o Rui já não está no projeto e a pedir que se escolha quem o substitui.
+- **When** a Ana recupera a tarefa indicando o Luís, que é membro do projeto
+- **Then** a tarefa volta, atribuída à Ana e ao Luís.
+
+**Cenário 7.10: o que não se recupera**
+- **Given** uma tarefa apagada de um projeto que está na reciclagem, ou de um projeto que foi concluído entretanto, ou uma subtarefa apagada cuja tarefa-mãe está na reciclagem
+- **When** o membro abre a reciclagem
+- **Then** vê o item como não recuperável, com o motivo, e a tentativa de o recuperar é recusada com uma mensagem a explicar o que fazer primeiro.
+- **Given** uma subtarefa em curso apagada, cuja tarefa-mãe foi concluída entretanto
+- **When** o membro tenta recuperá-la
+- **Then** é recusada, com uma mensagem a pedir que se reabra primeiro a tarefa-mãe.
 
 ### US08 — Visibilidade por projeto
 
@@ -813,6 +828,9 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC46 | Criar uma subtarefa numa tarefa-mãe concluída, cancelada ou duplicada, ou reabrir uma subtarefa fechada com a mãe fechada | Recusado, com mensagem a pedir que a mãe seja primeiro reaberta (cenários 4.6 e 4.7) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
 | EC47 | Atribuir uma pessoa a uma tarefa ao mesmo tempo que o gestor a remove do projeto | Uma das duas ações é recusada: a tarefa nunca fica atribuída a alguém que já não é membro do projeto | [R21](requirements.md#4-regras-de-negócio) |
 | EC48 | Adicionar, editar ou apagar um comentário numa tarefa ou subtarefa fechada (concluída, cancelada ou duplicada) | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem a pedir que a tarefa seja reaberta (cenário 11.11) | [P37](constraints.md#2-pressupostos-assumidos), [R24](requirements.md#4-regras-de-negócio) |
+| EC49 | Recuperar uma tarefa ou subtarefa cujo responsável já não é membro do projeto | Recusado, a dizer quem saiu; recupera-se indicando quem o substitui (cenário 7.9) | [P36](constraints.md#2-pressupostos-assumidos), [R21](requirements.md#4-regras-de-negócio), [R26](requirements.md#4-regras-de-negócio) |
+| EC50 | Recuperar uma subtarefa em curso cuja tarefa-mãe foi concluída entretanto | Recusado, a pedir que se reabra primeiro a tarefa-mãe (cenário 7.10) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
+| EC51 | Recuperar uma tarefa de um projeto que está na reciclagem ou que foi concluído | Recusado, com o motivo (cenário 7.10) | [R9](requirements.md#4-regras-de-negócio), [R28](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

@@ -20,10 +20,13 @@ import com.matriz.shared.NotFoundException;
 import com.matriz.tasks.Quadrant;
 import com.matriz.tasks.TaskQueries;
 import com.matriz.tasks.TaskRecord;
+import com.matriz.tasks.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -99,11 +102,14 @@ class TaskRules {
 
     /** R21: assignees are members of the project or its manager. */
     void requireEligible(ProjectRecord project, long userId) {
-        boolean eligible = userId == project.managerId() || team.isMember(project.id(), userId);
-        if (!eligible) {
+        if (!isEligible(project, userId)) {
             throw new BusinessRuleException("ASSIGNEE_NOT_MEMBER",
                     "This person is not a member of the project. Ask the manager to add them to the project first.");
         }
+    }
+
+    boolean isEligible(ProjectRecord project, long userId) {
+        return userId == project.managerId() || team.isMember(project.id(), userId);
     }
 
     /** "Today" in the time zone of the project (P26): the earliest accepted deadline (R13). */
@@ -116,12 +122,18 @@ class TaskRules {
         return build(List.of(task), Map.of(task.id(), subtasks)).get(0);
     }
 
+    /** A duplicate always has its original (R6), so one without it lost it when the original was eliminated (A41). */
+    private static boolean isDuplicateWithoutOriginal(TaskRecord t) {
+        return t.statusValue() == TaskStatus.DUPLICATE && t.originalTaskId() == null;
+    }
+
     private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
-            List<TaskView> subtasks) {
+            Set<Long> originalsInTheBin, List<TaskView> subtasks) {
         List<UserInfo> assignees = assigneeIds == null ? List.of() : assigneeIds.stream().map(infos::get).toList();
         return new TaskView(t.id(), t.version(), t.projectId(), t.parentTaskId(), t.title(), t.description(), t.status(),
                 t.deadline(), t.urgency(), t.importance(), Quadrant.of(t.urgency(), t.importance()).label(), t.blockReason(),
-                t.originalTaskId(), assignees, subtasks);
+                t.originalTaskId(), isDuplicateWithoutOriginal(t),
+                t.originalTaskId() != null && originalsInTheBin.contains(t.originalTaskId()), assignees, subtasks);
     }
 
     /**
@@ -140,9 +152,12 @@ class TaskRules {
         subtasksByParent.values().forEach(list -> list.forEach(s -> ids.add(s.id())));
         var assignees = tasks.assigneeIdsByTask(ids);
         var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
-        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, t.isSubtask() ? null
+        List<TaskRecord> all = new ArrayList<>(roots);
+        subtasksByParent.values().forEach(all::addAll);
+        Set<Long> inTheBin = tasks.deletedAmong(all.stream().map(TaskRecord::originalTaskId).filter(Objects::nonNull).toList());
+        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, inTheBin, t.isSubtask() ? null
                 : subtasksByParent.getOrDefault(t.id(), List.of()).stream()
-                        .map(s -> toView(s, assignees.get(s.id()), infos, null)).toList())).toList();
+                        .map(s -> toView(s, assignees.get(s.id()), infos, inTheBin, null)).toList())).toList();
     }
 
     private static ProjectStatus status(ProjectRecord project) {

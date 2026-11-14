@@ -5,9 +5,11 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -60,6 +62,12 @@ public class TaskQueries {
                 """, Long.class, projectId, userId);
     }
 
+    /** The tasks and subtasks of a project that are not deleted, locked, by id: for deleting the project (R9). */
+    public List<Long> lockTaskIdsOfProject(long projectId) {
+        return jdbc.queryForList("SELECT id FROM task WHERE project_id = ? AND deleted_at IS NULL ORDER BY id FOR UPDATE",
+                Long.class, projectId);
+    }
+
     /** As lockOpenTaskIdsOf, without the locks: for checks that run before anything is locked. */
     public List<Long> openTaskIdsOf(long projectId, long userId) {
         return jdbc.queryForList("""
@@ -86,6 +94,15 @@ public class TaskQueries {
         return Optional.ofNullable(jdbc.queryForObject(
                 "SELECT max(deadline) FROM task WHERE parent_task_id = ? AND deleted_at IS NULL", LocalDate.class,
                 parentId));
+    }
+
+    /** Of these tasks, the ones that are in the recycle bin (deleted, not yet eliminated for good). */
+    public Set<Long> deletedAmong(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return new HashSet<>(named.queryForList("SELECT id FROM task WHERE id IN (:ids) AND deleted_at IS NOT NULL",
+                new MapSqlParameterSource("ids", ids), Long.class));
     }
 
     public List<Long> assigneeIds(long taskId) {
