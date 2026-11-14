@@ -12,8 +12,9 @@ public record PageRequest(int page, int size) {
 
     /** Reads {@code page} and {@code size}; a null is the default (first page, 50 items). */
     public static PageRequest parse(String page, String size) {
-        int parsedPage = number("page", page, 1, 1, Integer.MAX_VALUE, "Must be a whole number from 1.");
-        int parsedSize = number("size", size, DEFAULT_SIZE, 1, MAX_SIZE, "Must be a whole number from 1 to " + MAX_SIZE + ".");
+        int parsedPage = number("page", "page number", page, 1, 1, Integer.MAX_VALUE, "Must be a whole number from 1.");
+        int parsedSize = number("size", "page size", size, DEFAULT_SIZE, 1, MAX_SIZE,
+                "Must be a whole number from 1 to " + MAX_SIZE + ".");
         return new PageRequest(parsedPage, parsedSize);
     }
 
@@ -22,18 +23,21 @@ public record PageRequest(int page, int size) {
         return (long) (page - 1) * size;
     }
 
-    private static int number(String field, String text, int fallback, int min, int max, String issue) {
+    private static int number(String field, String name, String text, int fallback, int min, int max, String issue) {
         if (text == null) {
             return fallback;
         }
-        try {
-            int value = Integer.parseInt(text);
-            if (value >= min && value <= max) {
-                return value;
+        // only the digits 0 to 9: parseInt alone also takes "+5" and the digits of other scripts
+        if (text.matches("[0-9]{1,10}")) {
+            try {
+                int value = Integer.parseInt(text);
+                if (value >= min && value <= max) {
+                    return value;
+                }
+            } catch (NumberFormatException e) {
+                // too large for an int: the same answer as a number out of range
             }
-        } catch (NumberFormatException e) {
-            // falls through to the same answer as a number out of range
         }
-        throw new InvalidRequestException("The page is not valid.", field, issue);
+        throw new InvalidRequestException("The " + name + " is not valid.", field, issue);
     }
 }

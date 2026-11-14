@@ -304,12 +304,15 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
     void aBadPageOrSizeIsRefusedAfterTheAccessCheck() {
         long project = newProject("Pages");
         for (Map<String, String> query : List.of(Map.of("page", "0"), Map.of("page", "abc"), Map.of("page", "99999999999"),
-                Map.of("size", "0"), Map.of("size", "201"), Map.of("size", "-1"), Map.of("size", "abc"))) {
+                Map.of("size", "0"), Map.of("size", "201"), Map.of("size", "-1"), Map.of("size", "abc"),
+                Map.of("page", "+2"), Map.of("size", "+5"), Map.of("size", "\u0663"), Map.of("page", " 1"))) {
             ResponseEntity<String> response = list("ana", project, query);
             assertThat(response.getStatusCode()).as(query.toString()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(json(response, "$.code")).isEqualTo("VALIDATION_ERROR");
             assertThat(list("sofia", project, query).getStatusCode()).as(query.toString()).isEqualTo(HttpStatus.FORBIDDEN);
         }
+        assertThat(json(list("ana", project, Map.of("size", "500")), "$.message")).isEqualTo("The page size is not valid.");
+        assertThat(json(list("ana", project, Map.of("page", "0")), "$.message")).isEqualTo("The page number is not valid.");
         assertThat(list("ana", project, Map.of("size", "200")).getStatusCode()).isEqualTo(HttpStatus.OK); // the largest page
         assertThat(list("ana", project, Map.of("size", "1", "page", "1")).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
