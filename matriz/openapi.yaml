@@ -24,7 +24,7 @@ info:
     - A8 (confirmed): adding someone who is already in the project, or who is its manager, is refused with 422 `MEMBER_ALREADY_IN_PROJECT`.
     - A9 (confirmed): the manager and the members of a project see its team (`listMembers`); only the manager sees the candidates (`listCandidateMembers`).
     - A10 (confirmed): `inOtherOpenProject` is true only while the project itself is open; in a suspended or completed project it is false (P22).
-    - A11 (confirmed): until the tasks exist in the API (increment 3), removing a member who has open tasks is refused with 422 `REPLACEMENT_REQUIRED`; for a member without open tasks `reassignments` must be empty.
+    - A11 (confirmed): `reassignments` names each open task and subtask of the member exactly once; a member without open tasks is removed with an empty list. Without a substitute for every open task the removal is refused with 422 `REPLACEMENT_REQUIRED`.
     - A12 (confirmed): the manager can hand the project to another project manager with `managerId` in `updateProject` (M10). The new manager loses his member row, if he had one, and keeps his tasks (M5, R19, R21). The former manager stops seeing the project, unless he has tasks in it: then he stays as a member.
     - A13 (confirmed): "today" in the start date rule (R29) is the current date in the time zone of the project (P26).
     - A14 (confirmed): a subtask is not created under a parent task that is closed (Done, Cancelled or Duplicate): 422 `PARENT_TASK_CLOSED`, because the closed parent would end up with an open subtask (R4). For the same reason, a closed subtask is not reopened while its parent is closed (the manager reopens the parent first).
@@ -34,6 +34,9 @@ info:
     - A18 (confirmed): the deadline is validated (R13, R2, R3) only when it is changed; saving the same deadline again is not an error.
     - A19 (confirmed): creating a task or a subtask in a completed or in a suspended project is refused with 422 `PROJECT_NOT_OPEN` (R22); changing, assigning or removing in a completed project is 422 `PROJECT_COMPLETED` (R27, R28).
     - A20 (confirmed): an update that changes nothing is accepted and does not change the `version`, so it never makes another editor's save fail with `409`; a save that carries an old `version` is still refused.
+    - A21 (confirmed): the limit of 5 open tasks and subtasks of a substitute (R17, P24) counts the open tasks the substitute has in this project, plus those received.
+    - A22 (confirmed): the closed tasks of the member who is removed keep him as an assignee (history); only the open ones pass to the substitutes.
+    - A23 (confirmed): a `reassignments` entry for a task that is not an open task of the member in this project, or a task named twice, is refused with 400; a substitute who does not exist, who is the member removed or who is already an assignee of that task is refused with 422 `REPLACEMENT_NOT_ELIGIBLE`.
 
 tags:
   - name: Auth
@@ -315,7 +318,7 @@ paths:
         Only the manager of the project removes members (R17), in an open or suspended project; a completed project cannot be changed (R28). The member is freed for another open project.
         Every open task and subtask of the member, including those shared with other assignees, needs a substitute in `reassignments`; they can be split among several substitutes. A substitute cannot already be an assignee of that task (P24).
         Nobody can end up with more than 5 open tasks and subtasks in total (R17, P24). Assumption A7: a substitute who is not yet a member is added to the project in the same transaction.
-        Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25). Assumption A11: until increment 3, a member with open tasks is refused with `REPLACEMENT_REQUIRED`.
+        Without a substitute for every open task the removal is not completed (scenarios 1.13 and 1.25): 422 `REPLACEMENT_REQUIRED` (A11), `REPLACEMENT_NOT_ELIGIBLE` (A23), `MEMBER_IN_OTHER_OPEN_PROJECT` for a new member who is in another open project (R11, scenario 1.14) and `ASSIGNEE_LIMIT_EXCEEDED` (A21). Everything is done in one transaction: if a check fails nothing changes. The closed tasks keep the member (A22).
       requestBody:
         required: true
         content:

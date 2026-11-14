@@ -175,7 +175,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 | Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
 | Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |
-| Remover membros (R17) | Só membros sem tarefas em aberto; com tarefas, 422 `REPLACEMENT_REQUIRED` até haver substitutos (incremento 3) |
+| Remover membros (R17, P24) | Cada tarefa e subtarefa em aberto do membro, também as partilhadas, passa a um substituto indicado em `reassignments` (422 `REPLACEMENT_REQUIRED` se faltar). O substituto é alguém do projeto, o gestor ou uma pessoa nova, que é adicionada ao projeto (R11, 422 `MEMBER_IN_OTHER_OPEN_PROJECT`); não pode já ser responsável pela tarefa (422 `REPLACEMENT_NOT_ELIGIBLE`); nenhum fica com mais de 5 tarefas em aberto no projeto (422 `ASSIGNEE_LIMIT_EXCEEDED`). Tudo ou nada, numa só transação |
 
 Os pressupostos A8 a A13 estão confirmados no [openapi.yaml](openapi.yaml). Adicionar alguém que já está no projeto (ou o seu gestor) dá 422 `MEMBER_ALREADY_IN_PROJECT`.
 
@@ -200,7 +200,7 @@ Operações: `createTask`, `getTask`, `updateTask`, `addAssignee`, `removeAssign
 | Projeto concluído (R27, R28) | Nada se altera (422 `PROJECT_COMPLETED`); num projeto suspenso edita-se e atribui-se, mas não se cria |
 | Edições simultâneas (T13, R30) | O `updateTask` leva a `version` lida; se a tarefa mudou entretanto, 409 `TASK_CHANGED` e nada se grava. Uma gravação que não altera nada não sobe a versão (A20) |
 
-Os pressupostos A14 a A20 estão confirmados no [openapi.yaml](openapi.yaml). Apagar tarefas é do incremento 7.
+Os pressupostos A14 a A23 estão confirmados no [openapi.yaml](openapi.yaml). Apagar tarefas é do incremento 7.
 
 ```bash
 curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"title":"Write report","deadline":"2027-01-15","urgency":3,"importance":4,"assigneeIds":[3]}' localhost:8081/projects/1/tasks
