@@ -126,6 +126,22 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void nameAndDescriptionCountCharactersNotUtf16Units() { // R14
+        String emoji = "\uD83D\uDC4D"; // one character, two UTF-16 units
+        String marta = sessionOf("marta");
+        Map<String, Object> fits = project(emoji.repeat(100), "2026-06-10", "2026-09-30");
+        fits.put("description", emoji.repeat(2000));
+
+        ResponseEntity<String> created = post("/projects", marta, fits);
+        ResponseEntity<String> renamed = patch("/projects/" + projectId("Website"), marta, Map.of("name", emoji.repeat(100)));
+        ResponseEntity<String> tooLong = post("/projects", marta, project(emoji.repeat(101), "2026-06-10", "2026-09-30"));
+
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(renamed.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void nameAndDescriptionHaveMaximumLengths() {
         String marta = sessionOf("marta");
         Map<String, Object> ok = project("n".repeat(100), "2026-06-10", "2026-09-30");

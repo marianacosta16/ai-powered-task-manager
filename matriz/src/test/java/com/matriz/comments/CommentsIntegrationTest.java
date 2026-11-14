@@ -10,11 +10,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jayway.jsonpath.JsonPath;
+import com.matriz.tasks.CommentQueries;
 import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
@@ -23,6 +25,8 @@ import com.matriz.testsupport.ApiIntegrationTest;
  * subtask "Draft wireframes", closed) and Old Site, a completed project, has "Shut down server".
  */
 class CommentsIntegrationTest extends ApiIntegrationTest {
+
+    @Autowired CommentQueries commentQueries;
 
     // ---- adding and listing (11.1 to 11.5) ----
 
@@ -274,7 +278,82 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
         assertThat(member.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    void whoMayNotCommentGetsNoHintsEvenWithAnUnknownField() { // 403 before 400
+        long design = taskId("Design homepage");
+
+        ResponseEntity<String> outsider = post("/tasks/" + design + "/comments", sessionOf("sofia"),
+                Map.of("content", "x", "authorId", userId("marta")));
+        ResponseEntity<String> member = post("/tasks/" + design + "/comments", sessionOf("ana"),
+                Map.of("content", "x", "authorId", userId("marta")));
+
+        assertThat(outsider.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(member.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void editingAndDeletingNeedASession() {
+        long id = idOf(comment("ana", taskId("Design homepage"), "Mine"));
+
+        assertThat(patch("/comments/" + id, null, Map.of("content", "x")).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(delete("/comments/" + id, null).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(contentOf(id)).isEqualTo("Mine");
+    }
+
+    @Test
+    void theLimitCountsCharactersNotUtf16Units() { // R14: a symbol counts once
+        long design = taskId("Design homepage");
+        String emoji = "\uD83D\uDC4D"; // one character, two UTF-16 units
+
+        ResponseEntity<String> fits = comment("ana", design, emoji.repeat(1200)); // 1200 characters, 2400 units
+        ResponseEntity<String> exact = comment("ana", design, emoji.repeat(2000));
+        ResponseEntity<String> tooLong = comment("ana", design, emoji.repeat(2001));
+
+        assertThat(fits.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(exact.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(json(exact, "$.content")).isEqualTo(emoji.repeat(2000));
+        assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void theQueriesDoNotReturnTheCommentsOfADeletedTask() { // a second line of defence for the recycle bin
+        long design = taskId("Design homepage");
+        long id = idOf(comment("ana", design, "Hidden with the task"));
+        assertThat(commentQueries.findById(id)).isPresent();
+
+        jdbc.update("UPDATE task SET deleted_at = now() WHERE id = ?", design);
+
+        assertThat(commentQueries.findById(id)).isEmpty();
+        assertThat(commentQueries.listByTask(design)).isEmpty();
+    }
+
     // ---- at the same time ----
+
+    @Test
+    void aCommentAndTheClosingOfTheTaskAtTheSameTimeNeverLeaveACommentOnAClosedTask() throws Exception {
+        long hosting = taskId("Set up hosting"); // Blocked, open
+        String ana = sessionOf("ana");
+        int before = count("task_comment");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            // the task is being closed (its row is locked) when the comment arrives: the comment waits, then sees it closed
+            Future<ResponseEntity<String>> request = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM task WHERE id = ? FOR UPDATE", Long.class, hosting);
+                Future<ResponseEntity<String>> pending = pool.submit(() -> post("/tasks/" + hosting + "/comments", ana,
+                        Map.of("content", "Too late")));
+                awaitLockWaiters(1);
+                jdbc.update("UPDATE task SET status = 'Done' WHERE id = ?", hosting);
+                return pending;
+            });
+
+            ResponseEntity<String> response = request.get(15, TimeUnit.SECONDS);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(json(response, "$.code")).isEqualTo("TASK_CLOSED");
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(count("task_comment")).isEqualTo(before);
+    }
 
     @Test
     void anEditAndADeletionAtTheSameTimeAreDoneOneAfterTheOther() throws Exception {

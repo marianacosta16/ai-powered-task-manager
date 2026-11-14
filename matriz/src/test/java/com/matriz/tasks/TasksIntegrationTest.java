@@ -99,6 +99,24 @@ class TasksIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void titleAndDescriptionCountCharactersNotUtf16Units() { // R14
+        String emoji = "\uD83D\uDC4D"; // one character, two UTF-16 units
+        String path = "/projects/" + projectId("Website") + "/tasks";
+        String ana = sessionOf("ana");
+        Map<String, Object> fits = task(emoji.repeat(100), "2026-12-15", userId("ana"));
+        fits.put("description", emoji.repeat(2000));
+
+        ResponseEntity<String> created = post(path, ana, fits);
+        ResponseEntity<String> tooLong = post(path, ana, task(emoji.repeat(101), "2026-12-15", userId("ana")));
+        ResponseEntity<String> renamed = patch("/tasks/" + taskId("Set up hosting"), ana,
+                Map.of("version", 1, "title", emoji.repeat(100)));
+
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(renamed.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
     void textIsStoredAndReturnedLiterally() {
         ResponseEntity<String> created = post("/projects/" + projectId("Website") + "/tasks", sessionOf("ana"),
                 task("<b>x</b>", "2026-12-15", userId("ana")));

@@ -22,7 +22,6 @@ import com.matriz.usecases.ProjectSummaryView;
 import com.matriz.usecases.ProjectView;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
 
 /**
  * listProjects and getProject. The user always comes from the session; nothing in the request
@@ -60,7 +59,7 @@ class ProjectController {
 
     @GetMapping("/projects")
     List<ProjectSummaryView> listProjects(@AuthenticationPrincipal AuthenticatedUser user,
-            @RequestParam(required = false) @Size(min = 1, max = 100) String search) {
+            @RequestParam(required = false) @Chars(min = 1, max = 100) String search) {
         return useCases.listProjects(user, search);
     }
 

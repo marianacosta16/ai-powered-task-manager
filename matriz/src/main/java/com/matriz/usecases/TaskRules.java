@@ -77,6 +77,14 @@ class TaskRules {
         }
     }
 
+    /** P37: the comments of a closed task or subtask (Done, Cancelled, Duplicate) are only read; reopening the task lifts it. */
+    static void requireTaskNotClosed(TaskRecord task) {
+        if (task.statusValue().isFinal()) {
+            throw new BusinessRuleException("TASK_CLOSED",
+                    "The task is closed, so its comments cannot be changed. Reopen the task first.");
+        }
+    }
+
     /** R22: tasks and subtasks are only created in an open project. */
     static void requireOpenForCreation(ProjectRecord project) {
         if (!status(project).isOpen()) {
