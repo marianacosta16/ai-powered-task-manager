@@ -60,17 +60,10 @@ final class TaskPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
-        if (length > max) {
-            throw invalid(field, "Longer than " + max + " characters.");
-        }
-        boolean title = "title".equals(field);
-        if (title && length > 0 && Texts.isOnlySpaces(value)) {
-            throw invalid(field, CharsValidator.BLANK_MESSAGE);
-        }
-        if ((title ? Texts.visibleLength(value) : length) < min) { // a title counts without the spaces at its ends
-            throw invalid(field, "Must have " + min + " to " + max + " characters.");
-        }
+        Texts.check(value, min, max, "title".equals(field)) // the rule of the requests (R14, A46)
+                .ifPresent(problem -> {
+                    throw invalid(field, Texts.message(problem, min, max));
+                });
         return value;
     }
 

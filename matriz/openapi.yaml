@@ -1234,6 +1234,7 @@ components:
           minLength: 3
           maxLength: 100
           pattern: '\S'
+          description: 'The server also refuses a text of only the usual invisible characters and counts the minimum without the spaces at its ends (A46); the pattern here only catches white space.'
         description:
           type: string
           maxLength: 1000
@@ -1270,6 +1271,7 @@ components:
           minLength: 3
           maxLength: 100
           pattern: '\S'
+          description: 'The server also refuses a text of only the usual invisible characters and counts the minimum without the spaces at its ends (A46); the pattern here only catches white space.'
         description:
           type: [string, 'null']
           maxLength: 1000
@@ -1306,7 +1308,7 @@ components:
           minLength: 3
           maxLength: 150
           pattern: '\S'
-          description: Task title, 3 to 150 characters and not only spaces (R14, A46).
+          description: Task title, 3 to 150 characters and not only spaces (R14, A46). The server also refuses a text of only the usual invisible characters and counts the minimum without the spaces at its ends (A46); the pattern here only catches white space.
         description:
           type: string
           maxLength: 2000
@@ -1350,6 +1352,7 @@ components:
           minLength: 3
           maxLength: 150
           pattern: '\S'
+          description: 'The server also refuses a text of only the usual invisible characters and counts the minimum without the spaces at its ends (A46); the pattern here only catches white space.'
         description:
           type: [string, 'null']
           maxLength: 2000

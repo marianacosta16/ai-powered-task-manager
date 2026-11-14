@@ -40,6 +40,9 @@ class LimitsMatchTheContractAndTheDatabaseTest extends ApiIntegrationTest {
         expect(differences, "TaskUpdate.description", property("TaskUpdate", "description"), null, Limits.TASK_DESCRIPTION_MAX);
         expect(differences, "Task.description", property("Task", "description"), null, Limits.TASK_DESCRIPTION_MAX);
         expect(differences, "CommentWrite.content", property("CommentWrite", "content"), null, Limits.COMMENT_MAX);
+        expect(differences, "TaskUpdate.blockReason", property("TaskUpdate", "blockReason"), null, Limits.BLOCK_REASON_MAX);
+        expect(differences, "Task.blockReason", property("Task", "blockReason"), null, Limits.BLOCK_REASON_MAX);
+        expect(differences, "listProjects search", searchParameter(), 1, Limits.SEARCH_MAX);
 
         assertThat(differences).as("limits of the contract that differ from Limits").isEmpty();
     }
@@ -70,6 +73,12 @@ class LimitsMatchTheContractAndTheDatabaseTest extends ApiIntegrationTest {
         if (min != null && !min.equals(schema.getMinLength())) {
             differences.add(where + " minLength is " + schema.getMinLength() + ", Limits says " + min);
         }
+    }
+
+    /** The schema of the query parameter `search` of listProjects. */
+    private static Schema<?> searchParameter() {
+        return CONTRACT.getPaths().get("/projects").getGet().getParameters().stream()
+                .filter(p -> "search".equals(p.getName())).findFirst().map(p -> (Schema<?>) p.getSchema()).orElse(null);
     }
 
     private static Schema<?> property(String schema, String name) {

@@ -5,7 +5,7 @@ package com.matriz.shared;
  * parsers of the updates and the messages use them, so a limit is changed once. For the names and the titles the
  * minimum counts the text without the spaces at its ends, so padding does not get round it. The title of a task and the name of
  * a project also may not be only spaces ({@link Texts#isOnlySpaces}). The contract (openapi.yaml) and the database
- * columns say the same numbers and are changed with these; LimitsMatchTheContractAndTheDatabaseTest checks it.
+ * columns say the same numbers and are changed with these; LimitsMatchTheContractAndTheDatabaseTest checks it for the names, titles, descriptions, comments, block reason and search; LABEL_MAX is only a guard of the update parsers, because the contract has no length for the time zone, the phase and the status (the phase and the status are enumerations, and the time zone is checked as a zone).
  */
 public final class Limits {
 

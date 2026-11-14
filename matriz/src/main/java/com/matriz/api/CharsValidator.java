@@ -6,13 +6,11 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Validator of {@link Chars}: counts code points. With {@code notBlank} (names and titles) the minimum counts the
- * text without the spaces at its ends, and a text of only spaces is refused with its own message. A missing value is
- * valid (use @NotNull for that).
+ * Validator of {@link Chars}: counts code points. With {@code notBlank} (names and titles) the rule of
+ * {@link Texts#check} applies: a text of only spaces gets its own message, and the minimum counts the text without
+ * the spaces at its ends. A missing value is valid (use @NotNull for that).
  */
 class CharsValidator implements ConstraintValidator<Chars, CharSequence> {
-
-    static final String BLANK_MESSAGE = "Must not be only spaces.";
 
     private int min;
     private int max;
@@ -30,13 +28,14 @@ class CharsValidator implements ConstraintValidator<Chars, CharSequence> {
         if (value == null) {
             return true;
         }
-        int characters = Character.codePointCount(value, 0, value.length());
-        if (notBlank && characters > 0 && characters <= max && Texts.isOnlySpaces(value)) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(BLANK_MESSAGE).addConstraintViolation();
-            return false;
+        var problem = Texts.check(value.toString(), min, max, notBlank);
+        if (problem.isEmpty()) {
+            return true;
         }
-        int counted = notBlank ? Texts.visibleLength(value.toString()) : characters;
-        return counted >= min && characters <= max;
+        if (problem.get() == Texts.Problem.ONLY_SPACES) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate(Texts.ONLY_SPACES_MESSAGE).addConstraintViolation();
+        }
+        return false; // the other problems keep the message of the annotation
     }
 }

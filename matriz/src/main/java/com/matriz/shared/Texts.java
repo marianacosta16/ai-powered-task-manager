@@ -1,9 +1,17 @@
 package com.matriz.shared;
 
+import java.util.Optional;
 import java.util.Set;
 
 /** Small rules about the text that users type. */
 public final class Texts {
+
+    public static final String ONLY_SPACES_MESSAGE = "Must not be only spaces.";
+
+    /** What can be wrong with a text that has a minimum and a maximum length (R14, A46). */
+    public enum Problem {
+        TOO_LONG, ONLY_SPACES, TOO_SHORT
+    }
 
     /**
      * The invisible characters most often used to make an empty-looking text: the zero-width space, non-joiner and
@@ -12,6 +20,36 @@ public final class Texts {
     private static final Set<Integer> INVISIBLE = Set.of(0x200B, 0x200C, 0x200D, 0x2060, 0xFEFF);
 
     private Texts() {
+    }
+
+    /**
+     * The first problem of a text, in this order: too long (the text as written, in characters); only spaces, when
+     * {@code visible} is true (a name or a title); too short. With {@code visible} the minimum counts the text
+     * without the spaces and the common invisible characters at its two ends, so "  a" does not pass for three
+     * characters; the text itself is never changed. This is the one place where the rule is written: the validator of
+     * the requests and the parsers of the updates call it.
+     */
+    public static Optional<Problem> check(String text, int min, int max, boolean visible) {
+        int length = text.codePointCount(0, text.length());
+        if (length > max) {
+            return Optional.of(Problem.TOO_LONG);
+        }
+        if (visible && length > 0 && isOnlySpaces(text)) {
+            return Optional.of(Problem.ONLY_SPACES);
+        }
+        if ((visible ? visibleLength(text) : length) < min) {
+            return Optional.of(Problem.TOO_SHORT);
+        }
+        return Optional.empty();
+    }
+
+    /** The message for a problem found by {@link #check}, for the response of the API. */
+    public static String message(Problem problem, int min, int max) {
+        return switch (problem) {
+            case TOO_LONG -> "Longer than " + max + " characters.";
+            case ONLY_SPACES -> ONLY_SPACES_MESSAGE;
+            case TOO_SHORT -> min == 1 ? "Must have at least 1 character." : "Must have " + min + " to " + max + " characters.";
+        };
     }
 
     /**
@@ -24,11 +62,7 @@ public final class Texts {
         return text.codePoints().allMatch(Texts::isSpace);
     }
 
-    /**
-     * The number of characters of the text without the spaces and the common invisible characters at its two ends:
-     * what counts for the minimum of a name or a title, so "  a" does not pass for a text of three characters. The
-     * text itself is kept as written; this only measures it.
-     */
+    /** The number of characters of the text without the spaces and the invisible characters at its two ends. */
     public static int visibleLength(String text) {
         int[] codePoints = text.codePoints().toArray();
         int from = 0;

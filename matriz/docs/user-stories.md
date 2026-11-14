@@ -129,7 +129,9 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** tenta criar um projeto com um nome de 2 caracteres, ou vazio
 - **Then** o projeto não é criado e é indicado que o nome tem de ter de 3 a 100 caracteres.
 - **When** tenta criar um projeto com um nome só com espaços (por exemplo, três espaços)
-- **Then** o projeto não é criado e é indicado que o nome não pode ter só espaços. A mesma regra vale ao alterar o nome ou a descrição de um projeto.
+- **Then** o projeto não é criado e é indicado que o nome não pode ter só espaços.
+- **When** tenta criar um projeto com o nome "  a" (um carácter com espaços à volta)
+- **Then** o projeto não é criado, porque os espaços das pontas não contam para o mínimo de 3 caracteres; o nome "  abc  " é aceite e fica como foi escrito. A mesma regra vale ao alterar o nome ou a descrição de um projeto.
 
 **Cenário 1.16: a etiqueta vermelha desaparece**
 - **Given** o projeto "Website" retomado, com a Ana na lista de membros com etiqueta vermelha por estar também no projeto "Intranet", que está em aberto

@@ -57,17 +57,10 @@ final class ProjectPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
-        if (length > max) {
-            throw invalid(field, "Longer than " + max + " characters.");
-        }
-        boolean name = "name".equals(field);
-        if (name && length > 0 && Texts.isOnlySpaces(value)) {
-            throw invalid(field, CharsValidator.BLANK_MESSAGE);
-        }
-        if ((name ? Texts.visibleLength(value) : length) < min) { // a name counts without the spaces at its ends
-            throw invalid(field, min == 1 ? "Must have at least 1 character." : "Must have " + min + " to " + max + " characters.");
-        }
+        Texts.check(value, min, max, "name".equals(field)) // the rule of the requests (R14, A46)
+                .ifPresent(problem -> {
+                    throw invalid(field, Texts.message(problem, min, max));
+                });
         return value;
     }
 

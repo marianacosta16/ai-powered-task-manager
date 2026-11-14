@@ -171,7 +171,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 
 | Regra | Como se aplica |
 |---|---|
-| Criar projetos (F01, R19, A44) | Só um gestor (403 se for membro), que passa a ser o gestor do projeto: o pedido não leva `managerId` (um `managerId` dá 400). Para passar a gestão usa-se `updateProject` (A12, M10) |
+| Criar projetos (F01, R19, A44) | Só um gestor (403 se for membro), que passa a ser o gestor do projeto: o pedido não leva `managerId` (um `managerId` dá 400). Para passar a gestão usa-se `updateProject` (A12, M10). O nome tem de 3 a 100 caracteres, sem contar os espaços das pontas para o mínimo, e não pode ser só espaços nem só caracteres invisíveis comuns (400, A46); a descrição até 1000 (A45) |
 | Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
 | Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |

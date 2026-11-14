@@ -2,6 +2,7 @@ package com.matriz.projects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -188,7 +189,7 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
         long website = projectId("Website");
         int before = count("project");
 
-        List<String> refusedNames = new java.util.ArrayList<>(NOTHING_VISIBLE);
+        List<String> refusedNames = new ArrayList<>(NOTHING_VISIBLE);
         refusedNames.addAll(List.of("     ", "  a", " ab ")); // too short once the spaces at the ends are left out
         for (String name : refusedNames) {
             ResponseEntity<String> created = post("/projects", marta, project(name, "2026-06-10", "2026-09-30"));

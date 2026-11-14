@@ -107,7 +107,7 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         long parent = taskId("Design homepage");
         int before = count("task");
 
-        List<String> refusedTitles = new java.util.ArrayList<>(NOTHING_VISIBLE);
+        List<String> refusedTitles = new ArrayList<>(NOTHING_VISIBLE);
         // too short, also when padded with spaces: the minimum counts the text without the spaces at its ends
         refusedTitles.addAll(List.of("", " ", "ab", " a", "  a", " ab ", "\u200Bab\u200B"));
         for (String title : refusedTitles) {
