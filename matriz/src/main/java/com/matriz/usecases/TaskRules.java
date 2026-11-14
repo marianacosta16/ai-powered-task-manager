@@ -17,11 +17,14 @@ import com.matriz.projects.ProjectStatus;
 import com.matriz.projects.TeamRepository;
 import com.matriz.shared.BusinessRuleException;
 import com.matriz.shared.NotFoundException;
+import com.matriz.tasks.Quadrant;
 import com.matriz.tasks.TaskQueries;
 import com.matriz.tasks.TaskRecord;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Rules shared by the use cases of tasks and assignees: finding a task the user can reach, what
@@ -110,33 +113,36 @@ class TaskRules {
 
     TaskView view(TaskRecord task, boolean withSubtasks) {
         List<TaskRecord> subtasks = withSubtasks && !task.isSubtask() ? tasks.subtasksOf(task.id()) : List.of();
-        List<Long> ids = new ArrayList<>(List.of(task.id()));
-        subtasks.forEach(s -> ids.add(s.id()));
-        var assignees = tasks.assigneeIdsByTask(ids);
-        var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
-        List<TaskView> subtaskViews = subtasks.stream().map(s -> toView(s, assignees.get(s.id()), infos, null)).toList();
-        return toView(task, assignees.get(task.id()), infos, task.isSubtask() ? null : subtaskViews);
+        return build(List.of(task), Map.of(task.id(), subtasks)).get(0);
     }
 
-    private static TaskView toView(TaskRecord t, List<Long> assigneeIds, java.util.Map<Long, UserInfo> infos,
+    private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
             List<TaskView> subtasks) {
         List<UserInfo> assignees = assigneeIds == null ? List.of() : assigneeIds.stream().map(infos::get).toList();
         return new TaskView(t.id(), t.version(), t.projectId(), t.parentTaskId(), t.title(), t.description(), t.status(),
-                t.deadline(), t.urgency(), t.importance(), quadrant(t.urgency(), t.importance()), t.blockReason(),
+                t.deadline(), t.urgency(), t.importance(), Quadrant.of(t.urgency(), t.importance()).label(), t.blockReason(),
                 t.originalTaskId(), assignees, subtasks);
     }
 
-    /** Levels 1 and 2 are low and 3 and 4 are high (F04, R25). */
-    static String quadrant(int urgency, int importance) {
-        boolean urgent = urgency >= 3;
-        boolean important = importance >= 3;
-        if (urgent && important) {
-            return "Do first";
-        }
-        if (important) {
-            return "Schedule";
-        }
-        return urgent ? "Delegate" : "Later";
+    /**
+     * The views of main tasks, each with its subtasks inside (R18), keeping the order given. The
+     * subtasks, the assignees and the people are read once for all of them, not once per task.
+     */
+    List<TaskView> viewsOfMainTasks(List<TaskRecord> mainTasks) {
+        var subtasksByParent = tasks.subtasksOfAll(mainTasks.stream().map(TaskRecord::id).toList()).stream()
+                .collect(Collectors.groupingBy(TaskRecord::parentTaskId));
+        return build(mainTasks, subtasksByParent);
+    }
+
+    /** The one place where views are built: the assignees and the people are read once for all the tasks given. */
+    private List<TaskView> build(List<TaskRecord> roots, Map<Long, List<TaskRecord>> subtasksByParent) {
+        List<Long> ids = new ArrayList<>(roots.stream().map(TaskRecord::id).toList());
+        subtasksByParent.values().forEach(list -> list.forEach(s -> ids.add(s.id())));
+        var assignees = tasks.assigneeIdsByTask(ids);
+        var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
+        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, t.isSubtask() ? null
+                : subtasksByParent.getOrDefault(t.id(), List.of()).stream()
+                        .map(s -> toView(s, assignees.get(s.id()), infos, null)).toList())).toList();
     }
 
     private static ProjectStatus status(ProjectRecord project) {

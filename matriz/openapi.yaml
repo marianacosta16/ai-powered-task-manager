@@ -41,6 +41,10 @@ info:
     - A25 (confirmed): a comment made only of spaces is refused with 400.
     - A26 (confirmed): only the author edits or deletes a comment, not even the manager of the project (403). In a completed project the answer is 422 `PROJECT_COMPLETED`, and on a closed task 422 `TASK_CLOSED`, both before the author is checked.
     - A27 (confirmed): the date of a comment is set by the server clock when it is created and never changes; the body accepts only `content`, and an `authorId` or `createdAt` is refused with 400.
+    - A28 (confirmed): `status` and `quadrant` of `listProjectTasks` accept only the exact labels of `TaskStatus` and `Quadrant`; any other value, or a `mine` that is not `true` or `false`, is refused with 400 (after the 403 check).
+    - A29 (confirmed): tasks that tie on status group, deadline, urgency and importance are listed in the order they were created (by id), so the list never changes order between two requests.
+    - A30 (confirmed): `listProjectTasks` and `listComments` come in pages, with `page` from 1 and `size` from 1 to 200, 50 if omitted. A value outside this, or one that is not a whole number, is refused with 400, after the 403 check; it is not corrected silently.
+    - A31 (confirmed): the total of the whole list is in the `X-Total-Count` header, so the body stays a plain array; for the tasks it counts the main tasks that match the filters, and a page past the last one is a 200 with an empty array.
 
 tags:
   - name: Auth
@@ -501,6 +505,8 @@ paths:
 
         With `mine=true` only the tasks of the current user are returned: a main task is included if the user is assignee of it or of any of its subtasks (P25).
         The filters `mine`, `status` and `quadrant` can be combined (R25, A6).
+
+        The list comes in pages (A30): `page` from 1 and `size` from 1 to 200 (50 if omitted). The subtasks inside a task do not count towards the page. `X-Total-Count` is the number of main tasks that match the filters, in all the pages (A31).
       parameters:
         - name: mine
           in: query
@@ -521,9 +527,14 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/Quadrant'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: The list of main tasks. It is an empty array when the project has no tasks.
+          description: One page of the main tasks. It is an empty array when the project has no tasks or the page is past the last one.
+          headers:
+            X-Total-Count:
+              $ref: '#/components/headers/TotalCount'
           content:
             application/json:
               schema:
@@ -677,16 +688,27 @@ paths:
       tags: [Comments]
       operationId: listComments
       summary: List the comments of a task or subtask
-      description: Returns the comments from the oldest to the newest, with author and date (R24, scenario 11.2).
+      description: |
+        Returns the comments from the oldest to the newest, with author and date (R24, scenario 11.2). With the same date, the one created first comes first.
+
+        The list comes in pages (A30): `page` from 1 and `size` from 1 to 200 (50 if omitted). `X-Total-Count` is the number of comments of the task, in all the pages (A31).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: The comments.
+          description: One page of the comments. It is an empty array when the page is past the last one.
+          headers:
+            X-Total-Count:
+              $ref: '#/components/headers/TotalCount'
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -875,7 +897,33 @@ components:
 
         Requests that change data are not protected by a CSRF token for now: the API only accepts JSON and the cookie is `SameSite=Lax`. To review when the interface is chosen (T1).
 
+  headers:
+    TotalCount:
+      description: The number of items in the whole list, in all its pages (A31).
+      schema:
+        type: integer
+        minimum: 0
+
   parameters:
+    Page:
+      name: page
+      in: query
+      description: The page of the list, starting at 1 (A30). Any other value is refused with 400.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Size:
+      name: size
+      in: query
+      description: How many items in a page, from 1 to 200 (A30). Any other value is refused with 400.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
     ProjectId:
       name: projectId
       in: path

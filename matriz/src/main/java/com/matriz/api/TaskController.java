@@ -3,6 +3,7 @@ package com.matriz.api;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.matriz.access.AuthenticatedUser;
 import com.matriz.access.UserInfo;
 import com.matriz.usecases.AssigneeUseCases;
+import com.matriz.usecases.TaskListUseCases;
 import com.matriz.usecases.TaskUseCases;
 import com.matriz.usecases.TaskView;
 
@@ -37,10 +40,26 @@ class TaskController {
     private final AssigneeUseCases assignees;
     private final RequestValidator validator;
 
-    TaskController(TaskUseCases tasks, AssigneeUseCases assignees, RequestValidator validator) {
+    private final TaskListUseCases taskList;
+
+    TaskController(TaskUseCases tasks, AssigneeUseCases assignees, RequestValidator validator,
+            TaskListUseCases taskList) {
         this.tasks = tasks;
         this.assignees = assignees;
         this.validator = validator;
+        this.taskList = taskList;
+    }
+
+    /**
+     * The List and the Matrix of a project: the main tasks, open ones first, with their subtasks
+     * inside, one page at a time. {@code mine}, {@code status} and {@code quadrant} are filters that combine.
+     */
+    @GetMapping("/projects/{projectId}/tasks")
+    ResponseEntity<List<TaskView>> listProjectTasks(@AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable @Min(1) long projectId, @RequestParam(required = false) String mine,
+            @RequestParam(required = false) String status, @RequestParam(required = false) String quadrant,
+            @RequestParam(required = false) String page, @RequestParam(required = false) String size) {
+        return Pages.of(taskList.listProjectTasks(user, projectId, mine, status, quadrant, page, size));
     }
 
     @PostMapping("/projects/{projectId}/tasks")

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -18,10 +19,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TaskQueries {
 
-    private static final String COLUMNS = """
-            id, project_id, parent_task_id, original_task_id, title, description, status, deadline,
-            urgency, importance, block_reason, version
-            """;
+    private static final List<String> COLUMN_NAMES = List.of("id", "project_id", "parent_task_id", "original_task_id",
+            "title", "description", "status", "deadline", "urgency", "importance", "block_reason", "version");
+    private static final String COLUMNS = String.join(", ", COLUMN_NAMES);
     private static final String FINAL = "('Done', 'Cancelled', 'Duplicate')";
 
     private final JdbcTemplate jdbc;
@@ -106,7 +106,22 @@ public class TaskQueries {
         return result;
     }
 
-    private static TaskRecord map(ResultSet rs, int row) throws SQLException {
+    /** The subtasks of these main tasks, by task and then by id (R18). */
+    public List<TaskRecord> subtasksOfAll(Collection<Long> parentIds) {
+        if (parentIds.isEmpty()) {
+            return List.of();
+        }
+        return named.query("SELECT " + COLUMNS + " FROM task WHERE parent_task_id IN (:ids) AND deleted_at IS NULL "
+                + "ORDER BY parent_task_id, id", new MapSqlParameterSource("ids", parentIds), TaskQueries::map);
+    }
+
+    /** The columns of a task, prefixed with the alias of the table, for queries that join other tables. */
+    public static String columns(String alias) {
+        return COLUMN_NAMES.stream().map(column -> alias + "." + column).collect(Collectors.joining(", "));
+    }
+
+    /** Builds a task from a row that has the columns above. */
+    public static TaskRecord map(ResultSet rs, int row) throws SQLException {
         return new TaskRecord(rs.getLong("id"), rs.getLong("project_id"), (Long) rs.getObject("parent_task_id"),
                 (Long) rs.getObject("original_task_id"), rs.getString("title"), rs.getString("description"),
                 rs.getString("status"), rs.getObject("deadline", LocalDate.class), rs.getInt("urgency"),

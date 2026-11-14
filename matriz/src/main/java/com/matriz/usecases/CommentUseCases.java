@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.matriz.access.AuthenticatedUser;
 import com.matriz.access.UserDirectory;
 import com.matriz.shared.ForbiddenException;
 import com.matriz.shared.NotFoundException;
+import com.matriz.shared.Page;
+import com.matriz.shared.PageRequest;
 import com.matriz.tasks.CommentCommands;
 import com.matriz.tasks.CommentQueries;
 import com.matriz.tasks.CommentRecord;
@@ -40,10 +43,15 @@ public class CommentUseCases {
         this.clock = clock;
     }
 
-    /** Whoever can see the task sees its comments, also in a completed project (R24). */
-    public List<CommentView> listComments(AuthenticatedUser user, long taskId) {
+    /**
+     * Whoever can see the task sees its comments, also in a completed project (R24), one page at a time
+     * (A30). The page is read after the access check (403 before 400).
+     */
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ) // the page and the total are one snapshot
+    public Page<CommentView> listComments(AuthenticatedUser user, long taskId, String page, String size) {
         rules.load(user, taskId);
-        return views(queries.listByTask(taskId));
+        Page<CommentRecord> comments = queries.listByTask(taskId, PageRequest.parse(page, size));
+        return new Page<>(views(comments.items()), comments.total());
     }
 
     @Transactional
