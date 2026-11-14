@@ -3,6 +3,7 @@ package com.matriz.api;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,13 +52,14 @@ class TaskController {
 
     /**
      * The List and the Matrix of a project: the main tasks, open ones first, with their subtasks
-     * inside. {@code mine}, {@code status} and {@code quadrant} are filters that combine.
+     * inside, one page at a time. {@code mine}, {@code status} and {@code quadrant} are filters that combine.
      */
     @GetMapping("/projects/{projectId}/tasks")
-    List<TaskView> listProjectTasks(@AuthenticationPrincipal AuthenticatedUser user,
+    ResponseEntity<List<TaskView>> listProjectTasks(@AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable @Min(1) long projectId, @RequestParam(required = false) String mine,
-            @RequestParam(required = false) String status, @RequestParam(required = false) String quadrant) {
-        return taskList.listProjectTasks(user, projectId, mine, status, quadrant);
+            @RequestParam(required = false) String status, @RequestParam(required = false) String quadrant,
+            @RequestParam(required = false) String page, @RequestParam(required = false) String size) {
+        return Pages.of(taskList.listProjectTasks(user, projectId, mine, status, quadrant, page, size));
     }
 
     @PostMapping("/projects/{projectId}/tasks")

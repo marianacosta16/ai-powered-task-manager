@@ -324,7 +324,7 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
         jdbc.update("UPDATE task SET deleted_at = now() WHERE id = ?", design);
 
         assertThat(commentQueries.findById(id)).isEmpty();
-        assertThat(commentQueries.listByTask(design)).isEmpty();
+        assertThat(commentQueries.listByTask(design, new com.matriz.shared.PageRequest(1, 50)).items()).isEmpty();
     }
 
     // ---- at the same time ----
@@ -375,6 +375,42 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    // ---- pages (A30, A31) ----
+
+    @Test
+    void theCommentsComeInPagesWithTheTotalInAHeader() {
+        long design = taskId("Design homepage");
+        int before = JsonPath.<List<Object>>read(get("/tasks/" + design + "/comments", sessionOf("ana")).getBody(), "$").size();
+        clock.set("2030-01-01T10:00:00Z"); // after the seeded ones, and the same instant: the id settles the order
+        for (int i = 1; i <= 5; i++) {
+            comment("ana", design, "N" + i);
+        }
+        int total = before + 5;
+
+        ResponseEntity<String> last = get("/tasks/" + design + "/comments?size=2&page=" + ((total + 1) / 2), sessionOf("luis"));
+        ResponseEntity<String> beyond = get("/tasks/" + design + "/comments?size=2&page=" + (total + 1), sessionOf("luis"));
+        ResponseEntity<String> all = get("/tasks/" + design + "/comments", sessionOf("luis"));
+
+        assertThat(last.getHeaders().getFirst("X-Total-Count")).isEqualTo(String.valueOf(total));
+        assertThat(JsonPath.<List<String>>read(last.getBody(), "$[*].content").getLast()).isEqualTo("N5");
+        assertThat(beyond.getBody()).isEqualTo("[]");
+        assertThat(beyond.getHeaders().getFirst("X-Total-Count")).isEqualTo(String.valueOf(total));
+        assertThat(JsonPath.<List<String>>read(all.getBody(), "$[*].content")).endsWith("N1", "N2", "N3", "N4", "N5");
+    }
+
+    @Test
+    void aBadPageOrSizeOfCommentsIsRefusedAfterTheAccessCheck() {
+        long design = taskId("Design homepage");
+
+        for (String query : List.of("page=0", "page=abc", "size=0", "size=201", "size=abc")) {
+            assertThat(get("/tasks/" + design + "/comments?" + query, sessionOf("ana")).getStatusCode())
+                    .as(query).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(get("/tasks/" + design + "/comments?" + query, sessionOf("sofia")).getStatusCode())
+                    .as(query).isEqualTo(HttpStatus.FORBIDDEN);
+        }
+        assertThat(get("/tasks/999999/comments?page=0", sessionOf("ana")).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     // ---- helpers ----

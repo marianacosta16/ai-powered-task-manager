@@ -9,6 +9,9 @@ import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.matriz.shared.Page;
+import com.matriz.shared.PageRequest;
+
 /**
  * Reads comments. They follow their task (R24): a comment of a deleted task is not found (R9, M4).
  * The use cases check the task too, so this filter is a second line of defence for new callers.
@@ -32,10 +35,13 @@ public class CommentQueries {
                 .stream().findFirst();
     }
 
-    /** From the oldest to the newest (P28, R24). */
-    public List<CommentRecord> listByTask(long taskId) {
-        return jdbc.query("SELECT " + COLUMNS + " " + FROM + " AND c.task_id = ? ORDER BY c.created_at, c.id",
-                CommentQueries::map, taskId);
+    /** One page of the comments of the task, from the oldest to the newest (P28, R24); the id settles ties. */
+    public Page<CommentRecord> listByTask(long taskId, PageRequest page) {
+        long total = jdbc.queryForObject("SELECT count(*) " + FROM + " AND c.task_id = ?", Long.class, taskId);
+        List<CommentRecord> comments = jdbc.query("SELECT " + COLUMNS + " " + FROM
+                + " AND c.task_id = ? ORDER BY c.created_at, c.id LIMIT ? OFFSET ?",
+                CommentQueries::map, taskId, page.size(), page.offset());
+        return new Page<>(comments, total);
     }
 
     private static CommentRecord map(ResultSet rs, int row) throws SQLException {

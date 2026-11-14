@@ -2,6 +2,7 @@ package com.matriz.views;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -239,6 +240,78 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
             assertThat(response.getStatusCode()).as(query.toString()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(json(response, "$.code")).isEqualTo("VALIDATION_ERROR");
         }
+    }
+
+    // ---- pages (A30, A31) ----
+
+    @Test
+    void theListComesInPagesWithTheTotalInAHeader() {
+        long project = newProject("Pages");
+        for (int i = 1; i <= 5; i++) {
+            newTask(project, "T" + i, "To do", "2026-12-1" + i, 3, 3, null, "ana");
+        }
+
+        ResponseEntity<String> first = list("ana", project, Map.of("size", "2"));
+        ResponseEntity<String> second = list("ana", project, Map.of("size", "2", "page", "2"));
+        ResponseEntity<String> last = list("ana", project, Map.of("size", "2", "page", "3"));
+        ResponseEntity<String> beyond = list("ana", project, Map.of("size", "2", "page", "4"));
+
+        assertThat(titles(first)).containsExactly("T1", "T2");
+        assertThat(titles(second)).containsExactly("T3", "T4");
+        assertThat(titles(last)).containsExactly("T5");
+        assertThat(beyond.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(beyond.getBody()).isEqualTo("[]");
+        for (ResponseEntity<String> page : List.of(first, second, last, beyond)) {
+            assertThat(page.getHeaders().getFirst("X-Total-Count")).isEqualTo("5");
+        }
+        assertThat(titles(list("ana", project, Map.of()))).hasSize(5); // the default page holds 50
+    }
+
+    @Test
+    void pagesKeepTheOrderOfTheListAndNeverOverlapOnTies() {
+        long project = newProject("Pages");
+        newTask(project, "closed", "Done", "2026-11-01", 3, 3, null, "ana");
+        for (int i = 1; i <= 4; i++) {
+            newTask(project, "tie" + i, "To do", "2026-12-10", 3, 3, null, "ana");
+        }
+
+        List<String> all = new ArrayList<>();
+        for (int page = 1; page <= 3; page++) {
+            all.addAll(titles(list("ana", project, Map.of("size", "2", "page", String.valueOf(page)))));
+        }
+
+        assertThat(all).containsExactly("tie1", "tie2", "tie3", "tie4", "closed");
+    }
+
+    @Test
+    void theTotalCountsTheTasksThatMatchTheFiltersAndNotTheSubtasks() {
+        long project = newProject("Pages");
+        long a = newTask(project, "A", "To do", "2026-12-10", 3, 3, null, "ana");
+        newTask(project, "a1", "To do", "2026-12-10", 3, 3, a, "ana");
+        newTask(project, "a2", "To do", "2026-12-10", 3, 3, a, "ana");
+        newTask(project, "B", "Done", "2026-12-11", 3, 3, null, "ana");
+        newTask(project, "C", "To do", "2026-12-12", 3, 3, null, "rui");
+
+        assertThat(list("ana", project, Map.of()).getHeaders().getFirst("X-Total-Count")).isEqualTo("3");
+        assertThat(list("ana", project, Map.of("status", "To do", "size", "1")).getHeaders().getFirst("X-Total-Count"))
+                .isEqualTo("2");
+        assertThat(list("ana", project, Map.of("mine", "true")).getHeaders().getFirst("X-Total-Count")).isEqualTo("2");
+        assertThat(JsonPath.<List<String>>read(list("ana", project, Map.of("size", "1")).getBody(), "$[0].subtasks[*].title"))
+                .containsExactly("a1", "a2"); // the subtasks do not count towards the page
+    }
+
+    @Test
+    void aBadPageOrSizeIsRefusedAfterTheAccessCheck() {
+        long project = newProject("Pages");
+        for (Map<String, String> query : List.of(Map.of("page", "0"), Map.of("page", "abc"), Map.of("page", "99999999999"),
+                Map.of("size", "0"), Map.of("size", "201"), Map.of("size", "-1"), Map.of("size", "abc"))) {
+            ResponseEntity<String> response = list("ana", project, query);
+            assertThat(response.getStatusCode()).as(query.toString()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(json(response, "$.code")).isEqualTo("VALIDATION_ERROR");
+            assertThat(list("sofia", project, query).getStatusCode()).as(query.toString()).isEqualTo(HttpStatus.FORBIDDEN);
+        }
+        assertThat(list("ana", project, Map.of("size", "200")).getStatusCode()).isEqualTo(HttpStatus.OK); // the largest page
+        assertThat(list("ana", project, Map.of("size", "1", "page", "1")).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     // ---- access and states ----

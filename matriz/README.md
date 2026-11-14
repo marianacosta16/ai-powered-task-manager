@@ -217,6 +217,7 @@ Operações: `listComments`, `addComment`, `editComment` e `deleteComment`. O au
 | Regra | Como se aplica |
 |---|---|
 | Quem vê e comenta (R24) | O gestor e os membros do projeto, em tarefas e subtarefas (403 para os outros). Lista do mais antigo para o mais recente |
+| Páginas (A30, A31) | `listComments` vem em páginas, como a lista de tarefas: `page` e `size`, total em `X-Total-Count`; com a mesma data, o primeiro a ser criado vem primeiro |
 | Texto (NF09, P28) | Até 2000 caracteres (400 acima) e não só espaços (A25); guardado e devolvido tal como chega |
 | Editar e apagar (R24) | Só o autor, nem o gestor (403). A edição mantém o autor e a data; apagar elimina de vez, sem reciclagem |
 | Estado do projeto e da tarefa (R27, R28, P37) | Em projetos em aberto e suspensos comenta-se, edita-se e apaga-se; num concluído só se lê (422 `PROJECT_COMPLETED`). Numa tarefa ou subtarefa fechada também só se lê (422 `TASK_CLOSED`) até o gestor a reabrir |
@@ -245,8 +246,9 @@ Operação nova: `listProjectTasks` (a pesquisa de projetos, `listProjects` com 
 | Quadrante | Urgência e importância de nível 3 ou mais são altas: `Do first` (ambas), `Schedule` (só importante), `Delegate` (só urgente), `Later` |
 | Matriz (P10) | A API devolve também as tarefas fechadas, com o estado; é a interface que as esconde na Matriz (V10) |
 | Valor de filtro desconhecido (A28) | 400, depois da verificação de acesso |
+| Páginas (A30, A31) | `page` (a partir de 1) e `size` (1 a 200, por omissão 50); o total de tarefas principais que passam os filtros vai em `X-Total-Count`; uma página depois da última dá 200 com lista vazia; as subtarefas não contam para a página. Um valor fora destes dá 400, depois do 403 |
 
-Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml).
+Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml); A30 e A31 (páginas) estão por confirmar.
 
 ```bash
 curl -s -b /tmp/ana.txt 'localhost:8081/projects/1/tasks?mine=true&status=To%20do&quadrant=Do%20first'
