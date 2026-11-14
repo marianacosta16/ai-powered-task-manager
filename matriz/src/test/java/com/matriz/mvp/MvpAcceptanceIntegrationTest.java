@@ -32,7 +32,7 @@ class MvpAcceptanceIntegrationTest extends ApiIntegrationTest {
         // When Marta signs in, creates the project "Website", adds Ana and moves it to "In progress"
         String marta = sessionOf("marta");
         ResponseEntity<String> created = post("/projects", marta, Map.of("name", "Website", "startDate", "2026-01-01",
-                "endDate", "2026-01-31", "phase", "Initiation", "status", "Not started", "managerId", userId("marta")));
+                "endDate", "2026-01-31", "phase", "Initiation", "status", "Not started"));
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         long website = ((Number) json(created, "$.id")).longValue();
         assertThat(post("/projects/" + website + "/members", marta, Map.of("userId", userId("ana"))).getStatusCode())

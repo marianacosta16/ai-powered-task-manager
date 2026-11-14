@@ -43,8 +43,8 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | Atributo | Tipo | Obr. | Notas |
 |---|---|---|---|
 | `id` | inteiro | Sim | Identificador |
-| `name` | texto | Sim | Máximo 100 caracteres (R14, P17) |
-| `description` | texto | Não | Máximo 2000 caracteres (R14, P17). Se é obrigatória, não está definido (M7) |
+| `name` | texto | Sim | De 3 a 100 caracteres e não só espaços (R14, P17, A46) |
+| `description` | texto | Não | Máximo 1000 caracteres (R14, P17); a coluna admite mais, o limite é da aplicação. Se é obrigatória, não está definido (M7) |
 | `start_date` | data | Sim | R16 |
 | `start_time` | hora | Não | Sem hora, conta a partir das 00:00 (P26) |
 | `end_date` | data | Sim | R16 |
@@ -52,7 +52,7 @@ A reciclagem (F09) não tem entidade própria: `PROJECT` e `TASK` têm a marca `
 | `timezone` | texto | Sim | Fuso horário do projeto; por defeito, o de Lisboa (P26) |
 | `phase` | texto | Sim | `Initiation`, `Planning`, `Execution`, `Monitoring` ou `Evaluation` (P3) |
 | `status` | texto | Sim | Só os estados definidos pelo gestor: `Not started`, `In progress`, `Suspended` ou `Completed`. `Attention` e `Late` não se guardam (secção 6, P5, R12) |
-| `manager_id` | inteiro | Sim | Chave para `APP_USER`. Um só gestor por projeto, indicado por quem cria o projeto (R19) |
+| `manager_id` | inteiro | Sim | Chave para `APP_USER`. Um só gestor por projeto: quem o cria, tirado da sessão (R19, A44); só muda ao passar a gestão |
 | `deleted_at` | data e hora | Não | Vazio = não apagado. Apagado há mais de 30 dias é eliminado (R20, M4) |
 
 ### 3.3 `PROJECT_MEMBER`
@@ -71,7 +71,7 @@ A linha mantém-se quando o projeto é concluído ou suspenso (P20, P22). O gest
 | `id` | inteiro | Sim | Identificador |
 | `project_id` | inteiro | Sim | Chave para `PROJECT`. Uma subtarefa fica no projeto da tarefa-mãe |
 | `parent_task_id` | inteiro | Não | Chave para `TASK`. Vazio = tarefa principal; preenchido = subtarefa (M1) |
-| `title` | texto | Sim | Máximo 100 caracteres (R14) |
+| `title` | texto | Sim | De 3 a 150 caracteres e não só espaços (R14, A46); a coluna passou a 150 na migração V3 |
 | `description` | texto | Não | Máximo 2000 caracteres (R14, M7) |
 | `status` | texto | Sim | `To do`, `In progress`, `In review`, `Blocked`, `Done`, `Cancelled` ou `Duplicate`. Os três últimos são finais |
 | `deadline` | data | Sim | R1. Se tem hora, não está definido (M3) |
@@ -254,7 +254,7 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M7 | Que campos de texto são obrigatórios? | Só são obrigatórios o nome do projeto e o título da tarefa. As descrições são opcionais. Os requisitos só tornam obrigatórios o prazo (R1) e as datas do projeto (R16) | Confirmado |
 | M8 | Limite do motivo de bloqueio | Máximo 100 caracteres, como o título (R14) | Decisão |
 | M9 | Identificadores | Identificador interno em cada entidade e par de chaves nas tabelas de associação. Nome de projeto e de utilizador não são únicos, porque nada o exige | Confirmado |
-| M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser indicado como gestor. A documentação diz que o gestor é indicado por quem cria o projeto, sem dizer se tem de ter esse papel | Confirmado |
+| M10 | Papel do utilizador | `role` é um só e global. Um utilizador `Team member` não pode ser gestor: quem cria um projeto tem de ser gestor (403 se não for), e o novo gestor, ao passar a gestão, também (422 `MANAGER_NOT_A_MANAGER`). Alterado em 2026-11-14: o gestor de um projeto novo é o criador, sem o indicar no pedido (A44) | Confirmado |
 | M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5). Implementado com `username` em minúsculas e comparado exatamente, e palavra-passe de pelo menos 8 caracteres, guardada como hash BCrypt (incremento 1) | Confirmado |
 | M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
 | M13 | Edições simultâneas da mesma tarefa | Cada tarefa tem uma `version`; ao gravar, se a versão enviada já não é a atual, a gravação é recusada (R30, T13). Decidido em 2026-11-12 | Decisão |

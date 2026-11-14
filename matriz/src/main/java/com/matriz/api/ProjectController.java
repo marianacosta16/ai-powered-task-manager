@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.matriz.access.AuthenticatedUser;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.usecases.ProjectReadUseCases;
 import com.matriz.usecases.ProjectUseCases;
 import com.matriz.usecases.ProjectSummaryView;
@@ -59,7 +60,7 @@ class ProjectController {
 
     @GetMapping("/projects")
     List<ProjectSummaryView> listProjects(@AuthenticationPrincipal AuthenticatedUser user,
-            @RequestParam(required = false) @Chars(min = 1, max = 100) String search) {
+            @RequestParam(required = false) @Chars(min = 1, max = Limits.SEARCH_MAX) String search) {
         return useCases.listProjects(user, search);
     }
 

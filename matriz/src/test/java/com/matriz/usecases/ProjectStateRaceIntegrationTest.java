@@ -220,7 +220,7 @@ class ProjectStateRaceIntegrationTest extends ApiIntegrationTest {
             ExecutorService pool = Executors.newSingleThreadExecutor();
             try {
                 Future<ResponseEntity<String>> other = pool.submit(
-                        () -> patch("/tasks/" + b, sessionOf("ana"), Map.of("version", 1, "title", "B2")));
+                        () -> patch("/tasks/" + b, sessionOf("ana"), Map.of("version", 1, "title", "B two")));
                 assertThat(other.get(15, TimeUnit.SECONDS).getStatusCode()).isEqualTo(HttpStatus.OK);
             } catch (Exception e) {
                 throw new AssertionError(e);

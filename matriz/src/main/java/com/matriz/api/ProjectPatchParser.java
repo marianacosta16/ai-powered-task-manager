@@ -8,7 +8,9 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Texts;
 import com.matriz.usecases.ProjectPatch;
 
 /**
@@ -36,13 +38,14 @@ final class ProjectPatchParser {
             present.add(field);
         }
         return new ProjectPatch(present,
-                text(body, "name", false, 100), text(body, "description", true, 2000),
+                text(body, "name", false, Limits.PROJECT_NAME_MIN, Limits.PROJECT_NAME_MAX),
+                text(body, "description", true, 0, Limits.PROJECT_DESCRIPTION_MAX),
                 date(body, "startDate", false), time(body, "startTime"), date(body, "endDate", false),
-                time(body, "endTime"), text(body, "timezone", false, 100),
-                text(body, "phase", false, 100), text(body, "status", false, 100), managerId(body));
+                time(body, "endTime"), text(body, "timezone", false, 1, Limits.LABEL_MAX),
+                text(body, "phase", false, 1, Limits.LABEL_MAX), text(body, "status", false, 1, Limits.LABEL_MAX), managerId(body));
     }
 
-    private static String text(JsonNode body, String field, boolean nullable, int max) {
+    private static String text(JsonNode body, String field, boolean nullable, int min, int max) {
         JsonNode node = body.get(field);
         if (node == null) {
             return null;
@@ -54,12 +57,10 @@ final class ProjectPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        if (value.isEmpty() && !"description".equals(field)) {
-            throw invalid(field, "Must have at least 1 character.");
-        }
-        if (value.codePointCount(0, value.length()) > max) { // characters, not UTF-16 units (R14)
-            throw invalid(field, "Longer than " + max + " characters.");
-        }
+        Texts.check(value, min, max, "name".equals(field)) // the rule of the requests (R14, A46)
+                .ifPresent(problem -> {
+                    throw invalid(field, Texts.message(problem, min, max));
+                });
         return value;
     }
 

@@ -109,12 +109,16 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
 
         ResponseEntity<String> exact = comment("ana", design, "c".repeat(2000));
         ResponseEntity<String> tooLong = comment("ana", design, "c".repeat(2001));
-        ResponseEntity<String> blank = comment("ana", design, "   ");
 
         assertThat(exact.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(JsonPath.<List<String>>read(tooLong.getBody(), "$.details[*].field")).containsExactly("content");
-        assertThat(blank.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        long id = idOf(exact);
+        for (String blank : NOTHING_VISIBLE) { // spaces of any kind and invisible ones, A25
+            assertThat(comment("ana", design, blank).getStatusCode()).as("[" + blank + "]").isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(patch("/comments/" + id, sessionOf("ana"), Map.of("content", blank)).getStatusCode())
+                    .as("edit [" + blank + "]").isEqualTo(HttpStatus.BAD_REQUEST);
+        }
     }
 
     // ---- editing and deleting (11.6) ----
@@ -411,6 +415,30 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
                     .as(query).isEqualTo(HttpStatus.FORBIDDEN);
         }
         assertThat(get("/tasks/999999/comments?page=0", sessionOf("ana")).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void theCommentsAndTheAssigneesAreStillThereWhenTheTaskIsReopened() { // 11.12
+        clock.set("2026-06-01T10:00:00Z");
+        long task = taskId("Write contact page copy"); // Rui and Luís
+        String ana = sessionOf("ana");
+        comment("rui", task, "First comment");
+        clock.set("2026-06-01T11:00:00Z");
+        comment("luis", task, "Second comment");
+        ResponseEntity<String> before = get("/tasks/" + task + "/comments", ana);
+        List<String> assigneesBefore = JsonPath.read(get("/tasks/" + task, ana).getBody(), "$.assignees[*].name");
+
+        // the task is closed and then the manager reopens it
+        assertThat(patch("/tasks/" + task, ana, Map.of("version", 1, "status", "Done")).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(patch("/tasks/" + task, sessionOf("marta"), Map.of("version", 2, "status", "In progress")).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<String> after = get("/tasks/" + task + "/comments", ana);
+        assertThat(after.getBody()).isEqualTo(before.getBody()); // the same comments, with the same authors and dates
+        assertThat(JsonPath.<List<String>>read(after.getBody(), "$[*].content")).containsExactly("First comment", "Second comment");
+        assertThat(JsonPath.<List<String>>read(get("/tasks/" + task, ana).getBody(), "$.assignees[*].name")).isEqualTo(assigneesBefore);
+        assertThat(assigneesBefore).containsExactly("Rui", "Luís");
+        assertThat(comment("rui", task, "After reopening").getStatusCode()).isEqualTo(HttpStatus.CREATED); // and one more can be added
     }
 
     // ---- helpers ----

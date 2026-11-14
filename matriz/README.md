@@ -135,7 +135,7 @@ Mecanismo (T3, S5): **sessão no servidor, identificada por um cookie `SESSION`*
 | Passo | O que acontece |
 |---|---|
 | Iniciar sessão | `POST /auth/login` com `username` e `password`. Credenciais certas: `200` com `id`, `name` e `role`, e o cookie com um identificador novo. Erradas (utilizador ou palavra-passe): `401 INVALID_CREDENTIALS`, igual nos dois casos |
-| Durante a sessão | O cliente envia o cookie em cada pedido. O servidor tira a identidade da sessão: quem faz o pedido e o autor dos comentários nunca vêm do pedido. O gestor de um projeto novo é indicado por quem o cria (R19) e validado no servidor (M10) |
+| Durante a sessão | O cliente envia o cookie em cada pedido. O servidor tira a identidade da sessão: quem faz o pedido e o autor dos comentários nunca vêm do pedido. O gestor de um projeto novo é quem o cria, tirado da sessão (R19, A44); o pedido não leva gestor |
 | Perfil | `GET /auth/me` devolve o nome e o papel |
 | Fim | `POST /auth/logout` (`204`), ou 3 horas sem qualquer pedido |
 | Sem sessão válida | `401 UNAUTHENTICATED`. Se o pedido trazia cookie, a mensagem é "Your session has ended. Sign in again to continue."; caso contrário, "Sign in to continue." A interface deve levar o utilizador ao início de sessão e mostrar a mensagem |
@@ -171,7 +171,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 
 | Regra | Como se aplica |
 |---|---|
-| Criar projetos (F01, R19) | Só um gestor (403 se for membro). Quem cria indica o gestor, que tem de ter o papel de gestor (422 `MANAGER_NOT_A_MANAGER`); se for outra pessoa, o criador deixa de ver o projeto |
+| Criar projetos (F01, R19, A44) | Só um gestor (403 se for membro), que passa a ser o gestor do projeto: o pedido não leva `managerId` (um `managerId` dá 400). Para passar a gestão usa-se `updateProject` (A12, M10). O nome tem de 3 a 100 caracteres, sem contar os espaços das pontas para o mínimo, e não pode ser só espaços nem só caracteres invisíveis comuns (400, A46); a descrição até 1000 (A45) |
 | Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
 | Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |
@@ -193,14 +193,14 @@ Operações: `createTask`, `getTask`, `updateTask`, `addAssignee`, `removeAssign
 
 | Regra | Como se aplica |
 |---|---|
-| Criar (R1, R13, R14, R22) | Qualquer membro ou o gestor, num projeto em aberto (422 `PROJECT_NOT_OPEN` se concluído ou suspenso). Prazo obrigatório (400) e não no passado, sendo hoje aceite (422 `DEADLINE_IN_PAST`). Estado inicial "To do" |
-| Responsáveis (R21, R26) | Membros do projeto ou o gestor (422 `ASSIGNEE_NOT_MEMBER`); há sempre pelo menos um (422 `LAST_ASSIGNEE`) |
+| Criar (R1, R13, R14, R22) | Qualquer membro ou o gestor, num projeto em aberto (422 `PROJECT_NOT_OPEN` se concluído ou suspenso). Título de 3 a 150 caracteres e não só espaços (400, A46). Prazo obrigatório (400) e não no passado, sendo hoje aceite (422 `DEADLINE_IN_PAST`). Estado inicial "To do" |
+| Responsáveis (R21, R26) | Membros do projeto ou o gestor (422 `ASSIGNEE_NOT_MEMBER`); há sempre pelo menos um (422 `LAST_ASSIGNEE`); atribuir quem já é responsável é recusado (409 `ASSIGNEE_ALREADY_ASSIGNED`, A16) |
 | Subtarefas (R2, R3, A4) | O prazo da subtarefa não é posterior ao da mãe (422 `SUBTASK_DEADLINE_AFTER_PARENT`); antecipar a mãe para antes de uma subtarefa é bloqueado (422 `PARENT_DEADLINE_BEFORE_SUBTASK`); só um nível (422 `PARENT_IS_SUBTASK`); não se cria numa mãe fechada nem se reabre uma subtarefa com a mãe fechada (422 `PARENT_TASK_CLOSED`, P35) |
 | Estados (R4, R5, R6, P8) | A mãe não se conclui nem cancela com subtarefas em aberto (422 `PARENT_HAS_OPEN_SUBTASKS`). "Blocked" exige motivo (422 `BLOCK_REASON_REQUIRED`) e "Duplicate" exige uma original válida (422 `ORIGINAL_TASK_REQUIRED` ou `ORIGINAL_TASK_NOT_VALID`). Reabrir uma tarefa final só o gestor (403) |
 | Projeto concluído (R27, R28) | Nada se altera (422 `PROJECT_COMPLETED`); num projeto suspenso edita-se e atribui-se, mas não se cria |
 | Edições simultâneas (T13, R30) | O `updateTask` leva a `version` lida; se a tarefa mudou entretanto, 409 `TASK_CHANGED` e nada se grava. Uma gravação que não altera nada não sobe a versão (A20) |
 
-Os pressupostos A14 a A23 estão confirmados no [openapi.yaml](openapi.yaml). Apagar tarefas é do incremento 7.
+Os pressupostos A14 a A23 (e A46 e A47) estão confirmados no [openapi.yaml](openapi.yaml). Apagar tarefas é do incremento 7.
 
 ```bash
 curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"title":"Write report","deadline":"2027-01-15","urgency":3,"importance":4,"assigneeIds":[3]}' localhost:8081/projects/1/tasks

@@ -58,7 +58,7 @@ public class ProjectUseCases {
         this.clock = clock;
     }
 
-    /** Only a project manager creates projects (F01, R19); checked before the body is looked at. */
+    /** Only a project manager creates projects, and manages the project they create (F01, R19); checked before the body is looked at. */
     public void requireCanCreate(AuthenticatedUser creator) {
         if (creator.role() != Role.PROJECT_MANAGER) {
             throw new ForbiddenException("Only a project manager can create projects.");
@@ -72,7 +72,7 @@ public class ProjectUseCases {
         ProjectStatus status = ProjectStatus.fromLabel("status", c.status());
         String timezone = c.timezone() == null ? DEFAULT_TIMEZONE : c.timezone();
         ZoneId zone = zone(timezone);
-        UserInfo manager = requireManagerRole(c.managerId());
+        UserInfo manager = creator.toInfo(); // the creator manages the new project (R19); requireCanCreate checked the role
         checkDates(c.startDate(), c.startTime(), c.endDate(), c.endTime(), zone, true);
 
         long id = commands.insert(new NewProject(c.name(), c.description(), c.startDate(), c.startTime(),

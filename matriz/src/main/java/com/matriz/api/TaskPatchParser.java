@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.matriz.shared.Limits;
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Texts;
 import com.matriz.usecases.TaskPatch;
 
 /**
@@ -43,12 +45,13 @@ final class TaskPatchParser {
             throw invalid("body", "Send at least one field to change.");
         }
         return new TaskPatch(version.asInt(), present,
-                text(body, "title", false, 100), text(body, "description", true, 2000), text(body, "status", false, 100),
-                date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, Integer.MAX_VALUE),
+                text(body, "title", false, Limits.TASK_TITLE_MIN, Limits.TASK_TITLE_MAX),
+                text(body, "description", true, 0, Limits.TASK_DESCRIPTION_MAX), text(body, "status", false, 0, Limits.LABEL_MAX),
+                date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, 0, Integer.MAX_VALUE),
                 originalTaskId(body));
     }
 
-    private static String text(JsonNode body, String field, boolean nullable, int max) {
+    private static String text(JsonNode body, String field, boolean nullable, int min, int max) {
         JsonNode node = body.get(field);
         if (node == null || (node.isNull() && nullable)) {
             return null;
@@ -57,12 +60,10 @@ final class TaskPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        if (value.isEmpty() && "title".equals(field)) {
-            throw invalid(field, "Must have at least 1 character.");
-        }
-        if (value.codePointCount(0, value.length()) > max) { // characters, not UTF-16 units (R14)
-            throw invalid(field, "Longer than " + max + " characters.");
-        }
+        Texts.check(value, min, max, "title".equals(field)) // the rule of the requests (R14, A46)
+                .ifPresent(problem -> {
+                    throw invalid(field, Texts.message(problem, min, max));
+                });
         return value;
     }
 
