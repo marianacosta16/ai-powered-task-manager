@@ -13,7 +13,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
- * The dashboard (getDashboard): scenarios 6.1, 6.7 to 6.11, 6.13, 13.1 to 13.5 and EC1, EC16, EC24, through
+ * The dashboard (getDashboard): scenarios 6.1, 6.7 to 6.11, 6.13, 13.1 to 13.5 and EC1, EC16, EC20, EC24, through
  * real HTTP requests. The limits of the calculation are in ProjectProgressTest. The projects of each test
  * are created here; the seed ones are also in the answer, so each test looks for its own by name.
  */

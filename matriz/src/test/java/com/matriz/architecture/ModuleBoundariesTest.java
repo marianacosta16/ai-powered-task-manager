@@ -6,6 +6,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.matriz.access.UserDirectory;
+import com.matriz.projects.ProjectQueries;
 import com.matriz.recycle.RecycleBin;
 import com.matriz.tasks.TaskQueries;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -63,13 +64,15 @@ class ModuleBoundariesTest {
     static final ArchRule noCycles = slices().matching(BASE + "(*)..").should().beFreeOfCycles()
             .allowEmptyShould(true);
 
-    /** The lock order (people first, then tasks) is kept in one place: only Locks takes these locks. */
+    /** The lock order (project, then people, then tasks) is kept in one place: only Locks takes these locks. */
     @ArchTest
-    static final ArchRule onlyLocksLocksPeopleAndTasks = noClasses()
+    static final ArchRule onlyLocksLocksProjectsPeopleAndTasks = noClasses()
             .that().doNotHaveFullyQualifiedName(BASE + "usecases.Locks")
             .should().callMethod(UserDirectory.class, "findForUpdate", long.class)
             .orShould().callMethod(TaskQueries.class, "findByIdForUpdate", long.class)
             .orShould().callMethod(TaskQueries.class, "lockOpenTaskIdsOf", long.class, long.class)
+            .orShould().callMethod(ProjectQueries.class, "findByIdForUpdate", long.class)
+            .orShould().callMethod(ProjectQueries.class, "findByIdForShare", long.class)
             .orShould().callMethod(TaskQueries.class, "lockTaskIdsOfProject", long.class)
             .orShould().callMethod(RecycleBin.class, "lockTask", long.class, Instant.class)
             .allowEmptyShould(true);

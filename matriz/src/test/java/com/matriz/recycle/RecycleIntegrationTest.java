@@ -21,8 +21,8 @@ import com.matriz.testsupport.ApiIntegrationTest;
 import com.matriz.usecases.RecyclePurgeJob;
 
 /**
- * Deleting, the recycle bin and restoring (US07): scenarios 7.1 to 7.8, 11.7 (the second half), EC7, EC21,
- * EC23 and EC36, and P36, through real HTTP requests with a clock that the test moves. Each test builds its
+ * Deleting, the recycle bin and restoring (US07): scenarios 7.1 to 7.10, 11.7 (the second half), EC7, EC21,
+ * EC23, EC35 (deleting in a completed project), EC36 and EC49 to EC51, and P36, through real HTTP requests with a clock that the test moves. Each test builds its
  * own projects; the people are the seeded ones. The projects are made by hand in the database, so that the
  * rule of one open project per member (R11) does not get in the way of the setup.
  */

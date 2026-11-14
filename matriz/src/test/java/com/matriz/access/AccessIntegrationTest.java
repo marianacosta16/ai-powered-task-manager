@@ -26,8 +26,8 @@ import com.matriz.testsupport.TestDatabase;
 import com.matriz.usecases.DemoDataSeeder;
 
 /**
- * US10 (scenarios 10.1 to 10.6, EC31, EC38) and the project access rules (R8, R19, S1),
- * through real HTTP requests, against the test database. Passwords are generated per run.
+ * US10 (scenarios 10.1 to 10.6, EC31, EC38), US08 (scenarios 8.1 to 8.3, EC8) and the project access rules
+ * (R8, R19, S1), through real HTTP requests, against the test database. Passwords are generated per run.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

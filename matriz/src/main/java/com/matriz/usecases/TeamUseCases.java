@@ -72,8 +72,9 @@ public class TeamUseCases {
 
     @Transactional
     public MemberView addMember(AuthenticatedUser user, long projectId, long userId) {
-        ProjectRecord project = find(projectId);
+        find(projectId);
         permissions.requireManager(user, projectId);
+        ProjectRecord project = lockProject(projectId);
         ProjectUseCases.requireNotCompleted(project); // R28
         // Lock the person first: the checks below and the insert must not be mixed with another
         // request about the same person (R11 across projects, and the same person added twice)
@@ -90,8 +91,9 @@ public class TeamUseCases {
     /** Removes a member, passing the open tasks to substitutes (R17, P24); see {@link MemberRemoval}. */
     @Transactional
     public void removeMember(AuthenticatedUser user, long projectId, long userId, List<TaskReassignment> reassignments) {
-        ProjectRecord project = find(projectId);
+        find(projectId);
         permissions.requireManager(user, projectId);
+        ProjectRecord project = lockProject(projectId);
         ProjectUseCases.requireNotCompleted(project); // R28
         removal.remove(project, userId, reassignments);
     }
@@ -104,6 +106,11 @@ public class TeamUseCases {
                 .map(u -> new MemberView(u.id(), u.name(), u.role(), counts.getOrDefault(u.id(), 0),
                         flagged.contains(u.id()) && !TeamRules.isManagerRole(u)))
                 .toList();
+    }
+
+    /** The project locked in shared mode and read again: a project completed or deleted meanwhile is seen (R28). */
+    private ProjectRecord lockProject(long projectId) {
+        return locks.projectShared(projectId).orElseThrow(() -> new NotFoundException("The project was not found."));
     }
 
     private ProjectRecord find(long projectId) {

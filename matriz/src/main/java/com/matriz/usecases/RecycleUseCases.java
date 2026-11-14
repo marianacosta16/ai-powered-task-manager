@@ -113,7 +113,7 @@ public class RecycleUseCases {
     public void deleteProject(AuthenticatedUser user, long projectId) {
         rules.loadProject(user, projectId); // 404 and 403
         permissions.requireManager(user, projectId);
-        ProjectRecord project = projects.findByIdForUpdate(projectId)
+        ProjectRecord project = locks.project(projectId)
                 .orElseThrow(() -> new NotFoundException("The project was not found."));
         if (ProjectStatus.fromLabel("status", project.status()) == ProjectStatus.COMPLETED) {
             throw new BusinessRuleException("PROJECT_COMPLETED", "A completed project cannot be deleted.");
@@ -181,7 +181,7 @@ public class RecycleUseCases {
         if (newAssignees != null) {
             requireValidShape(newAssignees);
         }
-        ProjectRecord project = projects.findByIdForUpdate(item.projectId())
+        ProjectRecord project = locks.projectShared(item.projectId())
                 .orElseThrow(NotRestorable.PROJECT_IN_RECYCLE_BIN::toException); // deleted, or being deleted
         if (newAssignees != null) {
             locks.people(newAssignees); // the people before the tasks (see Locks)

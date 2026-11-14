@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: Matriz API (MVP contract)
-  version: 0.3.0
+  version: 1.0.0
   description: |
     REST contract for the MVP (v1) of Matriz: sign in and out, projects, team, tasks, assignees, comments, search and filters, dashboard and recycle bin.
 
