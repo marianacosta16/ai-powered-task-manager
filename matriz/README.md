@@ -268,7 +268,7 @@ Operação nova: `getDashboard`. Só lê: o módulo `views` conta as tarefas e c
 | Tempo (P26, P23) | No fuso do projeto; o início sem hora conta das 00:00 e o fim sem hora conta o dia inteiro; antes do início passou 0% |
 | Arredondamento (A32) | O progresso e o tempo passado arredondam-se a duas casas antes de se calcular o desvio |
 
-Os pressupostos A32 a A34 estão por confirmar no [openapi.yaml](openapi.yaml).
+Os pressupostos A32 a A34 estão confirmados no [openapi.yaml](openapi.yaml).
 
 ```bash
 curl -s -b /tmp/marta.txt localhost:8081/dashboard
