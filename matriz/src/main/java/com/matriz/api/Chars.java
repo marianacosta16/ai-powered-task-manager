@@ -29,4 +29,7 @@ import jakarta.validation.Payload;
     int min() default 0;
 
     int max() default Integer.MAX_VALUE;
+
+    /** When true, a text made only of spaces (or other blank characters) is refused, whatever its length. */
+    boolean notBlank() default false;
 }

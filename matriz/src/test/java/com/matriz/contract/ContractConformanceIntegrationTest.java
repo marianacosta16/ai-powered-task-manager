@@ -127,6 +127,8 @@ class ContractConformanceIntegrationTest extends ApiIntegrationTest {
         long subtaskId = id(subtask);
         calls.call("createTask", anaCookie, Map.of("projectId", website), Map.of("title", "", "deadline", "2026-12-20",
                 "urgency", 3, "importance", 4, "assigneeIds", List.of(ana))); // 400
+        calls.call("createTask", anaCookie, Map.of("projectId", website), Map.of("title", "   ", "deadline", "2026-12-20",
+                "urgency", 3, "importance", 4, "assigneeIds", List.of(ana))); // 400: only spaces
         calls.call("listProjectTasks", anaCookie, Map.of("projectId", website), null);
         calls.call("listProjectTasks", anaCookie, Map.of("projectId", website), null, "mine=true&status=To%20do&quadrant=Do%20first&size=10");
         calls.call("listProjectTasks", anaCookie, Map.of("projectId", website), null, "size=500"); // 400
@@ -135,6 +137,7 @@ class ContractConformanceIntegrationTest extends ApiIntegrationTest {
         calls.call("updateTask", anaCookie, Map.of("taskId", taskId), Map.of("version", 1, "title", "Stale")); // 409
         calls.call("addAssignee", anaCookie, Map.of("taskId", taskId), Map.of("userId", userId("rui")));
         calls.call("addAssignee", anaCookie, Map.of("taskId", taskId), Map.of("userId", userId("sofia"))); // 422
+        calls.call("addAssignee", anaCookie, Map.of("taskId", taskId), Map.of("userId", userId("rui"))); // 409: already assigned
         calls.call("removeAssignee", anaCookie, Map.of("taskId", taskId, "userId", userId("rui")), null);
         calls.call("removeAssignee", anaCookie, Map.of("taskId", taskId, "userId", ana), null); // 422: the last one
 

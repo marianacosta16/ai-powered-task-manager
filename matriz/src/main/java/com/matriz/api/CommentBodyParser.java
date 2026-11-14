@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Texts;
 
 /**
  * Reads the body of addComment and editComment (CommentWrite in the contract): only the text.
@@ -35,7 +36,7 @@ final class CommentBodyParser {
             throw invalid("content", "Must be text.");
         }
         String content = node.asText();
-        if (content.isBlank()) { // A25
+        if (Texts.isOnlySpaces(content)) { // A25
             throw invalid("content", "Is required.");
         }
         if (content.codePointCount(0, content.length()) > MAX_CHARACTERS) {

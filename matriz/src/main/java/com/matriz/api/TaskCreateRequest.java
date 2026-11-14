@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotNull;
 
 /** Body of createTask (TaskCreate in the contract). */
 record TaskCreateRequest(
-        @NotNull(message = "Is required.") @Chars(min = 1, max = 100, message = "Must have 1 to 100 characters.") String title,
+        @NotNull(message = "Is required.") @Chars(min = 3, max = 150, notBlank = true, message = "Must have 3 to 150 characters.") String title,
         @Chars(max = 2000, message = "Longer than 2000 characters.") String description,
         @NotNull(message = "Is required.") LocalDate deadline,
         @NotNull(message = "Is required.") @Min(value = 1, message = "Must be 1 to 4.") @Max(value = 4, message = "Must be 1 to 4.") Integer urgency,

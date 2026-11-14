@@ -183,6 +183,27 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void aNameOfOnlySpacesIsRefused() { // 1.15, EC52
+        String marta = sessionOf("marta");
+        long website = projectId("Website");
+        int before = count("project");
+
+        for (String name : List.of("   ", "     ", "\t\t\t", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003")) {
+            ResponseEntity<String> created = post("/projects", marta, project(name, "2026-06-10", "2026-09-30"));
+            ResponseEntity<String> renamed = patch("/projects/" + website, marta, Map.of("name", name));
+            for (ResponseEntity<String> refused : List.of(created, renamed)) {
+                assertThat(refused.getStatusCode()).as("[" + name + "]").isEqualTo(HttpStatus.BAD_REQUEST);
+                assertThat(JsonPath.<List<String>>read(refused.getBody(), "$.details[*].field")).contains("name");
+            }
+        }
+        assertThat(JsonPath.<List<String>>read(post("/projects", marta, project("     ", "2026-06-10", "2026-09-30")).getBody(),
+                "$.details[*].issue")).containsExactly("Must not be only spaces.");
+        assertThat(count("project")).isEqualTo(before);
+        assertThat(json(get("/projects/" + website, marta), "$.name")).isEqualTo("Website");
+        assertThat(post("/projects", marta, project(" a b ", "2026-06-10", "2026-09-30")).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
     void aDescriptionOfUpTo1000CharactersIsKeptWhenTheProjectIsUpdated() { // 1.15
         String marta = sessionOf("marta");
         long website = projectId("Website");

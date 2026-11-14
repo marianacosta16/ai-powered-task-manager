@@ -17,6 +17,7 @@ import com.matriz.shared.ConflictException;
 import com.matriz.shared.ForbiddenException;
 import com.matriz.shared.InvalidRequestException;
 import com.matriz.shared.NotFoundException;
+import com.matriz.shared.Texts;
 import com.matriz.tasks.NewTask;
 import com.matriz.tasks.TaskCommands;
 import com.matriz.tasks.TaskQueries;
@@ -31,7 +32,7 @@ import com.matriz.tasks.TaskStatus;
 @Service
 public class TaskUseCases {
 
-    static final int TITLE_MAX = 100;
+    static final int TITLE_MAX = 150;
     static final int DESCRIPTION_MAX = 2000;
     static final int BLOCK_REASON_MAX = 100;
 
@@ -174,7 +175,7 @@ public class TaskUseCases {
             return null;
         }
         String reason = patch.has("blockReason") ? patch.blockReason() : task.blockReason();
-        if (reason == null || reason.isBlank()) {
+        if (reason == null || Texts.isOnlySpaces(reason)) {
             throw new BusinessRuleException("BLOCK_REASON_REQUIRED", "A blocked task needs a reason. Write why it is blocked.");
         }
         if (reason.codePointCount(0, reason.length()) > BLOCK_REASON_MAX) { // characters (R14)

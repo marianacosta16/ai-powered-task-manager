@@ -13,6 +13,7 @@ import com.matriz.access.UserInfo;
 import com.matriz.projects.ProjectRecord;
 import com.matriz.projects.TeamRepository;
 import com.matriz.shared.BusinessRuleException;
+import com.matriz.shared.ConflictException;
 import com.matriz.shared.NotFoundException;
 import com.matriz.tasks.TaskCommands;
 import com.matriz.tasks.TaskQueries;
@@ -61,6 +62,9 @@ public class AssigneeUseCases {
         locks.people(List.of(userId)); // locks: people first, then tasks, always by id (see Locks)
         TaskRecord task = lock(taskId);
         rules.requireEligible(context.project(), userId); // R21 (scenario 2.9)
+        if (queries.assigneeIds(task.id()).contains(userId)) { // the same person is not assigned twice (A16, scenario 2.15)
+            throw new ConflictException("ASSIGNEE_ALREADY_ASSIGNED", "This person is already assigned to the task.");
+        }
         commands.addAssignee(task.id(), userId);
         return assignees(task.id());
     }

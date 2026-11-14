@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Texts;
 import com.matriz.usecases.ProjectPatch;
 
 /**
@@ -60,6 +61,9 @@ final class ProjectPatchParser {
         }
         if (length > max) {
             throw invalid(field, "Longer than " + max + " characters.");
+        }
+        if ("name".equals(field) && Texts.isOnlySpaces(value)) {
+            throw invalid(field, CharsValidator.BLANK_MESSAGE);
         }
         return value;
     }

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.matriz.shared.InvalidRequestException;
+import com.matriz.shared.Texts;
 import com.matriz.usecases.TaskPatch;
 
 /**
@@ -43,12 +44,12 @@ final class TaskPatchParser {
             throw invalid("body", "Send at least one field to change.");
         }
         return new TaskPatch(version.asInt(), present,
-                text(body, "title", false, 100), text(body, "description", true, 2000), text(body, "status", false, 100),
-                date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, Integer.MAX_VALUE),
+                text(body, "title", false, 3, 150), text(body, "description", true, 0, 2000), text(body, "status", false, 0, 100),
+                date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, 0, Integer.MAX_VALUE),
                 originalTaskId(body));
     }
 
-    private static String text(JsonNode body, String field, boolean nullable, int max) {
+    private static String text(JsonNode body, String field, boolean nullable, int min, int max) {
         JsonNode node = body.get(field);
         if (node == null || (node.isNull() && nullable)) {
             return null;
@@ -57,11 +58,15 @@ final class TaskPatchParser {
             throw invalid(field, "Must be text.");
         }
         String value = node.asText();
-        if (value.isEmpty() && "title".equals(field)) {
-            throw invalid(field, "Must have at least 1 character.");
+        int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
+        if (length < min) {
+            throw invalid(field, "Must have " + min + " to " + max + " characters.");
         }
-        if (value.codePointCount(0, value.length()) > max) { // characters, not UTF-16 units (R14)
+        if (length > max) {
             throw invalid(field, "Longer than " + max + " characters.");
+        }
+        if ("title".equals(field) && Texts.isOnlySpaces(value)) {
+            throw invalid(field, CharsValidator.BLANK_MESSAGE);
         }
         return value;
     }

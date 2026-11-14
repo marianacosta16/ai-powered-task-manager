@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotNull;
  * the session (R19). A {@code managerId} in the body is refused as an unknown field.
  */
 record ProjectCreateRequest(
-        @NotNull(message = "Is required.") @Chars(min = 3, max = 100, message = "Must have 3 to 100 characters.") String name,
+        @NotNull(message = "Is required.") @Chars(min = 3, max = 100, notBlank = true, message = "Must have 3 to 100 characters.") String name,
         @Chars(max = 1000, message = "Longer than 1000 characters.") String description,
         @NotNull(message = "Is required.") LocalDate startDate,
         LocalTime startTime,

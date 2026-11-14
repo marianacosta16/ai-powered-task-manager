@@ -86,11 +86,11 @@ class TasksIntegrationTest extends ApiIntegrationTest {
     void titleAndDescriptionHaveMaximumLengths() {
         String ana = sessionOf("ana");
         String path = "/projects/" + projectId("Website") + "/tasks";
-        Map<String, Object> ok = task("t".repeat(100), "2026-12-15", userId("ana"));
+        Map<String, Object> ok = task("t".repeat(150), "2026-12-15", userId("ana"));
         ok.put("description", "d".repeat(2000));
         assertThat(post(path, ana, ok).getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        ResponseEntity<String> longTitle = post(path, ana, task("t".repeat(101), "2026-12-15", userId("ana")));
+        ResponseEntity<String> longTitle = post(path, ana, task("t".repeat(151), "2026-12-15", userId("ana")));
         Map<String, Object> longDescription = task("Long description", "2026-12-15", userId("ana"));
         longDescription.put("description", "d".repeat(2001));
 
@@ -100,17 +100,43 @@ class TasksIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void aTitleOfOnlySpacesOrOfFewerThanThreeCharactersIsRefused() { // 2.14, EC52
+        String ana = sessionOf("ana");
+        String path = "/projects/" + projectId("Website") + "/tasks";
+        long task = taskId("Set up hosting");
+        long parent = taskId("Design homepage");
+        int before = count("task");
+
+        for (String title : List.of("", " ", "   ", "\t\n ", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003", "ab", " a")) {
+            ResponseEntity<String> created = post(path, ana, task(title, "2026-12-15", userId("ana")));
+            ResponseEntity<String> renamed = patch("/tasks/" + task, ana, Map.of("version", 1, "title", title));
+            for (ResponseEntity<String> refused : List.of(created, renamed)) {
+                assertThat(refused.getStatusCode()).as("[" + title + "]").isEqualTo(HttpStatus.BAD_REQUEST);
+                assertThat(JsonPath.<List<String>>read(refused.getBody(), "$.details[*].field")).contains("title");
+            }
+        }
+        Map<String, Object> subtask = task("   ", "2026-11-20", userId("ana"));
+        subtask.put("parentTaskId", parent);
+        assertThat(post(path, ana, subtask).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(JsonPath.<List<String>>read(post(path, ana, task("     ", "2026-12-15", userId("ana"))).getBody(), "$.details[*].issue"))
+                .containsExactly("Must not be only spaces.");
+        assertThat(count("task")).isEqualTo(before);
+        assertThat(post(path, ana, task("abc", "2026-12-15", userId("ana"))).getStatusCode()).isEqualTo(HttpStatus.CREATED); // the minimum
+        assertThat(post(path, ana, task(" a b ", "2026-12-16", userId("ana"))).getStatusCode()).isEqualTo(HttpStatus.CREATED); // spaces inside are text
+    }
+
+    @Test
     void titleAndDescriptionCountCharactersNotUtf16Units() { // R14
         String emoji = "\uD83D\uDC4D"; // one character, two UTF-16 units
         String path = "/projects/" + projectId("Website") + "/tasks";
         String ana = sessionOf("ana");
-        Map<String, Object> fits = task(emoji.repeat(100), "2026-12-15", userId("ana"));
+        Map<String, Object> fits = task(emoji.repeat(150), "2026-12-15", userId("ana"));
         fits.put("description", emoji.repeat(2000));
 
         ResponseEntity<String> created = post(path, ana, fits);
-        ResponseEntity<String> tooLong = post(path, ana, task(emoji.repeat(101), "2026-12-15", userId("ana")));
+        ResponseEntity<String> tooLong = post(path, ana, task(emoji.repeat(151), "2026-12-15", userId("ana")));
         ResponseEntity<String> renamed = patch("/tasks/" + taskId("Set up hosting"), ana,
-                Map.of("version", 1, "title", emoji.repeat(100)));
+                Map.of("version", 1, "title", emoji.repeat(150)));
 
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(tooLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -603,14 +629,16 @@ class TasksIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
-    void assigningSomeoneWhoIsAlreadyAnAssigneeChangesNothing() { // A16
+    void assigningSomeoneWhoIsAlreadyAnAssigneeIsRefused() { // 2.15, EC53, A16
         long copy = taskId("Write contact page copy"); // Rui and Luís
 
         ResponseEntity<String> again = post("/tasks/" + copy + "/assignees", sessionOf("ana"), Map.of("userId", userId("rui")));
 
-        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(JsonPath.<List<String>>read(again.getBody(), "$[*].name")).containsExactly("Rui", "Luís");
-        assertThat(assigneeNames(copy)).containsExactly("Rui", "Luís");
+        assertThat(again.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(json(again, "$.code")).isEqualTo("ASSIGNEE_ALREADY_ASSIGNED");
+        assertThat(json(again, "$.message").toString()).isNotBlank();
+        assertThat(assigneeNames(copy)).containsExactly("Rui", "Luís"); // nothing changed, no row twice
+        assertThat(count("task_assignee")).isEqualTo(jdbc.queryForObject("SELECT count(DISTINCT (task_id, user_id)) FROM task_assignee", Integer.class));
     }
 
     @Test
