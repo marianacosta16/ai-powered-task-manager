@@ -219,10 +219,10 @@ Operações: `listComments`, `addComment`, `editComment` e `deleteComment`. O au
 | Quem vê e comenta (R24) | O gestor e os membros do projeto, em tarefas e subtarefas (403 para os outros). Lista do mais antigo para o mais recente |
 | Texto (NF09, P28) | Até 2000 caracteres (400 acima) e não só espaços (A25); guardado e devolvido tal como chega |
 | Editar e apagar (R24) | Só o autor, nem o gestor (403). A edição mantém o autor e a data; apagar elimina de vez, sem reciclagem |
-| Estado do projeto (R27, R28) | Em projetos em aberto e suspensos comenta-se, edita-se e apaga-se; num concluído só se lê (422 `PROJECT_COMPLETED`) |
+| Estado do projeto e da tarefa (R27, R28, P37) | Em projetos em aberto e suspensos comenta-se, edita-se e apaga-se; num concluído só se lê (422 `PROJECT_COMPLETED`). Numa tarefa ou subtarefa fechada também só se lê (422 `TASK_CLOSED`) até o gestor a reabrir |
 | Seguem a tarefa (R9) | Os comentários de uma tarefa apagada deixam de aparecer; voltam quando ela for recuperada (incremento 7) |
 
-Os pressupostos A24 a A27 estão no [openapi.yaml](openapi.yaml), por confirmar.
+Os pressupostos A24 a A27 estão confirmados no [openapi.yaml](openapi.yaml).
 
 ```bash
 curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"content":"Falta rever o capítulo 2"}' localhost:8081/tasks/1/comments

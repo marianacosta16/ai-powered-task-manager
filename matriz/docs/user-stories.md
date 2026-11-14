@@ -673,6 +673,16 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 - **When** é pedida a criação, a edição ou a eliminação de um comentário desse projeto por outra via
 - **Then** a ação é recusada, com uma mensagem a explicar que o projeto está concluído, e o comentário não muda.
 
+**Cenário 11.11: tarefa ou subtarefa fechada**
+- **Given** uma tarefa "concluído" com um comentário da Ana, num projeto em aberto
+- **When** a Ana abre a tarefa
+- **Then** vê o comentário, mas não estão disponíveis as ações de adicionar, editar nem apagar comentários.
+- **When** é pedida uma dessas ações por outra via
+- **Then** a ação é recusada, com uma mensagem a pedir que a tarefa seja primeiro reaberta, e o comentário não muda.
+- **When** o gestor reabre a tarefa e a Ana adiciona um comentário
+- **Then** o comentário é criado.
+- **And** a regra é a mesma nos estados "cancelado" e "duplicado" e para subtarefas.
+
 ### US12 — Pesquisa e filtros
 
 **Cenário 12.1: pesquisar projetos pelo nome**
@@ -802,6 +812,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | EC45 | O gestor faz duas alterações ao mesmo projeto ao mesmo tempo (por exemplo, o nome e o estado) | As duas ficam guardadas, uma a seguir à outra, e nenhuma desfaz a outra | [R12](requirements.md#4-regras-de-negócio) |
 | EC46 | Criar uma subtarefa numa tarefa-mãe concluída, cancelada ou duplicada, ou reabrir uma subtarefa fechada com a mãe fechada | Recusado, com mensagem a pedir que a mãe seja primeiro reaberta (cenários 4.6 e 4.7) | [P35](constraints.md#2-pressupostos-assumidos), [R4](requirements.md#4-regras-de-negócio) |
 | EC47 | Atribuir uma pessoa a uma tarefa ao mesmo tempo que o gestor a remove do projeto | Uma das duas ações é recusada: a tarefa nunca fica atribuída a alguém que já não é membro do projeto | [R21](requirements.md#4-regras-de-negócio) |
+| EC48 | Adicionar, editar ou apagar um comentário numa tarefa ou subtarefa fechada (concluída, cancelada ou duplicada) | Os controlos não aparecem; um pedido por outra via é recusado, com mensagem a pedir que a tarefa seja reaberta (cenário 11.11) | [P37](constraints.md#2-pressupostos-assumidos), [R24](requirements.md#4-regras-de-negócio) |
 
 ## 5. Revisão: ambiguidades e pontos em aberto
 

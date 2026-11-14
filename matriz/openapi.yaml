@@ -37,10 +37,10 @@ info:
     - A21 (confirmed): the limit of 5 open tasks and subtasks of a substitute (R17, P24) counts the open tasks the substitute has in this project, plus those received.
     - A22 (confirmed): the closed tasks of the member who is removed keep him as an assignee (history); only the open ones pass to the substitutes.
     - A23 (confirmed): a `reassignments` entry for a task that is not an open task of the member in this project, or a task named twice, is refused with 400; a substitute who does not exist, who is the member removed or who is already an assignee of that task is refused with 422 `REPLACEMENT_NOT_ELIGIBLE`.
-    - A24 (to confirm): comments are allowed on closed tasks (Done, Cancelled, Duplicate) and on subtasks of any status; only the state of the project limits them (R24).
-    - A25 (to confirm): a comment made only of spaces is refused with 400.
-    - A26 (to confirm): only the author edits or deletes a comment, not even the manager of the project (403). In a completed project the answer is 422 `PROJECT_COMPLETED`, before the author is checked.
-    - A27 (to confirm): the date of a comment is set by the server clock when it is created and never changes; the body accepts only `content`, and an `authorId` or `createdAt` is refused with 400.
+    - A24 (confirmed): the comments of a closed task or subtask (Done, Cancelled or Duplicate) are only read: they are not added, edited or deleted (422 `TASK_CLOSED`, P37). The manager reopens the task to allow it again (P8).
+    - A25 (confirmed): a comment made only of spaces is refused with 400.
+    - A26 (confirmed): only the author edits or deletes a comment, not even the manager of the project (403). In a completed project the answer is 422 `PROJECT_COMPLETED`, and on a closed task 422 `TASK_CLOSED`, both before the author is checked.
+    - A27 (confirmed): the date of a comment is set by the server clock when it is created and never changes; the body accepts only `content`, and an `authorId` or `createdAt` is refused with 400.
 
 tags:
   - name: Auth
@@ -699,7 +699,7 @@ paths:
       summary: Add a comment to a task or subtask
       description: |
         Any member of the project and its manager can comment. The author and the date are set by the application (R24).
-        Allowed in an open or suspended project, never in a completed one (R28). The text is plain text of up to 2000 characters (NF09), and not only spaces (A25). Closed tasks and subtasks can be commented (A24). Only `content` is accepted: the author and the date are never taken from the request (A27).
+        Allowed in an open or suspended project, never in a completed one (R28). The text is plain text of up to 2000 characters (NF09), and not only spaces (A25). A closed task or subtask takes no new comments (422 `TASK_CLOSED`, A24). Only `content` is accepted: the author and the date are never taken from the request (A27).
       requestBody:
         required: true
         content:
@@ -732,7 +732,7 @@ paths:
       operationId: editComment
       summary: Edit a comment
       description: |
-        Only the author edits their comment, not even the manager (R24, A26). The author and the creation date do not change (A27). Not allowed in a completed project (R28).
+        Only the author edits their comment, not even the manager (R24, A26). The author and the creation date do not change (A27). Not allowed in a completed project (R28) or on a closed task (A24).
       requestBody:
         required: true
         content:
@@ -761,7 +761,7 @@ paths:
       operationId: deleteComment
       summary: Delete a comment
       description: |
-        Only the author deletes their comment, and it is removed for good, without the recycle bin (R24, P28). Not allowed in a completed project (R28).
+        Only the author deletes their comment, and it is removed for good, without the recycle bin (R24, P28). Not allowed in a completed project (R28) or on a closed task (A24).
       responses:
         '204':
           description: Comment deleted.
@@ -1501,6 +1501,7 @@ components:
         - CANNOT_RESTORE
         - TASK_CHANGED
         - PARENT_TASK_CLOSED
+        - TASK_CLOSED
 
     Error:
       type: object
