@@ -107,7 +107,10 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         long parent = taskId("Design homepage");
         int before = count("task");
 
-        for (String title : List.of("", " ", "   ", "\t\n ", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003", "\u200B\u200B\u200B", "\uFEFF\uFEFF\uFEFF", "\u2060 \u200D \u200C", "ab", " a")) {
+        List<String> refusedTitles = new java.util.ArrayList<>(NOTHING_VISIBLE);
+        // too short, also when padded with spaces: the minimum counts the text without the spaces at its ends
+        refusedTitles.addAll(List.of("", " ", "ab", " a", "  a", " ab ", "\u200Bab\u200B"));
+        for (String title : refusedTitles) {
             ResponseEntity<String> created = post(path, ana, task(title, "2026-12-15", userId("ana")));
             ResponseEntity<String> renamed = patch("/tasks/" + task, ana, Map.of("version", 1, "title", title));
             for (ResponseEntity<String> refused : List.of(created, renamed)) {
@@ -123,6 +126,9 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         assertThat(count("task")).isEqualTo(before);
         assertThat(post(path, ana, task("abc", "2026-12-15", userId("ana"))).getStatusCode()).isEqualTo(HttpStatus.CREATED); // the minimum
         assertThat(post(path, ana, task(" a b ", "2026-12-16", userId("ana"))).getStatusCode()).isEqualTo(HttpStatus.CREATED); // spaces inside are text
+        assertThat(post(path, ana, task("  abc  ", "2026-12-17", userId("ana"))).getStatusCode()).isEqualTo(HttpStatus.CREATED); // 3 visible
+        assertThat(JsonPath.<List<String>>read(get("/projects/" + projectId("Website") + "/tasks", ana).getBody(), "$[*].title"))
+                .contains("  abc  "); // kept as written
     }
 
     @Test

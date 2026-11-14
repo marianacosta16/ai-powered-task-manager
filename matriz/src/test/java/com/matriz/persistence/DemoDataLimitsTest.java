@@ -40,7 +40,7 @@ class DemoDataLimitsTest extends ApiIntegrationTest {
                     Limits.TASK_TITLE_MAX, true);
             check(problems, "task " + rs.getLong("id") + " description", rs.getString("description"), 0,
                     Limits.TASK_DESCRIPTION_MAX, false);
-            check(problems, "task " + rs.getLong("id") + " block reason", rs.getString("block_reason"), 0, 100, false);
+            check(problems, "task " + rs.getLong("id") + " block reason", rs.getString("block_reason"), 0, Limits.BLOCK_REASON_MAX, false);
         });
 
         assertThat(count("task")).isPositive();

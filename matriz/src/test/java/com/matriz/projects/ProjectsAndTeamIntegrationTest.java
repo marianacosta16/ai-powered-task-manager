@@ -188,7 +188,9 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
         long website = projectId("Website");
         int before = count("project");
 
-        for (String name : List.of("   ", "     ", "\t\t\t", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003", "\u200B\u200B\u200B", "\uFEFF\uFEFF\uFEFF")) {
+        List<String> refusedNames = new java.util.ArrayList<>(NOTHING_VISIBLE);
+        refusedNames.addAll(List.of("     ", "  a", " ab ")); // too short once the spaces at the ends are left out
+        for (String name : refusedNames) {
             ResponseEntity<String> created = post("/projects", marta, project(name, "2026-06-10", "2026-09-30"));
             ResponseEntity<String> renamed = patch("/projects/" + website, marta, Map.of("name", name));
             for (ResponseEntity<String> refused : List.of(created, renamed)) {

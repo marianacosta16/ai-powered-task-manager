@@ -319,7 +319,9 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **Given** um membro da equipa a criar ou a alterar uma tarefa ou subtarefa
 - **When** indica um título só com espaços (de qualquer tipo, por exemplo "   ", ou só com caracteres invisíveis como o espaço de largura zero), vazio ou com menos de 3 caracteres
 - **Then** a tarefa não é criada nem alterada, e é indicado que o título tem de ter de 3 a 150 caracteres e não pode ter só espaços.
-- **When** indica o título "abc", ou " a b " (com espaços no meio e nas pontas)
+- **When** indica um título com menos de 3 caracteres depois de tirar os espaços das pontas (por exemplo "  a" ou " ab ")
+- **Then** a tarefa não é criada, porque os espaços das pontas não contam para o mínimo.
+- **When** indica o título "abc", " a b " ou "  abc  "
 - **Then** a tarefa é criada, com o texto tal como foi escrito.
 
 **Cenário 2.15: atribuir quem já é responsável**

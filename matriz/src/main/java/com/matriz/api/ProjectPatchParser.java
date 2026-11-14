@@ -41,8 +41,8 @@ final class ProjectPatchParser {
                 text(body, "name", false, Limits.PROJECT_NAME_MIN, Limits.PROJECT_NAME_MAX),
                 text(body, "description", true, 0, Limits.PROJECT_DESCRIPTION_MAX),
                 date(body, "startDate", false), time(body, "startTime"), date(body, "endDate", false),
-                time(body, "endTime"), text(body, "timezone", false, 1, 100),
-                text(body, "phase", false, 1, 100), text(body, "status", false, 1, 100), managerId(body));
+                time(body, "endTime"), text(body, "timezone", false, 1, Limits.LABEL_MAX),
+                text(body, "phase", false, 1, Limits.LABEL_MAX), text(body, "status", false, 1, Limits.LABEL_MAX), managerId(body));
     }
 
     private static String text(JsonNode body, String field, boolean nullable, int min, int max) {
@@ -58,14 +58,15 @@ final class ProjectPatchParser {
         }
         String value = node.asText();
         int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
-        if (length < min) {
-            throw invalid(field, min == 1 ? "Must have at least 1 character." : "Must have " + min + " to " + max + " characters.");
-        }
         if (length > max) {
             throw invalid(field, "Longer than " + max + " characters.");
         }
-        if ("name".equals(field) && Texts.isOnlySpaces(value)) {
+        boolean name = "name".equals(field);
+        if (name && length > 0 && Texts.isOnlySpaces(value)) {
             throw invalid(field, CharsValidator.BLANK_MESSAGE);
+        }
+        if ((name ? Texts.visibleLength(value) : length) < min) { // a name counts without the spaces at its ends
+            throw invalid(field, min == 1 ? "Must have at least 1 character." : "Must have " + min + " to " + max + " characters.");
         }
         return value;
     }

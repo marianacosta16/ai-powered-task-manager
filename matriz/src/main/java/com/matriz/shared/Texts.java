@@ -21,6 +21,28 @@ public final class Texts {
      * (A25, A46). Spaces and these characters between visible ones are kept as they were written.
      */
     public static boolean isOnlySpaces(CharSequence text) {
-        return text.codePoints().allMatch(cp -> Character.isWhitespace(cp) || Character.isSpaceChar(cp) || INVISIBLE.contains(cp));
+        return text.codePoints().allMatch(Texts::isSpace);
+    }
+
+    /**
+     * The number of characters of the text without the spaces and the common invisible characters at its two ends:
+     * what counts for the minimum of a name or a title, so "  a" does not pass for a text of three characters. The
+     * text itself is kept as written; this only measures it.
+     */
+    public static int visibleLength(String text) {
+        int[] codePoints = text.codePoints().toArray();
+        int from = 0;
+        int to = codePoints.length;
+        while (from < to && isSpace(codePoints[from])) {
+            from++;
+        }
+        while (to > from && isSpace(codePoints[to - 1])) {
+            to--;
+        }
+        return to - from;
+    }
+
+    private static boolean isSpace(int codePoint) {
+        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint) || INVISIBLE.contains(codePoint);
     }
 }

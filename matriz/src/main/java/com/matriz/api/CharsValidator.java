@@ -6,8 +6,9 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Validator of {@link Chars}: counts code points, and refuses a text of only blank characters when asked to. A
- * missing value is valid (use @NotNull for that). The message says which of the two was broken.
+ * Validator of {@link Chars}: counts code points. With {@code notBlank} (names and titles) the minimum counts the
+ * text without the spaces at its ends, and a text of only spaces is refused with its own message. A missing value is
+ * valid (use @NotNull for that).
  */
 class CharsValidator implements ConstraintValidator<Chars, CharSequence> {
 
@@ -30,13 +31,12 @@ class CharsValidator implements ConstraintValidator<Chars, CharSequence> {
             return true;
         }
         int characters = Character.codePointCount(value, 0, value.length());
-        if (characters >= min && characters <= max && !(notBlank && Texts.isOnlySpaces(value))) {
-            return true;
-        }
-        if (characters >= min && characters <= max) { // the length is fine, so it is the blank text
+        if (notBlank && characters > 0 && characters <= max && Texts.isOnlySpaces(value)) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(BLANK_MESSAGE).addConstraintViolation();
+            return false;
         }
-        return false;
+        int counted = notBlank ? Texts.visibleLength(value.toString()) : characters;
+        return counted >= min && characters <= max;
     }
 }

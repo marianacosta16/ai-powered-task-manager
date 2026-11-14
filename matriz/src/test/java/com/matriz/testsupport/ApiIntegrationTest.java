@@ -2,6 +2,7 @@ package com.matriz.testsupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +138,14 @@ public abstract class ApiIntegrationTest {
         }
         return id;
     }
+
+    /**
+     * Texts with nothing visible in them, which a name, a title or a comment may not be (A25, A46): spaces and tabs,
+     * the no-break and the em space, and the common invisible characters (zero-width space, byte order mark, word
+     * joiner, joiners). The empty text is not here: it is refused for another reason.
+     */
+    protected static final List<String> NOTHING_VISIBLE = List.of("   ", "\t\n ", "\u00A0\u00A0\u00A0", "\u2003\u2003\u2003",
+            "\u200B\u200B\u200B", "\uFEFF\uFEFF\uFEFF", "\u2060 \u200D \u200C");
 
     protected int count(String table) {
         return jdbc.queryForObject("SELECT count(*) FROM " + table, Integer.class);

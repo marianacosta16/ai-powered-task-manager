@@ -46,7 +46,7 @@ final class TaskPatchParser {
         }
         return new TaskPatch(version.asInt(), present,
                 text(body, "title", false, Limits.TASK_TITLE_MIN, Limits.TASK_TITLE_MAX),
-                text(body, "description", true, 0, Limits.TASK_DESCRIPTION_MAX), text(body, "status", false, 0, 100),
+                text(body, "description", true, 0, Limits.TASK_DESCRIPTION_MAX), text(body, "status", false, 0, Limits.LABEL_MAX),
                 date(body), level(body, "urgency"), level(body, "importance"), text(body, "blockReason", true, 0, Integer.MAX_VALUE),
                 originalTaskId(body));
     }
@@ -61,14 +61,15 @@ final class TaskPatchParser {
         }
         String value = node.asText();
         int length = value.codePointCount(0, value.length()); // characters, not UTF-16 units (R14)
-        if (length < min) {
-            throw invalid(field, "Must have " + min + " to " + max + " characters.");
-        }
         if (length > max) {
             throw invalid(field, "Longer than " + max + " characters.");
         }
-        if ("title".equals(field) && Texts.isOnlySpaces(value)) {
+        boolean title = "title".equals(field);
+        if (title && length > 0 && Texts.isOnlySpaces(value)) {
             throw invalid(field, CharsValidator.BLANK_MESSAGE);
+        }
+        if ((title ? Texts.visibleLength(value) : length) < min) { // a title counts without the spaces at its ends
+            throw invalid(field, "Must have " + min + " to " + max + " characters.");
         }
         return value;
     }
