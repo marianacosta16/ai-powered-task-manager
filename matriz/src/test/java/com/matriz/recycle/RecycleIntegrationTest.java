@@ -2,6 +2,7 @@ package com.matriz.recycle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -519,8 +520,8 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
         long other = newProject("Other", "In progress", "marta", "ana");
         long strayInProject = newTask(other, "StrayInProject", "To do", null, "ana"); // not deleted, in a project that will expire
         clock.set("2026-03-01T10:00:00Z");
-        jdbc.update("UPDATE task SET deleted_at = ? WHERE id = ?", java.sql.Timestamp.from(clock.instant()), parent);
-        jdbc.update("UPDATE project SET deleted_at = ? WHERE id = ?", java.sql.Timestamp.from(clock.instant()), other);
+        jdbc.update("UPDATE task SET deleted_at = ? WHERE id = ?", Timestamp.from(clock.instant()), parent);
+        jdbc.update("UPDATE project SET deleted_at = ? WHERE id = ?", Timestamp.from(clock.instant()), other);
 
         clock.set("2026-04-01T10:00:00Z");
         purgeJob.purge(); // no foreign key breaks, and the job does not fail every night
@@ -662,6 +663,58 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    @Test
+    void aSubtaskIsNotRestoredUnderAParentThatIsClosedWhileTheRestoreWaits() throws Exception { // R4, P35
+        long project = newProject("Web", "In progress", "marta", "ana");
+        long parent = newTask(project, "Parent", "To do", null, "ana");
+        long sub = newTask(project, "Sub", "In progress", parent, "ana");
+        delete("/tasks/" + sub, sessionOf("ana"));
+        String ana = sessionOf("ana");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            // the manager is closing the parent (its row is locked) when the restore arrives: the restore waits for it
+            Future<ResponseEntity<String>> restore = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM task WHERE id = ? FOR UPDATE", Long.class, parent);
+                Future<ResponseEntity<String>> pending = pool.submit(() -> post("/recycle-bin/tasks/" + sub + "/restore", ana, null));
+                awaitLockWaiters(1);
+                jdbc.update("UPDATE task SET status = 'Done' WHERE id = ?", parent);
+                return pending;
+            });
+
+            ResponseEntity<String> response = restore.get(15, TimeUnit.SECONDS);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(json(response, "$.code")).isEqualTo("PARENT_TASK_CLOSED");
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(bin("ana")).hasSize(1); // still in the bin, and no open subtask under a closed parent
+    }
+
+    @Test
+    void aTaskIsNotRestoredIntoAProjectThatIsBeingDeleted() throws Exception { // R9
+        long project = newProject("Web", "In progress", "marta", "ana");
+        long task = newTask(project, "T", "To do", null, "ana");
+        delete("/tasks/" + task, sessionOf("ana"));
+        String ana = sessionOf("ana");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<ResponseEntity<String>> restore = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM project WHERE id = ? FOR UPDATE", Long.class, project); // the deletion
+                Future<ResponseEntity<String>> pending = pool.submit(() -> post("/recycle-bin/tasks/" + task + "/restore", ana, null));
+                awaitLockWaiters(1);
+                jdbc.update("UPDATE project SET deleted_at = now() WHERE id = ?", project);
+                return pending;
+            });
+
+            ResponseEntity<String> response = restore.get(15, TimeUnit.SECONDS);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(json(response, "$.code")).isEqualTo("CANNOT_RESTORE");
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(jdbc.queryForObject("SELECT deleted_at IS NOT NULL FROM task WHERE id = ?", Boolean.class, task)).isTrue();
     }
 
     // ---- helpers ----

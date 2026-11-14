@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.matriz.access.AuthenticatedUser;
@@ -127,7 +129,7 @@ public class RecycleUseCases {
      * projects they manage or belong to, without what was deleted together with its project or its parent.
      * Newest first. Items past the 30 days are not there (R20).
      */
-    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<RecycleItemView> listRecycleBin(AuthenticatedUser user) {
         Instant now = clock.instant();
         List<Entry> entries = new ArrayList<>();
@@ -163,6 +165,10 @@ public class RecycleUseCases {
      * A member of the project or its manager restores a task or a subtask (R9), with the subtasks deleted with
      * it. The body, if any, gives the people who take over from those who left the project (P36, A42); it is
      * read after 404 and 403 are checked.
+     *
+     * <p>The state of the project and of the parent is checked after they are locked, in the order project,
+     * people, parent, task: a parent that is closed, or a project that is deleted or completed, while the
+     * restore is under way, is seen by it (R4, P35, R28).
      */
     @Transactional
     public void restoreTask(AuthenticatedUser user, long taskId, Supplier<List<Long>> body) {
@@ -172,44 +178,51 @@ public class RecycleUseCases {
             throw new ForbiddenException("You have no access to this project.");
         }
         List<Long> newAssignees = body.get();
-        whyNot(item).ifPresent(reason -> {
-            throw reason.toException();
-        });
-        if (item.isSubtask()) {
-            requireParentAllowsSubtask(item);
-        }
-        ProjectRecord project = projects.findById(item.projectId()).orElseThrow(() -> new NotFoundException(NOT_FOUND));
         if (newAssignees != null) {
-            validateNewAssignees(project, newAssignees);
+            requireValidShape(newAssignees);
+        }
+        ProjectRecord project = projects.findByIdForUpdate(item.projectId())
+                .orElseThrow(NotRestorable.PROJECT_IN_RECYCLE_BIN::toException); // deleted, or being deleted
+        if (newAssignees != null) {
             locks.people(newAssignees); // the people before the tasks (see Locks)
+            newAssignees.forEach(id -> rules.requireEligible(project, id));
+        }
+        TaskRecord parent = null;
+        if (item.isSubtask()) {
+            parent = locks.task(item.parentId()).orElseThrow(NotRestorable.PARENT_IN_RECYCLE_BIN::toException);
+        }
+        if (ProjectStatus.fromLabel("status", project.status()) == ProjectStatus.COMPLETED) {
+            throw NotRestorable.PROJECT_COMPLETED.toException();
         }
         DeletedTask locked = locks.deletedTask(taskId, now).orElseThrow(() -> new NotFoundException(NOT_FOUND));
+        if (parent != null) {
+            requireParentAllowsSubtask(locked, parent);
+        }
         List<Long> restored = bin.idsDeletedWith(taskId, locked.deletedAt());
         replaceWhoLeft(project, restored, newAssignees);
         bin.restoreTask(taskId, locked.deletedAt());
     }
 
     /** P35 and R2 again: the parent changed while the subtask was in the bin. */
-    private static void requireParentAllowsSubtask(DeletedTask item) {
-        boolean parentClosed = TaskStatus.ofStored(item.parentStatus()).isFinal();
-        if (parentClosed && !TaskStatus.ofStored(item.status()).isFinal()) {
+    private static void requireParentAllowsSubtask(DeletedTask subtask, TaskRecord parent) {
+        if (parent.statusValue().isFinal() && !TaskStatus.ofStored(subtask.status()).isFinal()) {
             throw new BusinessRuleException("PARENT_TASK_CLOSED",
                     "The parent task is closed. Reopen it before restoring this open subtask.");
         }
-        if (item.deadline().isAfter(item.parentDeadline())) {
+        if (subtask.deadline().isAfter(parent.deadline())) {
             throw new BusinessRuleException("SUBTASK_DEADLINE_AFTER_PARENT",
                     "The deadline of this subtask is later than the one of its parent task. Change the parent deadline first.");
         }
     }
 
-    private void validateNewAssignees(ProjectRecord project, List<Long> ids) {
+    /** At least one person, each once; the people are checked later, after they are locked. */
+    private static void requireValidShape(List<Long> ids) {
         if (ids.isEmpty()) {
             throw new InvalidRequestException("The list of assignees is empty.", "assigneeIds", "At least one person.");
         }
         if (ids.size() != new HashSet<>(ids).size()) {
             throw new InvalidRequestException("An assignee is repeated.", "assigneeIds", "Each person once.");
         }
-        ids.forEach(id -> rules.requireEligible(project, id));
     }
 
     /**
@@ -218,7 +231,7 @@ public class RecycleUseCases {
      */
     private void replaceWhoLeft(ProjectRecord project, List<Long> taskIds, List<Long> newAssignees) {
         Map<Long, List<Long>> current = tasks.assigneeIdsByTask(taskIds);
-        Map<Long, List<Long>> departedByTask = new java.util.HashMap<>();
+        Map<Long, List<Long>> departedByTask = new HashMap<>();
         for (Long id : taskIds) {
             List<Long> departed = current.getOrDefault(id, List.of()).stream()
                     .filter(userId -> !rules.isEligible(project, userId)).toList();

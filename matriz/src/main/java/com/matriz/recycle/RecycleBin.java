@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,13 +158,17 @@ public class RecycleBin {
      */
     public int purgeExpired(Instant now) {
         var params = new MapSqlParameterSource("cutoff", stored(cutoff(now)));
+        // The rows are locked by id, projects first and then tasks, the order of everything else, so the purge
+        // and a restore or a delete that touch the same rows wait for each other and never wait in a circle.
         List<Long> projects = jdbc.queryForList(
-                "SELECT id FROM project WHERE deleted_at IS NOT NULL AND deleted_at <= :cutoff", params, Long.class);
+                "SELECT id FROM project WHERE deleted_at IS NOT NULL AND deleted_at <= :cutoff ORDER BY id FOR UPDATE",
+                params, Long.class);
         List<Long> tasks = new ArrayList<>(jdbc.queryForList("""
                 SELECT t.id FROM task t
                 WHERE (t.deleted_at IS NOT NULL AND t.deleted_at <= :cutoff)
                    OR t.project_id IN (SELECT id FROM project WHERE deleted_at IS NOT NULL AND deleted_at <= :cutoff)
                    OR t.parent_task_id IN (SELECT id FROM task WHERE deleted_at IS NOT NULL AND deleted_at <= :cutoff)
+                ORDER BY t.id FOR UPDATE OF t
                 """, params, Long.class));
         if (!tasks.isEmpty()) {
             var ids = new MapSqlParameterSource("ids", tasks);
@@ -190,7 +195,7 @@ public class RecycleBin {
 
     /** The database keeps microseconds: the instant is cut to them, so what is stored equals what is read back. */
     private static OffsetDateTime stored(Instant instant) {
-        return instant.truncatedTo(ChronoUnit.MICROS).atOffset(java.time.ZoneOffset.UTC);
+        return instant.truncatedTo(ChronoUnit.MICROS).atOffset(ZoneOffset.UTC);
     }
 
     private static DeletedProject project(ResultSet rs, int row) throws SQLException {
