@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 
+import com.matriz.projects.ProjectStatus;
+
 /**
  * Progress and calculated status of a project (US06; P5, P7, P16, P23, P26). Pure calculation: it reads
  * no data and no clock, so the limits (15 and 25 points, the end day) are tested with fixed instants.
@@ -23,15 +25,15 @@ public record ProjectProgress(boolean hasCountableTasks, BigDecimal percent, Str
     private static final BigDecimal LATE_FROM = BigDecimal.valueOf(25);
 
     /**
-     * @param inProgress whether the status set by the manager is In progress: only then is a status calculated (P5)
+     * @param status the status set by the manager: only a project In progress gets a calculated status (P5)
      */
-    public static ProjectProgress of(ProjectSchedule schedule, boolean inProgress, StatusCounts counts, Instant now) {
+    public static ProjectProgress of(ProjectSchedule schedule, ProjectStatus status, StatusCounts counts, Instant now) {
         int countable = counts.countable();
         if (countable == 0) {
             return new ProjectProgress(false, null, null);
         }
         BigDecimal actual = percent(counts.done(), countable);
-        return new ProjectProgress(true, actual, inProgress ? calculatedStatus(schedule, actual, now) : null);
+        return new ProjectProgress(true, actual, status == ProjectStatus.IN_PROGRESS ? calculatedStatus(schedule, actual, now) : null);
     }
 
     /** Both values are rounded to two decimals before the deviation is taken, so it is what is shown (P5). */

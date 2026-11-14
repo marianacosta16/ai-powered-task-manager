@@ -1,5 +1,7 @@
 package com.matriz.views;
 
+import static com.matriz.projects.ProjectStatus.IN_PROGRESS;
+import static com.matriz.projects.ProjectStatus.SUSPENDED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
@@ -28,7 +30,7 @@ class ProjectProgressTest {
     void progressIsDoneOverCountableWithoutCancelledAndDuplicates() { // 6.1
         StatusCounts counts = new StatusCounts(2, 2, 0, 0, 4, 1, 1);
 
-        ProjectProgress progress = ProjectProgress.of(JANUARY, true, counts, at("2026-01-02T10:00"));
+        ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, counts, at("2026-01-02T10:00"));
 
         assertThat(progress.hasCountableTasks()).isTrue();
         assertThat(progress.percent()).isEqualByComparingTo("50");
@@ -38,7 +40,7 @@ class ProjectProgressTest {
     void aProjectWithoutCountableTasksHasNoPercentAndNoCalculatedStatus() { // 6.2, 6.10, EC1, EC16
         for (StatusCounts counts : new StatusCounts[] { new StatusCounts(0, 0, 0, 0, 0, 0, 0),
                 new StatusCounts(0, 0, 0, 0, 0, 3, 2) }) {
-            ProjectProgress progress = ProjectProgress.of(JANUARY, true, counts, at("2026-02-02T10:00")); // past the end
+            ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, counts, at("2026-02-02T10:00")); // past the end
 
             assertThat(progress.hasCountableTasks()).isFalse();
             assertThat(progress.percent()).isNull();
@@ -60,7 +62,7 @@ class ProjectProgressTest {
 
     @Test
     void anEndDateThatPassedIsLateWhateverTheProgress() { // 6.6
-        ProjectProgress progress = ProjectProgress.of(JANUARY, true, doneOutOf100(80), at("2026-02-02T10:00"));
+        ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, doneOutOf100(80), at("2026-02-02T10:00"));
 
         assertThat(progress.calculatedStatus()).isEqualTo("Late");
         assertThat(progress.percent()).isEqualByComparingTo("80");
@@ -68,31 +70,33 @@ class ProjectProgressTest {
 
     @Test
     void onlyAProjectInProgressGetsACalculatedStatus() { // 6.8, 6.13, EC24, P5
-        ProjectProgress suspended = ProjectProgress.of(JANUARY, false, doneOutOf100(10), at("2026-02-02T10:00"));
+        ProjectProgress suspended = ProjectProgress.of(JANUARY, SUSPENDED, doneOutOf100(10), at("2026-02-02T10:00"));
 
         assertThat(suspended.calculatedStatus()).isNull(); // suspended or not started, even long past the end
         assertThat(suspended.percent()).isEqualByComparingTo("10"); // the bar is still there
+        assertThat(ProjectProgress.of(JANUARY, com.matriz.projects.ProjectStatus.NOT_STARTED, doneOutOf100(10), at("2026-02-02T10:00"))
+                .calculatedStatus()).isNull();
     }
 
     @Test
     void subtasksDoNotCountBecauseOnlyMainTaskCountsAreGiven() { // 6.11
-        ProjectProgress progress = ProjectProgress.of(JANUARY, true, new StatusCounts(0, 1, 0, 0, 1, 0, 0), at("2026-01-02T00:00"));
+        ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, new StatusCounts(0, 1, 0, 0, 1, 0, 0), at("2026-01-02T00:00"));
 
         assertThat(progress.percent()).isEqualByComparingTo("50");
     }
 
     @Test
     void theProgressIsRoundedToTwoDecimals() { // 6.12
-        ProjectProgress progress = ProjectProgress.of(JANUARY, true, new StatusCounts(2, 0, 0, 0, 1, 0, 0), at("2026-01-02T00:00"));
+        ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, new StatusCounts(2, 0, 0, 0, 1, 0, 0), at("2026-01-02T00:00"));
 
         assertThat(progress.percent()).isEqualTo(new BigDecimal("33.33"));
-        assertThat(ProjectProgress.of(JANUARY, true, new StatusCounts(1, 0, 0, 0, 2, 0, 0), at("2026-01-02T00:00")).percent())
+        assertThat(ProjectProgress.of(JANUARY, IN_PROGRESS, new StatusCounts(1, 0, 0, 0, 2, 0, 0), at("2026-01-02T00:00")).percent())
                 .isEqualTo(new BigDecimal("66.67")); // half up, not down
     }
 
     @Test
     void theDeviationUsesTheRoundedValues() { // P5: 50 - 33.33 = 16.67
-        ProjectProgress progress = ProjectProgress.of(JANUARY, true, new StatusCounts(2, 0, 0, 0, 1, 0, 0), HALF_WAY);
+        ProjectProgress progress = ProjectProgress.of(JANUARY, IN_PROGRESS, new StatusCounts(2, 0, 0, 0, 1, 0, 0), HALF_WAY);
 
         assertThat(progress.calculatedStatus()).isEqualTo("Attention");
     }
@@ -102,14 +106,14 @@ class ProjectProgressTest {
         ProjectSchedule withTime = new ProjectSchedule(LocalDate.of(2026, 1, 1), null, LocalDate.of(2026, 1, 31),
                 LocalTime.of(18, 0), "Europe/Lisbon");
 
-        assertThat(ProjectProgress.of(withTime, true, doneOutOf100(90), at("2026-01-31T19:00")).calculatedStatus()).isEqualTo("Late");
-        assertThat(ProjectProgress.of(withTime, true, doneOutOf100(90), at("2026-01-31T17:59")).calculatedStatus()).isNull();
+        assertThat(ProjectProgress.of(withTime, IN_PROGRESS, doneOutOf100(90), at("2026-01-31T19:00")).calculatedStatus()).isEqualTo("Late");
+        assertThat(ProjectProgress.of(withTime, IN_PROGRESS, doneOutOf100(90), at("2026-01-31T17:59")).calculatedStatus()).isNull();
     }
 
     @Test
     void anEndWithoutATimeCountsTheWholeDay() { // 6.15
-        assertThat(ProjectProgress.of(JANUARY, true, doneOutOf100(90), at("2026-01-31T23:00")).calculatedStatus()).isNull();
-        assertThat(ProjectProgress.of(JANUARY, true, doneOutOf100(90), at("2026-02-01T00:00")).calculatedStatus()).isEqualTo("Late");
+        assertThat(ProjectProgress.of(JANUARY, IN_PROGRESS, doneOutOf100(90), at("2026-01-31T23:00")).calculatedStatus()).isNull();
+        assertThat(ProjectProgress.of(JANUARY, IN_PROGRESS, doneOutOf100(90), at("2026-02-01T00:00")).calculatedStatus()).isEqualTo("Late");
     }
 
     @Test
@@ -118,8 +122,8 @@ class ProjectProgressTest {
                 "America/New_York");
         Instant lateInLisbon = Instant.parse("2026-02-01T00:30:00Z"); // 19:30 of 31 January in New York
 
-        assertThat(ProjectProgress.of(newYork, true, doneOutOf100(90), lateInLisbon).calculatedStatus()).isNull();
-        assertThat(ProjectProgress.of(newYork, true, doneOutOf100(90), Instant.parse("2026-02-01T05:00:00Z")).calculatedStatus())
+        assertThat(ProjectProgress.of(newYork, IN_PROGRESS, doneOutOf100(90), lateInLisbon).calculatedStatus()).isNull();
+        assertThat(ProjectProgress.of(newYork, IN_PROGRESS, doneOutOf100(90), Instant.parse("2026-02-01T05:00:00Z")).calculatedStatus())
                 .isEqualTo("Late");
     }
 
@@ -127,13 +131,13 @@ class ProjectProgressTest {
     void beforeTheStartNoTimeHasElapsed() { // P23
         assertThat(ProjectProgress.elapsedPercent(JANUARY, at("2025-12-01T00:00"))).isEqualByComparingTo("0");
         assertThat(ProjectProgress.elapsedPercent(JANUARY, HALF_WAY)).isEqualByComparingTo("50");
-        assertThat(ProjectProgress.of(JANUARY, true, doneOutOf100(0), at("2025-12-01T00:00")).calculatedStatus()).isNull();
+        assertThat(ProjectProgress.of(JANUARY, IN_PROGRESS, doneOutOf100(0), at("2025-12-01T00:00")).calculatedStatus()).isNull();
     }
 
     // ---- helpers ----
 
     private static String statusWithDone(int done) {
-        return ProjectProgress.of(JANUARY, true, doneOutOf100(done), HALF_WAY).calculatedStatus();
+        return ProjectProgress.of(JANUARY, IN_PROGRESS, doneOutOf100(done), HALF_WAY).calculatedStatus();
     }
 
     private static StatusCounts doneOutOf100(int done) {

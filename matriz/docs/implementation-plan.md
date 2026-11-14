@@ -205,7 +205,7 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
 | Concluir um projeto e escrever nele ao mesmo tempo | A verificação do estado do projeto (R27, R28) e a escrita (tarefas, responsáveis, membros, comentários) não são atómicas: se um projeto for concluído no instante em que alguém escreve, a escrita pode passar. Registado em 2026-11-14 e a tratar no incremento 8, com uma revisão de todos os caminhos da R28 |
-| Paginação das listas | `listProjectTasks` e `listComments` vêm em páginas (`page` a partir de 1 e `size` de 1 a 200, por omissão 50); o total vai no cabeçalho `X-Total-Count` e o corpo continua a ser uma lista. Decidido pela autora em 2026-11-14 (pressupostos A30 e A31, confirmados). `listProjects` e as listas de membros ficam sem paginação: são pequenas (P18, 10 utilizadores) |
+| Paginação das listas | `listProjectTasks` e `listComments` vêm em páginas (`page` a partir de 1 e `size` de 1 a 200, por omissão 50); o total vai no cabeçalho `X-Total-Count` e o corpo continua a ser uma lista. Decidido pela autora em 2026-11-14 (pressupostos A30 e A31, confirmados). `listProjects`, `getDashboard` e as listas de membros ficam sem paginação: são pequenas (P18, 10 utilizadores) |
 | Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |
 
 ## 8. Verificações adiadas para a fase da interface

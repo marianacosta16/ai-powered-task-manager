@@ -47,8 +47,7 @@ public class DashboardUseCases {
     /** By name, then by id, so the order does not change between two requests (A34). */
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ) // the projects and the counts are one snapshot
     public List<DashboardProjectView> getDashboard(AuthenticatedUser user) {
-        List<ProjectRecord> shown = projects.findAmong(permissions.accessibleProjectIds(user.id()), null).stream()
-                .filter(p -> ProjectStatus.fromLabel("status", p.status()) != ProjectStatus.COMPLETED) // P27
+        List<ProjectRecord> shown = projects.findNotCompletedAmong(permissions.accessibleProjectIds(user.id())).stream() // P27
                 .sorted(Comparator.comparing(ProjectRecord::name, String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(ProjectRecord::id))
                 .toList();
@@ -61,7 +60,6 @@ public class DashboardUseCases {
 
     private ProjectProgress progress(ProjectRecord p, StatusCounts counts) {
         ProjectSchedule schedule = new ProjectSchedule(p.startDate(), p.startTime(), p.endDate(), p.endTime(), p.timezone());
-        boolean inProgress = ProjectStatus.fromLabel("status", p.status()) == ProjectStatus.IN_PROGRESS;
-        return ProjectProgress.of(schedule, inProgress, counts, clock.instant());
+        return ProjectProgress.of(schedule, ProjectStatus.fromLabel("status", p.status()), counts, clock.instant());
     }
 }

@@ -38,7 +38,7 @@ class DashboardIntegrationTest extends ApiIntegrationTest {
     void subtasksDoNotCountForTheCountsNorTheProgress() { // 13.4, 6.11
         clock.set("2026-01-10T12:00:00Z");
         long project = newProject("Subtasks", "In progress", "2026-01-01", "2026-01-31", "marta", "ana");
-        long a = newTask(project, "Done", null);
+        newTask(project, "Done", null);
         long b = newTask(project, "In progress", null);
         newTask(project, "Done", b);
         newTask(project, "Done", b);
@@ -49,7 +49,6 @@ class DashboardIntegrationTest extends ApiIntegrationTest {
         assertThat(counts(mine)).isEqualTo(2);
         assertThat(((Number) progress(mine).get("percent")).doubleValue()).isEqualTo(50.0);
         assertThat(counts(entry("ana", "Subtasks"))).isEqualTo(2);
-        assertThat(a).isPositive();
     }
 
     @Test

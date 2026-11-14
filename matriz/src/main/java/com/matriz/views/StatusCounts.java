@@ -2,15 +2,20 @@ package com.matriz.views;
 
 import java.util.Map;
 
+import com.matriz.tasks.TaskStatus;
+
 /** Number of main tasks in each status (R18): the StatusCounts of the contract. */
 public record StatusCounts(int toDo, int inProgress, int inReview, int blocked, int done, int cancelled, int duplicate) {
 
     /** From the number of tasks by status label; a status that is missing counts 0. */
     public static StatusCounts of(Map<String, Integer> byStatus) {
-        return new StatusCounts(byStatus.getOrDefault("To do", 0), byStatus.getOrDefault("In progress", 0),
-                byStatus.getOrDefault("In review", 0), byStatus.getOrDefault("Blocked", 0),
-                byStatus.getOrDefault("Done", 0), byStatus.getOrDefault("Cancelled", 0),
-                byStatus.getOrDefault("Duplicate", 0));
+        return new StatusCounts(count(byStatus, TaskStatus.TO_DO), count(byStatus, TaskStatus.IN_PROGRESS),
+                count(byStatus, TaskStatus.IN_REVIEW), count(byStatus, TaskStatus.BLOCKED), count(byStatus, TaskStatus.DONE),
+                count(byStatus, TaskStatus.CANCELLED), count(byStatus, TaskStatus.DUPLICATE));
+    }
+
+    private static int count(Map<String, Integer> byStatus, TaskStatus status) {
+        return byStatus.getOrDefault(status.label(), 0);
     }
 
     /** The tasks that count for the progress: all but the cancelled and the duplicates (P7). */
