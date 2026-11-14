@@ -177,7 +177,7 @@ public class TaskUseCases {
         if (reason == null || reason.isBlank()) {
             throw new BusinessRuleException("BLOCK_REASON_REQUIRED", "A blocked task needs a reason. Write why it is blocked.");
         }
-        if (reason.length() > BLOCK_REASON_MAX) {
+        if (reason.codePointCount(0, reason.length()) > BLOCK_REASON_MAX) { // characters (R14)
             throw new InvalidRequestException("The block reason is too long.", "blockReason",
                     "Longer than " + BLOCK_REASON_MAX + " characters.");
         }

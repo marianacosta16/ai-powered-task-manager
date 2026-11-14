@@ -57,7 +57,7 @@ final class ProjectPatchParser {
         if (value.isEmpty() && !"description".equals(field)) {
             throw invalid(field, "Must have at least 1 character.");
         }
-        if (value.length() > max) {
+        if (value.codePointCount(0, value.length()) > max) { // characters, not UTF-16 units (R14)
             throw invalid(field, "Longer than " + max + " characters.");
         }
         return value;
