@@ -181,7 +181,7 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
 
     @Test
     void subtasksHaveCommentsWithTheSameRules() { // 11.8
-        long subtask = taskId("Draft wireframes"); // a subtask (and a closed one: A24)
+        long subtask = taskId("Pick colour palette"); // an open subtask
 
         ResponseEntity<String> created = comment("ana", subtask, "Enviado");
         long id = idOf(created);
@@ -191,6 +191,38 @@ class CommentsIntegrationTest extends ApiIntegrationTest {
         assertThat(patch("/comments/" + id, sessionOf("rui"), Map.of("content", "x")).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(patch("/comments/" + id, sessionOf("ana"), Map.of("content", "Enviado!")).getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(delete("/comments/" + id, sessionOf("ana")).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    @Test
+    void aClosedTaskOrSubtaskTakesNoChangesToItsComments() { // P37: they are only read
+        long closedSubtask = taskId("Draft wireframes"); // a subtask, Done, with a comment of Ana
+        long id = jdbc.queryForObject("SELECT id FROM task_comment WHERE task_id = ?", Long.class, closedSubtask);
+        String text = contentOf(id);
+        String ana = sessionOf("ana");
+
+        ResponseEntity<String> list = get("/tasks/" + closedSubtask + "/comments", ana);
+        List<ResponseEntity<String>> refused = List.of(
+                comment("ana", closedSubtask, "New"),
+                patch("/comments/" + id, ana, Map.of("content", "Changed")),
+                delete("/comments/" + id, ana));
+
+        assertThat(list.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(JsonPath.<List<String>>read(list.getBody(), "$[*].content")).containsExactly(text);
+        for (ResponseEntity<String> r : refused) {
+            assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(json(r, "$.code")).isEqualTo("TASK_CLOSED");
+        }
+        assertThat(contentOf(id)).isEqualTo(text);
+
+        // every final status closes it, a main task too; reopening it (only the manager can, P8) lifts the freeze
+        long hosting = taskId("Set up hosting");
+        patch("/tasks/" + hosting, sessionOf("luis"), Map.of("version", 1, "status", "Cancelled"));
+        long copyText = taskId("Contact page text"); // a Duplicate
+        assertThat(json(comment("ana", hosting, "x"), "$.code")).isEqualTo("TASK_CLOSED");
+        assertThat(json(comment("ana", copyText, "x"), "$.code")).isEqualTo("TASK_CLOSED");
+        patch("/tasks/" + closedSubtask, sessionOf("marta"), Map.of("version", 1, "status", "In progress"));
+        assertThat(comment("ana", closedSubtask, "After reopening").getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(patch("/comments/" + id, ana, Map.of("content", "Edited again")).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     // ---- project states (11.9, 11.10, EC34) ----
