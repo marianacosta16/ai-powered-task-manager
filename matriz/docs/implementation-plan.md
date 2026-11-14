@@ -33,7 +33,7 @@ Como atualizar: ao terminar um incremento, passar o estado a **Concluído**, ind
 | 3 | Tarefas, subtarefas e responsáveis | Concluído | 3a: 2026-11-13; 3b: 2026-11-14 | 3a (tarefas, subtarefas, responsáveis e versão, T13): cenários 2.1 a 2.13 (menos apagar, do incremento 7), 4.1 a 4.7 e 5.1 a 5.4; EC2 a EC5, EC10, EC19, EC22, EC28 a EC30, EC35, EC43, EC46 e EC47, em testes HTTP com relógio controlável e 5 testes de concorrência, que esperam pelo bloqueio em vez de dormir (38 testes novos; 108 no total, verdes). Verificado por mutação: sem o bloqueio de linha, sem a verificação da versão, sem a R4, sem a guarda da reabertura de subtarefas, sem o bloqueio da pessoa e sem a regra "não subir a versão" os testes falham. Pressupostos A14 a A20 do contrato, todos confirmados em 2026-11-13. 3b (remoção de membros com substitutos, R17 e P24): cenários 1.12 a 1.14 e 1.24 a 1.28; EC15, EC18, EC41 e a concorrência com a criação de tarefas, em 23 testes novos (131 no total, verdes); verificado por mutação (limite de 5, cobertura de todas as tarefas, R11 do substituto novo e a isenção dos gestores, P24, validação antes de bloquear, bloqueio das pessoas, guarda da ordem dos bloqueios e a regra ArchUnit). Pressupostos A21 a A23 confirmados em 2026-11-14. Todos os bloqueios seguem uma só ordem: pessoas por id, depois tarefas por id |
 | 4 | Lista, Matriz, pesquisa e filtros | Por fazer | | |
 | 5 | Painel e progresso | Por fazer | | |
-| 6 | Comentários | Por fazer | | |
+| 6 | Comentários | Concluído | 2026-11-14 | Cenários 11.1 a 11.6 e 11.8 a 11.10, a primeira metade do 11.7 (os comentários de uma tarefa apagada não aparecem), EC32 e EC34, em testes HTTP com relógio controlável e um de concorrência (15 testes novos; 146 no total, verdes). Verificado por mutação: sem a regra do autor, sem a do projeto concluído, sem a ordenação por data e sem a verificação das linhas atualizadas os testes falham. O autor e a data vêm sempre do servidor. Pressupostos A24 a A27 do contrato por confirmar. A segunda metade do 11.7 (voltam quando a tarefa é recuperada) é do incremento 7 |
 | 7 | Reciclagem e eliminações | Por fazer | | |
 | 8 | Fecho do MVP | Por fazer | | |
 
@@ -156,7 +156,7 @@ src/test/java/...                         testes por cenário Given / When / The
 | **API** | `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject`, `restoreTask` |
 | **Depende de** | Incrementos 2, 3 e 6 |
 | **Aceitação** | Cenários 7.1 a 7.8; EC7, EC21, EC23 e EC36; os membros recuperam tarefas e subtarefas dos seus projetos, só o gestor recupera projetos |
-| **Decisões** | **P36 (2026-11-14):** ao recuperar uma tarefa ou subtarefa, se algum responsável já não for membro do projeto nem o seu gestor, a recuperação pede primeiro um novo responsável (R21, R26). A remoção de membros (incremento 3b) só passa para substitutos as tarefas em aberto não apagadas |
+| **Decisões** | **Cenário 11.7, segunda metade:** os comentários voltam a aparecer quando a tarefa é recuperada (já só dependem de a tarefa deixar de estar apagada). **P36 (2026-11-14):** ao recuperar uma tarefa ou subtarefa, se algum responsável já não for membro do projeto nem o seu gestor, a recuperação pede primeiro um novo responsável (R21, R26). A remoção de membros (incremento 3b) só passa para substitutos as tarefas em aberto não apagadas |
 | **Verificação** | Relógio controlado para os 29 e 31 dias; cascata e recuperação do projeto e das subtarefas; projeto concluído não se apaga (R28) |
 
 ### Incremento 8 — Fecho do MVP
@@ -204,6 +204,7 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 |---|---|
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
 | Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
+| Concluir um projeto e escrever nele ao mesmo tempo | A verificação do estado do projeto (R27, R28) e a escrita (tarefas, responsáveis, membros, comentários) não são atómicas: se um projeto for concluído no instante em que alguém escreve, a escrita pode passar. Registado em 2026-11-14 e a tratar no incremento 8, com uma revisão de todos os caminhos da R28 |
 | Validação do contrato | Validado no Swagger Editor em 2026-11-12, sem erros. O incremento 0 acrescenta um teste automático que o valida a cada compilação |
 
 ## 8. Verificações adiadas para a fase da interface
@@ -216,7 +217,8 @@ Itens que a API não consegue verificar sozinha e que não se podem esquecer qua
 | V2 | Os controlos que a pessoa não pode usar não aparecem (criar projeto para membros, alterar o projeto e a equipa para membros, e tudo num projeto concluído). A API já os recusa com 403 ou 422 | Cenários 1.2, 1.3, 1.6, 1.21, NF08 | 2 | Por verificar na interface |
 | V3 | Aviso ao gestor, ao retomar um projeto suspenso, de que há membros noutro projeto em aberto (a API devolve `inOtherOpenProject`) | Cenário 1.8, P22 | 2 | Por verificar na interface |
 | V4 | Encaminhar para o início de sessão quando a sessão deixa de ser válida, mostrando a mensagem do servidor ("Your session has ended..." ou "Sign in to continue.") | Cenários 10.5 e 10.6, EC31, EC38, P33, W16 | 1 | Por verificar na interface |
+| V5 | A expiração às 3 horas sem atividade: hoje só se verifica a configuração do servidor, não uma sessão realmente expirada | Cenário 10.6, EC38, S5 | 1 | Por verificar (esperar o tempo, ou com a interface) |
 | V6 | O texto das tarefas (título, descrição e motivo de bloqueio) mostra-se literalmente, sem formatação nem execução de código (por exemplo, `<b>x</b>`). A API guarda e devolve o texto tal como chega; a interface tem de o escapar | Cenário 2.8, NF09 | 3a | Por verificar na interface |
 | V7 | Os controlos de criar tarefas e subtarefas não aparecem num projeto concluído ou suspenso, e os de editar, mudar de estado, atribuir e remover responsáveis não aparecem num projeto concluído. A API já os recusa (422) | Cenários 2.10 e 2.13, EC29, EC35 | 3a | Por verificar na interface |
 | V8 | Ao remover um membro com tarefas, a interface mostra um aviso a pedir substituto (cenário 1.13), deixa escolher um substituto por tarefa, mostra quem está disponível (`listCandidateMembers`) e explica as recusas (substituto noutro projeto, mais de 5 tarefas, já responsável) | Cenários 1.12 a 1.14 e 1.24 a 1.28, EC15, EC18, EC41 | 3b | Por verificar na interface |
-| V5 | A expiração às 3 horas sem atividade: hoje só se verifica a configuração do servidor, não uma sessão realmente expirada | Cenário 10.6, EC38, S5 | 1 | Por verificar (esperar o tempo, ou com a interface) |
+| V9 | Os comentários: o controlo de editar e apagar só aparece ao autor (não aos outros, nem ao gestor), e os de comentar, editar e apagar não aparecem num projeto concluído, onde só se lê. A API já recusa (403 e 422). O texto dos comentários mostra-se literalmente, como o das tarefas (V6) | Cenários 11.4, 11.6 e 11.10, EC34, NF09 | 6 | Por verificar na interface |

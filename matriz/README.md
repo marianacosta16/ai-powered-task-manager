@@ -210,6 +210,28 @@ curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"title":"Write 
 curl -s -X PATCH -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"version":1,"status":"In progress"}' localhost:8081/tasks/1
 ```
 
+## Comentários (incremento 6)
+
+Operações: `listComments`, `addComment`, `editComment` e `deleteComment`. O autor e a data são atribuídos pelo servidor, a partir da sessão e do relógio (Exercício 3): o pedido só aceita o texto, e um `authorId` ou um `createdAt` dá 400.
+
+| Regra | Como se aplica |
+|---|---|
+| Quem vê e comenta (R24) | O gestor e os membros do projeto, em tarefas e subtarefas (403 para os outros). Lista do mais antigo para o mais recente |
+| Texto (NF09, P28) | Até 2000 caracteres (400 acima) e não só espaços (A25); guardado e devolvido tal como chega |
+| Editar e apagar (R24) | Só o autor, nem o gestor (403). A edição mantém o autor e a data; apagar elimina de vez, sem reciclagem |
+| Estado do projeto (R27, R28) | Em projetos em aberto e suspensos comenta-se, edita-se e apaga-se; num concluído só se lê (422 `PROJECT_COMPLETED`) |
+| Seguem a tarefa (R9) | Os comentários de uma tarefa apagada deixam de aparecer; voltam quando ela for recuperada (incremento 7) |
+
+Os pressupostos A24 a A27 estão no [openapi.yaml](openapi.yaml), por confirmar.
+
+```bash
+curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"content":"Falta rever o capítulo 2"}' localhost:8081/tasks/1/comments
+```
+
+```bash
+curl -s -b /tmp/ana.txt localhost:8081/tasks/1/comments
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
