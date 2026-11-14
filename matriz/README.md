@@ -290,7 +290,7 @@ Operações: `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject` e
 | 30 dias (R20, A39) | Com 30 dias exatos já não existe; a lista e a recuperação ignoram o que expirou, mesmo que a eliminação ainda não tenha corrido; `daysLeft` arredonda para cima |
 | Eliminação definitiva (M14) | `RecyclePurgeJob`, todos os dias às 03:00 (`matriz.recycle.purge.cron`), apaga também comentários, responsáveis e membros; um duplicado cujo original sai fica `Duplicate` sem original e com `originalEliminated: true`, para a interface mostrar uma nota (A41); continua a poder editar-se |
 
-Os pressupostos A35 a A43 estão no [openapi.yaml](openapi.yaml): todos confirmados, menos a A42.
+Os pressupostos A35 a A43 estão no [openapi.yaml](openapi.yaml): todos confirmados.
 
 ```bash
 curl -s -b /tmp/ana.txt -X DELETE localhost:8081/tasks/1
