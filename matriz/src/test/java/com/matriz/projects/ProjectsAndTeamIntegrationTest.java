@@ -323,13 +323,19 @@ class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
 
     @Test
     void theOneOpenProjectRuleDoesNotApplyToManagers() {
-        // Pedro manages Intranet (open) and is added as a member of Marta's Website (1.17)
-        ResponseEntity<String> added = post("/projects/" + projectId("Website") + "/members", sessionOf("marta"),
+        // Pedro manages Intranet (open) and is a member of Marta's Mobile App (open) ...
+        String marta = sessionOf("marta");
+        assertThat(post("/projects/" + projectId("Mobile App") + "/members", marta, Map.of("userId", userId("pedro")))
+                .getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // ... and is added as a member of Marta's Website as well (1.17): R11 does not apply to managers, and a
+        // normal member in the same position is refused
+        ResponseEntity<String> added = post("/projects/" + projectId("Website") + "/members", marta,
                 Map.of("userId", userId("pedro")));
 
         assertThat(added.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(json(added, "$.role")).isEqualTo("Project manager");
-        assertThat(projectNames("pedro")).contains("Website", "Intranet");
+        assertThat(projectNames("pedro")).contains("Website", "Mobile App", "Intranet");
     }
 
     @Test

@@ -113,6 +113,20 @@ class MemberRemovalIntegrationTest extends ApiIntegrationTest {
         assertThat(isMember(website, "marta")).isFalse(); // the manager has no row in his own project (M5)
     }
 
+    @Test
+    void aProjectManagerCanBeANewSubstituteEvenIfHeManagesAnotherOpenProject() { // R11 does not apply to managers (1.17)
+        long website = projectId("Website");
+        long design = taskId("Design homepage");
+        // Pedro manages Intranet and is also a member of Mobile App, both open: a normal member would be refused
+        post("/projects/" + projectId("Mobile App") + "/members", sessionOf("marta"), Map.of("userId", userId("pedro")));
+
+        ResponseEntity<String> removed = remove(website, "ana", reassign(design, "pedro"));
+
+        assertThat(removed.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(isMember(website, "pedro")).isTrue();
+        assertThat(assigneeNames(design)).containsExactly("Pedro");
+    }
+
     // ---- refused (1.13, 1.14, 1.25, 1.28, EC15, EC18, EC41) ----
 
     @Test
@@ -178,6 +192,33 @@ class MemberRemovalIntegrationTest extends ApiIntegrationTest {
         assertThat(isMember(website, "ana")).isTrue();
         assertThat(openCount(website, "ana")).isEqualTo(3);
         assertThat(openCount(website, "rui")).isEqualTo(3);
+    }
+
+    @Test
+    void aNewSubstituteRefusedByTheLimitIsNotAddedToTheProject() {
+        long website = projectId("Website");
+        openTasks(website, "ana", 6);
+
+        ResponseEntity<String> response = remove(website, "ana", reassignAllOpenTasksOf("ana", "diana")); // 6 tasks, Diana is new
+
+        assertThat(json(response, "$.code")).isEqualTo("ASSIGNEE_LIMIT_EXCEEDED");
+        assertThat(isMember(website, "diana")).isFalse();
+        assertThat(isMember(website, "ana")).isTrue();
+        assertThat(openCount(website, "ana")).isEqualTo(6);
+    }
+
+    @Test
+    void aSubstituteWhoIsTheManagerIsAlsoWithinTheLimit() {
+        long website = projectId("Website");
+        openTasks(website, "ana", 1);
+        for (int i = 0; i < 5; i++) {
+            newTask(website, "Manager task " + i, null, "marta"); // the manager already has 5
+        }
+
+        ResponseEntity<String> response = remove(website, "ana", reassignAllOpenTasksOf("ana", "marta"));
+
+        assertThat(json(response, "$.code")).isEqualTo("ASSIGNEE_LIMIT_EXCEEDED");
+        assertThat(isMember(website, "ana")).isTrue();
     }
 
     @Test
@@ -255,6 +296,34 @@ class MemberRemovalIntegrationTest extends ApiIntegrationTest {
     }
 
     // ---- at the same time ----
+
+    @Test
+    void aRequestThatCannotWorkLocksNobody() throws Exception {
+        long website = projectId("Website");
+        long design = taskId("Design homepage");
+        long sofia = userId("sofia"); // she is in Intranet, which is open: refused by R11
+        String marta = sessionOf("marta");
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            // while another operation holds the row of Sofia, the request must be answered at once: it is
+            // refused before anybody is locked
+            ResponseEntity<String> response = new TransactionTemplate(transactions).execute(tx -> {
+                jdbc.queryForObject("SELECT id FROM app_user WHERE id = ? FOR UPDATE", Long.class, sofia);
+                Future<ResponseEntity<String>> request = pool.submit(() -> post(
+                        "/projects/" + website + "/members/" + userId("ana") + "/removal", marta,
+                        Map.of("reassignments", reassign(design, "sofia"))));
+                try {
+                    return request.get(5, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    throw new AssertionError("The request waited for the lock of a person it did not need", ex);
+                }
+            });
+
+            assertThat(json(response, "$.code")).isEqualTo("MEMBER_IN_OTHER_OPEN_PROJECT");
+        } finally {
+            pool.shutdownNow();
+        }
+    }
 
     @Test
     void aRemovalAndANewTaskForTheSamePersonAtTheSameTimeAreDoneOneAfterTheOther() throws Exception {

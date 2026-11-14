@@ -30,14 +30,16 @@ public class AssigneeUseCases {
     private final TaskRules rules;
     private final TeamRepository team;
     private final UserDirectory users;
+    private final Locks locks;
 
     AssigneeUseCases(TaskQueries queries, TaskCommands commands, TaskRules rules, TeamRepository team,
-            UserDirectory users) {
+            UserDirectory users, Locks locks) {
         this.queries = queries;
         this.commands = commands;
         this.rules = rules;
         this.team = team;
         this.users = users;
+        this.locks = locks;
     }
 
     /** The members of the project and its manager (R21). */
@@ -56,7 +58,7 @@ public class AssigneeUseCases {
     public List<UserInfo> addAssignee(AuthenticatedUser user, long taskId, Supplier<Long> body) {
         TaskContext context = rules.loadForChange(user, taskId);
         long userId = body.get();
-        rules.lockPeople(List.of(userId)); // locks: people first, then tasks, always by id (see TeamUseCases)
+        locks.people(List.of(userId)); // locks: people first, then tasks, always by id (see Locks)
         TaskRecord task = lock(taskId);
         rules.requireEligible(context.project(), userId); // R21 (scenario 2.9)
         commands.addAssignee(task.id(), userId);
@@ -79,7 +81,7 @@ public class AssigneeUseCases {
     }
 
     private TaskRecord lock(long taskId) {
-        return queries.findByIdForUpdate(taskId).orElseThrow(() -> new NotFoundException("The task was not found."));
+        return locks.task(taskId).orElseThrow(() -> new NotFoundException("The task was not found."));
     }
 
     private List<UserInfo> assignees(long taskId) {
