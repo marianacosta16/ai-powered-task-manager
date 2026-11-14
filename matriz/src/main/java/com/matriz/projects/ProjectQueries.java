@@ -54,6 +54,17 @@ public class ProjectQueries {
         return jdbc.query(sql + " ORDER BY id", params, ProjectQueries::map);
     }
 
+    /** The given projects that are not completed (P27): the ones the dashboard shows. */
+    public List<ProjectRecord> findNotCompletedAmong(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query("SELECT " + COLUMNS + " FROM project WHERE id IN (:ids) AND deleted_at IS NULL"
+                + " AND status <> :completed ORDER BY id",
+                new MapSqlParameterSource("ids", ids).addValue("completed", ProjectStatus.COMPLETED.label()),
+                ProjectQueries::map);
+    }
+
     private static String escapeLike(String text) {
         return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }

@@ -254,6 +254,26 @@ Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml); A3
 curl -s -b /tmp/ana.txt 'localhost:8081/projects/1/tasks?mine=true&status=To%20do&quadrant=Do%20first'
 ```
 
+## Painel (incremento 5)
+
+Operação nova: `getDashboard`. Só lê: o módulo `views` conta as tarefas e calcula o progresso sem escrever. O cálculo está em `ProjectProgress`, que não lê dados nem relógio, para se testar com instantes fixos.
+
+| Regra | Como se aplica |
+|---|---|
+| Que projetos (P27, R8) | Os do utilizador que não estão concluídos nem apagados, por ordem de nome (A34) |
+| Contagens (R18) | Tarefas principais por estado, sem as subtarefas nem as apagadas |
+| Progresso (P7) | Concluídas ÷ (todas menos canceladas e duplicadas), a duas casas; só o gestor do projeto o recebe |
+| Sem tarefas contáveis (P16) | `hasCountableTasks` falso, sem percentagem e sem estado calculado, mesmo depois do fim |
+| Estado calculado (P5) | Só em projetos "In progress": `Attention` com desvio de 15 a menos de 25 pontos; `Late` com 25 ou mais, ou com o fim atingido. "Not started" e "Suspended" nunca o têm |
+| Tempo (P26, P23) | No fuso do projeto; o início sem hora conta das 00:00 e o fim sem hora conta o dia inteiro; antes do início passou 0% |
+| Arredondamento (A32) | O progresso e o tempo passado arredondam-se a duas casas antes de se calcular o desvio |
+
+Os pressupostos A32 a A34 estão confirmados no [openapi.yaml](openapi.yaml).
+
+```bash
+curl -s -b /tmp/marta.txt localhost:8081/dashboard
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
@@ -270,6 +290,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incrementos 0 a 4 e 6 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, comentários); próximo, o incremento 5 (painel e progresso) |
+| Implementação | Em curso: incrementos 0 a 6 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários); próximo, o incremento 7 (reciclagem e eliminações) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.
