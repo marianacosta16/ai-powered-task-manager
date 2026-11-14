@@ -44,9 +44,11 @@ public class ProjectUseCases {
     private final TeamRepository team;
     private final TaskAssignments assignments;
     private final Clock clock;
+    private final Locks locks;
 
-    public ProjectUseCases(ProjectQueries queries, ProjectCommands commands, ProjectPermissions permissions,
-            UserDirectory users, TeamRepository team, TaskAssignments assignments, Clock clock) {
+    ProjectUseCases(ProjectQueries queries, ProjectCommands commands, ProjectPermissions permissions,
+            UserDirectory users, TeamRepository team, TaskAssignments assignments, Clock clock, Locks locks) {
+        this.locks = locks;
         this.queries = queries;
         this.commands = commands;
         this.permissions = permissions;
@@ -84,7 +86,7 @@ public class ProjectUseCases {
         queries.findById(projectId).orElseThrow(() -> new NotFoundException("The project was not found."));
         permissions.requireManager(user, projectId);
         // Read again with the row locked: two updates at the same time are done one after the other
-        ProjectRecord current = queries.findByIdForUpdate(projectId)
+        ProjectRecord current = locks.project(projectId)
                 .orElseThrow(() -> new NotFoundException("The project was not found."));
         requireNotCompleted(current); // R28: nothing changes, and it is not reopened
 

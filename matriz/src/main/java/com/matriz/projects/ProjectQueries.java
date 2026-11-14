@@ -35,6 +35,12 @@ public class ProjectQueries {
      * Reads the project and locks its row until the end of the transaction, so a concurrent update
      * waits and then reads the fresh values instead of overwriting them with stale ones.
      */
+    /** As findById, and the row is locked in shared mode until the end of the transaction: a change of the state of the project waits for it (R27, R28). */
+    public Optional<ProjectRecord> findByIdForShare(long id) {
+        return jdbc.query("SELECT " + COLUMNS + " FROM project WHERE id = :id AND deleted_at IS NULL FOR SHARE",
+                new MapSqlParameterSource("id", id), ProjectQueries::map).stream().findFirst();
+    }
+
     public Optional<ProjectRecord> findByIdForUpdate(long id) {
         return jdbc.query("SELECT " + COLUMNS + " FROM project WHERE id = :id AND deleted_at IS NULL FOR UPDATE",
                 new MapSqlParameterSource("id", id), ProjectQueries::map).stream().findFirst();

@@ -20,8 +20,10 @@ import com.jayway.jsonpath.JsonPath;
 import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
- * US01 (scenarios 1.1 to 1.23, 1.29, 1.30) and US08, through real HTTP requests. Increment 2:
+ * US01 (scenarios 1.1 to 1.23 and 1.29 to 1.32) and US08, through real HTTP requests. Increment 2:
  * removing a member who has open tasks needs substitutes and arrives with the tasks (increment 3).
+ * Edge cases: EC12 to EC14, EC17, EC25, EC27, EC37, EC40, EC42, EC44 and EC45. EC39 (the confirmation before
+ * completing a project) is a screen, plan section 8, V1.
  */
 class ProjectsAndTeamIntegrationTest extends ApiIntegrationTest {
 

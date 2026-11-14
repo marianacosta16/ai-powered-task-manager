@@ -12,6 +12,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.matriz.access.UserDirectory;
 import com.matriz.access.UserInfo;
+import com.matriz.projects.ProjectQueries;
+import com.matriz.projects.ProjectRecord;
 import com.matriz.recycle.DeletedTask;
 import com.matriz.recycle.RecycleBin;
 import com.matriz.tasks.TaskQueries;
@@ -21,33 +23,58 @@ import com.matriz.tasks.TaskRecord;
  * The only place that locks the rows of people and tasks (an ArchUnit test checks it). Rules that
  * involve several rows (R2 to R4, R11, R17, R21, R26, T13) take locks so that two requests about the
  * same rows are done one after the other. To avoid two requests waiting for each other in a circle
- * (a deadlock) the order is always the same: <b>the people first, by id, then the tasks, by id</b>.
- * A task is never locked before a person in the same transaction; this class fails fast if that happens.
+ * (a deadlock) the order is always the same: <b>the project first, then the people by id, then the tasks by id</b>.
+ * A person is never locked before a project, nor a task before a person or a project, in the same transaction;
+ * this class fails fast if that happens, and also if a lock is asked for outside a transaction.
  */
 @Component
 class Locks {
 
+    private static final Object PEOPLE_ARE_LOCKED = new Object(); // marks the current transaction
     private static final Object TASKS_ARE_LOCKED = new Object(); // marks the current transaction
 
     private final UserDirectory users;
     private final TaskQueries tasks;
     private final RecycleBin recycleBin;
+    private final ProjectQueries projects;
 
-    Locks(UserDirectory users, TaskQueries tasks, RecycleBin recycleBin) {
+    Locks(UserDirectory users, TaskQueries tasks, RecycleBin recycleBin, ProjectQueries projects) {
         this.users = users;
         this.tasks = tasks;
         this.recycleBin = recycleBin;
+        this.projects = projects;
+    }
+
+    /**
+     * Locks a project to change its state or delete it (R27, R28): whatever writes in the project waits, and then
+     * sees the new state.
+     */
+    Optional<ProjectRecord> project(long id) {
+        requireProjectsFirst();
+        return projects.findByIdForUpdate(id);
+    }
+
+    /**
+     * Locks a project in shared mode to write in it (tasks, assignees, comments, members): many writers go on
+     * together, but a change of the state of the project waits for them and they wait for it. The state is read
+     * with the lock, so what is checked is what stays true until the end of the transaction (R22, R27, R28).
+     */
+    Optional<ProjectRecord> projectShared(long id) {
+        requireProjectsFirst();
+        return projects.findByIdForShare(id);
     }
 
     /** Locks one person and returns them, if they exist. */
     Optional<UserInfo> person(long id) {
         requirePeopleBeforeTasks();
+        peopleLockTaken();
         return users.findForUpdate(id);
     }
 
     /** Locks these people, by id. Unknown ids are ignored. */
     void people(Collection<Long> ids) {
         requirePeopleBeforeTasks();
+        peopleLockTaken();
         new TreeSet<>(ids).forEach(users::findForUpdate);
     }
 
@@ -74,21 +101,48 @@ class Locks {
         return tasks.lockOpenTaskIdsOf(projectId, userId);
     }
 
+    private static void requireProjectsFirst() {
+        requireTransaction();
+        if (TransactionSynchronizationManager.hasResource(PEOPLE_ARE_LOCKED)
+                || TransactionSynchronizationManager.hasResource(TASKS_ARE_LOCKED)) {
+            throw new IllegalStateException(
+                    "Lock order: the project must be locked before the people and the tasks (see docs/architecture.md).");
+        }
+    }
+
     private static void requirePeopleBeforeTasks() {
+        requireTransaction();
         if (TransactionSynchronizationManager.hasResource(TASKS_ARE_LOCKED)) {
             throw new IllegalStateException(
                     "Lock order: the people must be locked before the tasks (see docs/architecture.md).");
         }
     }
 
+    /** A lock that ends with the statement protects nothing: the callers are always in a transaction. */
+    private static void requireTransaction() {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+            throw new IllegalStateException("A lock is only taken inside a transaction.");
+        }
+    }
+
+    private static void peopleLockTaken() {
+        markTransaction(PEOPLE_ARE_LOCKED);
+    }
+
     private static void taskLockTaken() {
+        requireTransaction();
+        markTransaction(TASKS_ARE_LOCKED);
+    }
+
+    /** Marks the transaction until it ends, so that a lock out of order is refused at once. */
+    private static void markTransaction(Object key) {
         if (TransactionSynchronizationManager.isSynchronizationActive()
-                && !TransactionSynchronizationManager.hasResource(TASKS_ARE_LOCKED)) {
-            TransactionSynchronizationManager.bindResource(TASKS_ARE_LOCKED, Boolean.TRUE);
+                && !TransactionSynchronizationManager.hasResource(key)) {
+            TransactionSynchronizationManager.bindResource(key, Boolean.TRUE);
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
-                    TransactionSynchronizationManager.unbindResourceIfPossible(TASKS_ARE_LOCKED);
+                    TransactionSynchronizationManager.unbindResourceIfPossible(key);
                 }
             });
         }

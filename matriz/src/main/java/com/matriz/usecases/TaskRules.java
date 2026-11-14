@@ -42,9 +42,11 @@ class TaskRules {
     private final ProjectPermissions permissions;
     private final UserDirectory users;
     private final Clock clock;
+    private final Locks locks;
 
     TaskRules(TaskQueries tasks, ProjectQueries projects, TeamRepository team, ProjectPermissions permissions,
-            UserDirectory users, Clock clock) {
+            UserDirectory users, Clock clock, Locks locks) {
+        this.locks = locks;
         this.tasks = tasks;
         this.projects = projects;
         this.team = team;
@@ -62,11 +64,23 @@ class TaskRules {
         return new TaskContext(task, project, role);
     }
 
-    /** 404, 403 and R27/R28: the task of a project where changes are allowed. */
+    /**
+     * 404, 403 and R27/R28: the task of a project where changes are allowed. The project is locked in shared
+     * mode and read again, so a project that is completed or deleted while this request is under way is seen
+     * by it, and one that is being completed waits for it (the callers are in a transaction).
+     */
     TaskContext loadForChange(AuthenticatedUser user, long taskId) {
         TaskContext context = load(user, taskId);
-        requireNotCompleted(context.project());
-        return context;
+        ProjectRecord project = locks.projectShared(context.project().id())
+                .orElseThrow(() -> new NotFoundException("The task was not found."));
+        requireNotCompleted(project);
+        return new TaskContext(context.task(), project, context.role());
+    }
+
+    /** 404 and 403, and the project locked in shared mode and read again, to write in it (see loadForChange). */
+    ProjectRecord loadProjectForWrite(AuthenticatedUser user, long projectId) {
+        loadProject(user, projectId);
+        return locks.projectShared(projectId).orElseThrow(() -> new NotFoundException("The project was not found."));
     }
 
     ProjectRecord loadProject(AuthenticatedUser user, long projectId) {

@@ -20,8 +20,9 @@ import com.jayway.jsonpath.JsonPath;
 import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
- * US02, US04 and US05 (scenarios 2.1 to 2.13, 4.1 to 4.5 and 5.1 to 5.4), the rules R1 to R6, R13,
- * R21, R22, R26, R27, P8 and the version of a task (T13, R30), through real HTTP requests.
+ * US02, US04 and US05 (scenarios 2.1 to 2.13, 4.1 to 4.7 and 5.1 to 5.4), the rules R1 to R6, R13,
+ * R21, R22, R26, R27, P8 and the version of a task (T13, R30), through real HTTP requests. Edge cases:
+ * EC2 to EC5, EC9, EC19, EC22, EC26, EC28 to EC30, EC35, EC46 and EC47 (deleting is in RecycleIntegrationTest).
  * Demo tasks used: Website has "Design homepage" (deadline 2026-12-01, subtasks "Draft wireframes" Done
  * and "Pick colour palette" To do), "Set up hosting" (Blocked) and "Write contact page copy" (Rui and Luís).
  */

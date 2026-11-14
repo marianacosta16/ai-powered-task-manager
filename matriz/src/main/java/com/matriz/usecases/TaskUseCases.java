@@ -53,7 +53,7 @@ public class TaskUseCases {
      */
     @Transactional
     public TaskView createTask(AuthenticatedUser user, long projectId, Supplier<NewTaskCommand> body) {
-        ProjectRecord project = rules.loadProject(user, projectId);
+        ProjectRecord project = rules.loadProjectForWrite(user, projectId); // 404, 403 and the project locked
         TaskRules.requireOpenForCreation(project);
         NewTaskCommand c = body.get();
 

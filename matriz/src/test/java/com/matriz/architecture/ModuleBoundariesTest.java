@@ -6,6 +6,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.matriz.access.UserDirectory;
+import com.matriz.projects.ProjectQueries;
 import com.matriz.recycle.RecycleBin;
 import com.matriz.tasks.TaskQueries;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -70,6 +71,8 @@ class ModuleBoundariesTest {
             .should().callMethod(UserDirectory.class, "findForUpdate", long.class)
             .orShould().callMethod(TaskQueries.class, "findByIdForUpdate", long.class)
             .orShould().callMethod(TaskQueries.class, "lockOpenTaskIdsOf", long.class, long.class)
+            .orShould().callMethod(ProjectQueries.class, "findByIdForUpdate", long.class)
+            .orShould().callMethod(ProjectQueries.class, "findByIdForShare", long.class)
             .orShould().callMethod(TaskQueries.class, "lockTaskIdsOfProject", long.class)
             .orShould().callMethod(RecycleBin.class, "lockTask", long.class, Instant.class)
             .allowEmptyShould(true);

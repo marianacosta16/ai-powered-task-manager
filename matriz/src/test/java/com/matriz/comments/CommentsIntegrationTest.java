@@ -20,7 +20,7 @@ import com.matriz.tasks.CommentQueries;
 import com.matriz.testsupport.ApiIntegrationTest;
 
 /**
- * US11 (scenarios 11.1 to 11.6 and 11.8 to 11.10, and the first half of 11.7), EC32 and EC34, R24,
+ * US11 (scenarios 11.1 to 11.6 and 11.8 to 11.11, and the first half of 11.7), EC32, EC34 and EC48, R24,
  * P28 and NF09, through real HTTP requests. Tasks used: Website has "Design homepage" (with the
  * subtask "Draft wireframes", closed) and Old Site, a completed project, has "Shut down server".
  */
