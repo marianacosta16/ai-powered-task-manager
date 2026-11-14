@@ -258,6 +258,7 @@ Decisões de modelação que não estão documentadas e escolhas que dependem de
 | M11 | Credenciais da conta | `username` único e `password` obrigatória em `APP_USER`. O novo âmbito não define o identificador de início de sessão (nome de utilizador, email) nem as regras da palavra-passe (S5). Implementado com `username` em minúsculas e comparado exatamente, e palavra-passe de pelo menos 8 caracteres, guardada como hash BCrypt (incremento 1) | Confirmado |
 | M12 | Comentários | Entidade `COMMENT` ligada a `TASK` e a `APP_USER`, sem marca de apagado própria (seguem a tarefa). Editar altera `content` e mantém `created_at`; apagar elimina a linha, sem histórico de edições | Decisão (P28) |
 | M13 | Edições simultâneas da mesma tarefa | Cada tarefa tem uma `version`; ao gravar, se a versão enviada já não é a atual, a gravação é recusada (R30, T13). Decidido em 2026-11-12 | Decisão |
+| M14 | Eliminação definitiva | Ao fim de 30 dias, o que está na reciclagem (`deleted_at` com 30 dias ou mais) é eliminado de vez, com os seus comentários, responsáveis e membros; as subtarefas e as tarefas de um projeto ou de uma tarefa eliminados vão com eles. Uma tarefa duplicada cujo original é eliminado mantém o estado `Duplicate` e fica sem `original_task_id` (A41). Tudo o que foi apagado numa ação leva o mesmo `deleted_at`, que o liga ao que foi apagado com ele (M4) | Decisão |
 
 Não há pressupostos por validar neste modelo.
 
