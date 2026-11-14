@@ -2,7 +2,7 @@
 
 Aplicação de gestão de projetos e tarefas para equipas de trabalho, com uma **matriz urgente/importante** como vista principal para decidir o que fazer primeiro.
 
-> Projeto de aprendizagem. Por agora contém só documentação (requisitos, arquitetura, dados, contrato da API, wireframes e plano); ainda não há código.
+> Projeto de aprendizagem. Tem a documentação (requisitos, arquitetura, dados, contrato da API, wireframes e plano) e o **backend do MVP completo**: as 28 operações do contrato, com testes. A interface do utilizador ainda não existe (ver o [plano](docs/implementation-plan.md), secção 8).
 
 ## O problema
 
@@ -300,6 +300,24 @@ curl -s -b /tmp/ana.txt -X DELETE localhost:8081/tasks/1
 curl -s -b /tmp/ana.txt localhost:8081/recycle-bin
 ```
 
+## Fecho do MVP (incremento 8)
+
+O MVP da API está completo: as 28 operações do contrato, a versão 1.0.0 do [openapi.yaml](openapi.yaml) e o cenário de aceitação do MVP.
+
+| O quê | Como se garante |
+|---|---|
+| Escrever num projeto que é concluído ou apagado ao mesmo tempo (R22, R27, R28, R9) | Toda a escrita bloqueia a linha do projeto em modo partilhado e lê o estado com o bloqueio; concluir, alterar ou apagar o projeto bloqueia-a em modo exclusivo (`Locks`). Ordem: projeto, pessoas, tarefas. Um teste de concorrência por caminho de escrita |
+| O contrato e a aplicação dizem o mesmo | `ContractConformanceIntegrationTest`: as rotas são as do contrato; as 28 operações, chamadas a sério, respondem com um estado e um corpo que o contrato descreve, sem campos a mais, e cada recusa traz código e mensagem (NF08) |
+| O cenário MVP-1 | `MvpAcceptanceIntegrationTest`: da criação do projeto ao painel com 50% de progresso |
+| Nenhum cenário esquecido | `ScenarioCoverageTest`: cada cenário e caso excecional da v1 é nomeado por um teste; só o EC39 (uma confirmação) fica para a interface |
+| Documentação coerente | `DocumentationCodesTest`: os códigos P, T, R, EC, M, V e A são únicos, sem falhas, e nenhuma referência aponta para um código que não existe |
+
+```bash
+cd matriz && set -a && . ./.env && set +a && mvn -B verify
+```
+
+O que falta é a interface: os itens V1 a V12 do [plano](docs/implementation-plan.md#8-verificações-adiadas-para-a-fase-da-interface) são o que a API não consegue verificar sozinha.
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
@@ -316,6 +334,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incrementos 0 a 7 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem); próximo, o incremento 8 (fecho do MVP) |
+| Implementação | Backend do MVP concluído: os 9 incrementos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem e fecho do MVP): o backend do MVP está completo; falta a interface |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.
