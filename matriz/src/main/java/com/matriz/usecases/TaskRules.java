@@ -99,11 +99,14 @@ class TaskRules {
 
     /** R21: assignees are members of the project or its manager. */
     void requireEligible(ProjectRecord project, long userId) {
-        boolean eligible = userId == project.managerId() || team.isMember(project.id(), userId);
-        if (!eligible) {
+        if (!isEligible(project, userId)) {
             throw new BusinessRuleException("ASSIGNEE_NOT_MEMBER",
                     "This person is not a member of the project. Ask the manager to add them to the project first.");
         }
+    }
+
+    boolean isEligible(ProjectRecord project, long userId) {
+        return userId == project.managerId() || team.isMember(project.id(), userId);
     }
 
     /** "Today" in the time zone of the project (P26): the earliest accepted deadline (R13). */

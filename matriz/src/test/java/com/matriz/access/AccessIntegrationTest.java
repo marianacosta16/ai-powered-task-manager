@@ -260,7 +260,7 @@ class AccessIntegrationTest {
         assertThat(wrongType.getBody()).doesNotContain("timestamp");
 
         // A method the path does not accept, and a path that does not exist
-        ResponseEntity<String> wrongMethod = http.exchange("/projects/1", HttpMethod.DELETE,
+        ResponseEntity<String> wrongMethod = http.exchange("/projects/1", HttpMethod.PUT,
                 new HttpEntity<>(headers(ana)), String.class);
         assertThat(wrongMethod.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
         assertThat(wrongMethod.getHeaders().getAllow()).contains(HttpMethod.GET);

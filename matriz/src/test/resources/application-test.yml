@@ -5,6 +5,9 @@ spring:
     password: ${TEST_DB_PASSWORD}
 
 matriz:
+  recycle:
+    purge:
+      cron: "-" # the tests call the purge themselves
   demo:
     # Tests seed explicitly with a generated password
     password: ""

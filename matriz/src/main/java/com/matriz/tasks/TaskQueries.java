@@ -60,6 +60,12 @@ public class TaskQueries {
                 """, Long.class, projectId, userId);
     }
 
+    /** The tasks and subtasks of a project that are not deleted, locked, by id: for deleting the project (R9). */
+    public List<Long> lockTaskIdsOfProject(long projectId) {
+        return jdbc.queryForList("SELECT id FROM task WHERE project_id = ? AND deleted_at IS NULL ORDER BY id FOR UPDATE",
+                Long.class, projectId);
+    }
+
     /** As lockOpenTaskIdsOf, without the locks: for checks that run before anything is locked. */
     public List<Long> openTaskIdsOf(long projectId, long userId) {
         return jdbc.queryForList("""
