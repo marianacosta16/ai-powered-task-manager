@@ -43,8 +43,8 @@ info:
     - A27 (confirmed): the date of a comment is set by the server clock when it is created and never changes; the body accepts only `content`, and an `authorId` or `createdAt` is refused with 400.
     - A28 (confirmed): `status` and `quadrant` of `listProjectTasks` accept only the exact labels of `TaskStatus` and `Quadrant`; any other value, or a `mine` that is not `true` or `false`, is refused with 400 (after the 403 check).
     - A29 (confirmed): tasks that tie on status group, deadline, urgency and importance are listed in the order they were created (by id), so the list never changes order between two requests.
-    - A30 (to confirm): `listProjectTasks` and `listComments` come in pages, with `page` from 1 and `size` from 1 to 200, 50 if omitted. A value outside this, or one that is not a whole number, is refused with 400, after the 403 check; it is not corrected silently.
-    - A31 (to confirm): the total of the whole list is in the `X-Total-Count` header, so the body stays a plain array; for the tasks it counts the main tasks that match the filters, and a page past the last one is a 200 with an empty array.
+    - A30 (confirmed): `listProjectTasks` and `listComments` come in pages, with `page` from 1 and `size` from 1 to 200, 50 if omitted. A value outside this, or one that is not a whole number, is refused with 400, after the 403 check; it is not corrected silently.
+    - A31 (confirmed): the total of the whole list is in the `X-Total-Count` header, so the body stays a plain array; for the tasks it counts the main tasks that match the filters, and a page past the last one is a 200 with an empty array.
 
 tags:
   - name: Auth

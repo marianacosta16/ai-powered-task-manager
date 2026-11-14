@@ -248,7 +248,7 @@ Operação nova: `listProjectTasks` (a pesquisa de projetos, `listProjects` com 
 | Valor de filtro desconhecido (A28) | 400, depois da verificação de acesso |
 | Páginas (A30, A31) | `page` (a partir de 1) e `size` (1 a 200, por omissão 50); o total de tarefas principais que passam os filtros vai em `X-Total-Count`; uma página depois da última dá 200 com lista vazia; as subtarefas não contam para a página. Um valor fora destes dá 400, depois do 403 |
 
-Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml); A30 e A31 (páginas) estão por confirmar.
+Os pressupostos A28 e A29 estão confirmados no [openapi.yaml](openapi.yaml); A30 e A31 (páginas) estão confirmados.
 
 ```bash
 curl -s -b /tmp/ana.txt 'localhost:8081/projects/1/tasks?mine=true&status=To%20do&quadrant=Do%20first'
