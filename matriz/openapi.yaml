@@ -48,15 +48,15 @@ info:
     - A32 (confirmed): the progress and the elapsed time are each rounded to two decimals before the deviation is taken, so the deviation is exactly the difference of the two values shown (P5). Example: 50.00 elapsed and 33.33 done make a deviation of 16.67.
     - A33 (confirmed): a project is late by date from the very instant its end is reached, not after it: an end with a time of 18:00 is late at 18:00, and an end without a time is late at 00:00 of the next day (scenarios 6.14 and 6.15).
     - A34 (confirmed): the dashboard lists the projects ordered by name, ignoring case, and by id when the names are equal, so the order does not change between two requests.
-    - A35 (to confirm): the manager of a project also deletes its tasks and subtasks, as the members do.
-    - A36 (to confirm): deleting a task takes with it its subtasks (all closed, because an open one stops the deletion) and its comments, all with the same instant. `includedTasks` of a deleted project counts its main tasks, not the subtasks.
+    - A35 (confirmed): the manager of a project also deletes its tasks and subtasks, as the members do.
+    - A36 (confirmed): deleting a task takes with it its subtasks (all closed, because an open one stops the deletion until those subtasks are closed) and its comments, all with the same instant. `includedTasks` of a deleted project counts its main tasks, not the subtasks.
     - A37 (confirmed): a project is restored even when a member is now in another open project; the label `inOtherOpenProject` warns the manager, as when a suspended project is resumed (P22).
-    - A38 (to confirm): the bin lists a task that was deleted on its own while its project is in the bin, with `restorable: false` and the reason `PROJECT_IN_RECYCLE_BIN`; likewise `PARENT_IN_RECYCLE_BIN` for a subtask whose parent is in the bin, and `PROJECT_COMPLETED` when the project was completed meanwhile. What was deleted together with a project or a parent is not listed on its own.
-    - A39 (to confirm): an item that has been in the bin exactly 30 days is already gone. `daysLeft` is rounded up, so it goes from 30 down to 1.
+    - A38 (confirmed): the bin lists a task that was deleted on its own while its project is in the bin, with `restorable: false` and the reason `PROJECT_IN_RECYCLE_BIN`; likewise `PARENT_IN_RECYCLE_BIN` for a subtask whose parent is in the bin, and `PROJECT_COMPLETED` when the project was completed meanwhile. What was deleted together with a project or a parent is not listed on its own.
+    - A39 (confirmed): an item that has been in the bin exactly 30 days is already gone. `daysLeft` is rounded up, so it goes from 30 down to 1.
     - A40 (confirmed): when a parent task is eliminated for good, its subtasks that were still in the bin are gone too, each by its own 30 days: a subtask deleted before its parent is older, so it expires first. Restoring an item that is gone is 404. The reason `PARENT_MISSING` of the first draft of the contract never happens and was removed.
-    - A41 (to confirm): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty).
+    - A41 (confirmed): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty). The task then has `originalEliminated: true`, so the client can show a note saying that the original was eliminated. A duplicate is still edited while its original is in the recycle bin or eliminated; the original is only checked when the task becomes a duplicate or its original is changed.
     - A42 (to confirm): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36).
-    - A43 (to confirm): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
+    - A43 (confirmed): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
 
 tags:
   - name: Auth
@@ -1359,7 +1359,7 @@ components:
     Task:
       type: object
       description: A task or a subtask.
-      required: [id, version, projectId, parentTaskId, title, status, deadline, urgency, importance, assignees]
+      required: [id, version, projectId, parentTaskId, title, status, deadline, urgency, importance, originalEliminated, assignees]
       properties:
         id:
           type: integer
@@ -1395,7 +1395,10 @@ components:
           description: Filled only when the status is `Blocked` (R6).
         originalTaskId:
           type: [integer, 'null']
-          description: 'Filled only when the status is `Duplicate`, and then it is the original task (R6).'
+          description: 'Filled only when the status is `Duplicate`, and then it is the original task (R6). It is empty if the original was eliminated for good (`originalEliminated`).'
+        originalEliminated:
+          type: boolean
+          description: True for a duplicate whose original task was eliminated from the recycle bin; the client shows a note saying so (A41). False otherwise.
         assignees:
           type: array
           items:

@@ -119,12 +119,17 @@ class TaskRules {
         return build(List.of(task), Map.of(task.id(), subtasks)).get(0);
     }
 
+    /** A duplicate always has its original (R6), so one without it lost it when the original was eliminated (A41). */
+    private static boolean isDuplicateWithoutOriginal(TaskRecord t) {
+        return t.statusValue() == com.matriz.tasks.TaskStatus.DUPLICATE && t.originalTaskId() == null;
+    }
+
     private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
             List<TaskView> subtasks) {
         List<UserInfo> assignees = assigneeIds == null ? List.of() : assigneeIds.stream().map(infos::get).toList();
         return new TaskView(t.id(), t.version(), t.projectId(), t.parentTaskId(), t.title(), t.description(), t.status(),
                 t.deadline(), t.urgency(), t.importance(), Quadrant.of(t.urgency(), t.importance()).label(), t.blockReason(),
-                t.originalTaskId(), assignees, subtasks);
+                t.originalTaskId(), isDuplicateWithoutOriginal(t), assignees, subtasks);
     }
 
     /**

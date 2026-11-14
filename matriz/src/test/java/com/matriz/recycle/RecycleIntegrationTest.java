@@ -546,7 +546,32 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
 
         assertThat(statusOf(duplicate)).isEqualTo("Duplicate");
         assertThat(jdbc.queryForObject("SELECT original_task_id FROM task WHERE id = ?", Long.class, duplicate)).isNull();
-        assertThat(get("/tasks/" + duplicate, sessionOf("ana")).getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<String> read = get("/tasks/" + duplicate, sessionOf("ana"));
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(read, "$.originalEliminated")).isEqualTo(true); // the client shows a note
+        assertThat(JsonPath.<Object>read(read.getBody(), "$.originalTaskId")).isNull();
+        ResponseEntity<String> edited = patch("/tasks/" + duplicate, sessionOf("ana"), Map.of("version", 1, "title", "Renamed"));
+        assertThat(edited.getStatusCode()).isEqualTo(HttpStatus.OK); // it can still be edited
+        assertThat(json(edited, "$.title")).isEqualTo("Renamed");
+        assertThat(json(edited, "$.originalEliminated")).isEqualTo(true);
+    }
+
+    @Test
+    void aDuplicateIsStillEditedWhileItsOriginalIsInTheBin() { // A41
+        long project = newProject("Web", "In progress", "marta", "ana");
+        long original = newTask(project, "Original", "To do", null, "ana");
+        long duplicate = newTask(project, "Duplicate", "To do", null, "ana");
+        jdbc.update("UPDATE task SET status = 'Duplicate', original_task_id = ? WHERE id = ?", original, duplicate);
+        delete("/tasks/" + original, sessionOf("ana"));
+
+        ResponseEntity<String> edited = patch("/tasks/" + duplicate, sessionOf("ana"), Map.of("version", 1, "title", "Renamed"));
+
+        assertThat(edited.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(edited, "$.originalEliminated")).isEqualTo(false); // it is only in the bin: the link stays
+        assertThat(((Number) json(edited, "$.originalTaskId")).longValue()).isEqualTo(original);
+        ResponseEntity<String> noOriginal = patch("/tasks/" + duplicate, sessionOf("ana"), Map.of("version", 2, "originalTaskId", original));
+        assertThat(noOriginal.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY); // choosing a deleted original is still refused
+        assertThat(json(noOriginal, "$.code")).isEqualTo("ORIGINAL_TASK_NOT_VALID");
     }
 
     @Test
