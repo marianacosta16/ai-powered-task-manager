@@ -166,7 +166,7 @@ class ProjectStateRaceIntegrationTest extends ApiIntegrationTest {
     @Test
     void nothingIsWrittenInAProjectThatIsDeletedMeanwhile() throws Exception { // R9
         long project = project();
-        long task = task(project, "T");
+        task(project, "T");
         int comments = count("task_comment");
 
         assertThat(whileStateChanges(project, DELETE, () -> post("/projects/" + project + "/tasks", sessionOf("ana"),
@@ -180,7 +180,6 @@ class ProjectStateRaceIntegrationTest extends ApiIntegrationTest {
 
         assertThat(count("task_comment")).isEqualTo(comments);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM task WHERE project_id = ?", Integer.class, project)).isEqualTo(1);
-        assertThat(task).isPositive();
     }
 
     // ---- the other way round: the change of state waits for the writes under way ----
@@ -212,7 +211,7 @@ class ProjectStateRaceIntegrationTest extends ApiIntegrationTest {
     @Test
     void severalWritersGoOnTogetherInTheSameProject() throws Exception {
         long project = project();
-        long a = task(project, "A");
+        task(project, "A");
         long b = task(project, "B");
 
         // two writers hold the project in shared mode at once: neither waits for the other
@@ -229,7 +228,6 @@ class ProjectStateRaceIntegrationTest extends ApiIntegrationTest {
                 pool.shutdownNow();
             }
         });
-        assertThat(a).isPositive();
     }
 
     // ---- helpers ----

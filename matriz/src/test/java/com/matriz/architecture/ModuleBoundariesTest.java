@@ -64,9 +64,9 @@ class ModuleBoundariesTest {
     static final ArchRule noCycles = slices().matching(BASE + "(*)..").should().beFreeOfCycles()
             .allowEmptyShould(true);
 
-    /** The lock order (people first, then tasks) is kept in one place: only Locks takes these locks. */
+    /** The lock order (project, then people, then tasks) is kept in one place: only Locks takes these locks. */
     @ArchTest
-    static final ArchRule onlyLocksLocksPeopleAndTasks = noClasses()
+    static final ArchRule onlyLocksLocksProjectsPeopleAndTasks = noClasses()
             .that().doNotHaveFullyQualifiedName(BASE + "usecases.Locks")
             .should().callMethod(UserDirectory.class, "findForUpdate", long.class)
             .orShould().callMethod(TaskQueries.class, "findByIdForUpdate", long.class)

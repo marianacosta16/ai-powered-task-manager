@@ -34,8 +34,9 @@ import io.swagger.v3.parser.core.models.ParseOptions;
  * The contract and the application say the same (the closing of the MVP, increment 8). Two checks:
  * the routes of the application are exactly the paths and methods of the contract, and every one of the 28
  * operations, called for real on the demonstration data, answers with a status the contract lists and a body
- * that fits the schema of that status, with no property the contract does not know. An error always has a code
- * of the contract and a message that says what to do (NF08).
+ * that fits the schema of that status, with no property the contract does not know, and with the headers the
+ * contract lists for it. An error always has a code of the contract and a message that says what to do (NF08).
+ * The request bodies are not checked against their schemas: only the responses are.
  */
 class ContractConformanceIntegrationTest extends ApiIntegrationTest {
 
@@ -247,6 +248,10 @@ class ContractConformanceIntegrationTest extends ApiIntegrationTest {
             if (documented == null) {
                 problems.add(where + ", which the contract does not list for it");
                 return;
+            }
+            if (documented.getHeaders() != null) { // the headers the contract lists for this answer, such as X-Total-Count
+                documented.getHeaders().keySet().stream().filter(name -> !response.getHeaders().containsKey(name))
+                        .forEach(name -> problems.add(where + " without the header " + name + ", which the contract lists"));
             }
             String text = response.getBody();
             var content = documented.getContent() == null ? null : documented.getContent().get("application/json");

@@ -20,7 +20,7 @@ import com.matriz.tasks.TaskQueries;
 import com.matriz.tasks.TaskRecord;
 
 /**
- * The only place that locks the rows of people and tasks (an ArchUnit test checks it). Rules that
+ * The only place that locks the rows of projects, people and tasks (an ArchUnit test checks it). Rules that
  * involve several rows (R2 to R4, R11, R17, R21, R26, T13) take locks so that two requests about the
  * same rows are done one after the other. To avoid two requests waiting for each other in a circle
  * (a deadlock) the order is always the same: <b>the project first, then the people by id, then the tasks by id</b>.

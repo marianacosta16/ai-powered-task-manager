@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -17,7 +18,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Every scenario and every edge case of the v1 in docs/user-stories.md is named by at least one test, or is
  * explicitly left to the interface with a verification item in the plan (section 8). The tests name them in
- * their comments, alone ("// 7.8", "EC21") or in a range ("scenarios 1.1 to 1.23", "EC28 to EC30"). This does not
+ * their comments: a scenario after the word ("scenarios 1.1 to 1.23 and 1.29") or as "// 7.8", an edge case alone ("EC21") or in a range ("EC28 to EC30"). A bare number such as the "3.1" of "OpenAPI 3.1" names nothing. This does not
  * prove that a test checks the scenario well: it stops one from being forgotten when the documents change.
  */
 class ScenarioCoverageTest {
@@ -25,8 +26,12 @@ class ScenarioCoverageTest {
     /** Left to the interface: the plan has an item for each one (section 8, "V"), which the test checks. */
     private static final Set<String> FOR_THE_INTERFACE = Set.of("EC39");
 
-    private static final Pattern SCENARIO_RANGE = Pattern.compile("(\\d+)\\.(\\d+)\\s+(?:to|a)\\s+(?:\\1\\.)?(\\d+)");
-    private static final Pattern SCENARIO = Pattern.compile("(?<![\\w.])(\\d+)\\.(\\d+)(?![\\d.]*\\w)");
+    /** A scenario is named after the word "scenario" (or "cenário"), as in "scenarios 1.1 to 1.23 and 1.29", or in a comment "// 7.8". */
+    private static final Pattern AFTER_THE_WORD = Pattern.compile(
+            "(?i)\\b(?:scenarios?|cenários?)\\b((?:[\\s,]|\\d+\\.\\d+|\\bto\\b|\\band\\b)+)");
+    private static final Pattern IN_A_COMMENT = Pattern.compile("//\\s*(\\d+\\.\\d+(?:\\s*,\\s*\\d+\\.\\d+)*)");
+    private static final Pattern RANGE = Pattern.compile("(\\d+)\\.(\\d+)\\s+to\\s+(?:\\1\\.)?(\\d+)");
+    private static final Pattern SINGLE = Pattern.compile("(\\d+)\\.(\\d+)");
     private static final Pattern EDGE_RANGE = Pattern.compile("EC(\\d+)\\s+(?:to|a)\\s+EC(\\d+)");
     private static final Pattern EDGE = Pattern.compile("EC(\\d+)");
 
@@ -72,17 +77,11 @@ class ScenarioCoverageTest {
             }
         }
         Set<String> named = new TreeSet<>();
-        Matcher range = SCENARIO_RANGE.matcher(text);
-        while (range.find()) {
-            int from = Integer.parseInt(range.group(2));
-            int to = Integer.parseInt(range.group(3));
-            for (int i = from; i <= to && i - from < 40; i++) {
-                named.add(range.group(1) + "." + i);
+        for (Pattern place : List.of(AFTER_THE_WORD, IN_A_COMMENT)) {
+            Matcher where = place.matcher(text);
+            while (where.find()) {
+                addScenarios(where.group(1), named);
             }
-        }
-        Matcher single = SCENARIO.matcher(text);
-        while (single.find()) {
-            named.add(single.group(1) + "." + single.group(2));
         }
         Matcher edgeRange = EDGE_RANGE.matcher(text);
         while (edgeRange.find()) {
@@ -95,5 +94,21 @@ class ScenarioCoverageTest {
             named.add("EC" + edge.group(1));
         }
         return named;
+    }
+
+    /** The numbers in a list such as "1.1 to 1.23 and 1.29 to 1.32, 2.4": the ranges are opened, the others taken as they are. */
+    private static void addScenarios(String list, Set<String> named) {
+        Matcher range = RANGE.matcher(list);
+        while (range.find()) {
+            int from = Integer.parseInt(range.group(2));
+            int to = Integer.parseInt(range.group(3));
+            for (int i = from; i <= to && i - from < 40; i++) {
+                named.add(range.group(1) + "." + i);
+            }
+        }
+        Matcher single = SINGLE.matcher(list);
+        while (single.find()) {
+            named.add(single.group(1) + "." + single.group(2));
+        }
     }
 }

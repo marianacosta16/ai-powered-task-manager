@@ -68,6 +68,10 @@ class TaskRules {
      * 404, 403 and R27/R28: the task of a project where changes are allowed. The project is locked in shared
      * mode and read again, so a project that is completed or deleted while this request is under way is seen
      * by it, and one that is being completed waits for it (the callers are in a transaction).
+     *
+     * <p>The project is read twice on purpose: the first read, inside {@code load}, decides 404 and 403 without
+     * any lock, so someone who may not even see the task never waits for a lock; the second is the one with the
+     * lock, and the state that is checked is the one it returns.
      */
     TaskContext loadForChange(AuthenticatedUser user, long taskId) {
         TaskContext context = load(user, taskId);
