@@ -45,6 +45,9 @@ info:
     - A29 (confirmed): tasks that tie on status group, deadline, urgency and importance are listed in the order they were created (by id), so the list never changes order between two requests.
     - A30 (confirmed): `listProjectTasks` and `listComments` come in pages, with `page` from 1 and `size` from 1 to 200, 50 if omitted. A value outside this, or one that is not a whole number, is refused with 400, after the 403 check; it is not corrected silently.
     - A31 (confirmed): the total of the whole list is in the `X-Total-Count` header, so the body stays a plain array; for the tasks it counts the main tasks that match the filters, and a page past the last one is a 200 with an empty array.
+    - A32 (to confirm): the progress and the elapsed time are each rounded to two decimals before the deviation is taken, so the deviation is exactly the difference of the two values shown (P5). Example: 50.00 elapsed and 33.33 done make a deviation of 16.67.
+    - A33 (to confirm): a project is late by date from the very instant its end is reached, not after it: an end with a time of 18:00 is late at 18:00, and an end without a time is late at 00:00 of the next day (scenarios 6.14 and 6.15).
+    - A34 (to confirm): the dashboard lists the projects ordered by name, ignoring case, and by id when the names are equal, so the order does not change between two requests.
 
 tags:
   - name: Auth
@@ -803,7 +806,9 @@ paths:
       summary: Get the dashboard
       description: |
         Returns the projects the user can access that are not completed (open and suspended), each with the count of its main tasks by status (R18, P27).
-        For the manager of a project it also returns the progress and the calculated status (US06, P5, P7, P16). Completed projects are not returned; they are found in the project list and search (P27).
+        For the manager of a project it also returns the progress and the calculated status (US06, P5, P7, P16); a member, or a manager of another project, gets no `progress` for it (scenario 6.7). Completed projects are not returned; they are found in the project list and search (P27). The projects come ordered by name (A34).
+
+        The calculated status is only for a project `In progress` that has tasks that count (P5, P16). A project that is `Not started` or `Suspended` keeps its status, and a project without tasks that count shows `hasCountableTasks: false` and no percentage. The time is measured in the time zone of the project; an end date without a time counts the whole day (P26, A33). The progress and the elapsed time are rounded to two decimals (A32).
       responses:
         '200':
           description: The dashboard.
