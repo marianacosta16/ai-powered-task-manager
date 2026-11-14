@@ -57,6 +57,8 @@ info:
     - A41 (confirmed): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty). The task then has `originalEliminated: true`, so the client can show a note saying that the original was eliminated. While the original is only in the recycle bin the link stays and the task has `originalInRecycleBin: true`, because opening the original gives 404 until it is restored. A duplicate is still edited while its original is in the recycle bin or eliminated; the original is only checked when the task becomes a duplicate or its original is changed.
     - A42 (confirmed): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36). With the body and nobody who left, the answer is 400: the body is not ignored in silence.
     - A43 (confirmed): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
+    - A44 (confirmed): the creator of a project is its manager. `createProject` has no `managerId`, and one sent is refused with 400, like any field the contract does not list. The manager only changes with `updateProject` (A12), and the new manager must be a project manager (M10). This replaces the first decision of R19, in which the creator indicated the manager (2026-11-14, to follow the exercise: the owner is inferred by the server).
+    - A45 (confirmed): the name of a project has 3 to 100 characters and its description up to 1000, following the example of the exercise; text is counted in characters (R14). The titles and descriptions of tasks keep 100 and 2000.
 
 tags:
   - name: Auth
@@ -176,8 +178,8 @@ paths:
       operationId: createProject
       summary: Create a project
       description: |
-        Only a project manager creates projects (F01, R19). The creator indicates the manager of the project; if it is someone else, the creator stops seeing the project.
-        Rules: name up to 100 and description up to 2000 characters (R14); start and end dates are required and the end is not before the start (R16); the start date is not in the past, and today is accepted (R29, A13); the manager must have the role Project manager (M10). A single day with no times is accepted, because the end day counts whole (P26).
+        Only a project manager creates projects (F01, R19). The creator, who comes from the session, is the manager of the new project: the request has no manager, and a `managerId` is refused with 400 (A44). To hand the project to another project manager, the manager uses `updateProject` (A12).
+        Rules: name from 3 to 100 and description up to 1000 characters (R14, A45); start and end dates are required and the end is not before the start (R16); the start date is not in the past, and today is accepted (R29, A13). A single day with no times is accepted, because the end day counts whole (P26).
       requestBody:
         required: true
         content:
@@ -924,7 +926,7 @@ components:
 
         Session cycle:
         1. `POST /auth/login` with valid credentials starts the session. The server answers with `Set-Cookie: SESSION=...; HttpOnly; SameSite=Lax; Path=/` and a new identifier at every sign in (a cookie sent by the client is never adopted).
-        2. The client sends the cookie in every later request (a browser does it by itself). The server takes the identity of the user from the session, never from the request: who is asking and the author of a comment are set by the server. The manager of a new project is chosen by its creator (R19) and validated by the server (M10).
+        2. The client sends the cookie in every later request (a browser does it by itself). The server takes the identity of the user from the session, never from the request: who is asking and the author of a comment are set by the server. The manager of a new project is its creator, taken from the session (R19, A44), and is never sent in the request.
         3. Each request restarts the 3 hours of inactivity. After 3 hours without any request, or after `POST /auth/logout`, the session no longer exists.
         4. A request without a valid session gets `401` with the code `UNAUTHENTICATED`. If it carried a session cookie, the message says that the session has ended ("Your session has ended. Sign in again to continue."); otherwise it says "Sign in to continue.". The client should then send the user to the sign in screen and show the message.
         5. A signed in user without access to a project gets `403` (`FORBIDDEN`) on any operation on it, also by direct link.
@@ -1193,7 +1195,7 @@ components:
           properties:
             description:
               type: [string, 'null']
-              maxLength: 2000
+              maxLength: 1000
             startDate:
               type: string
               format: date
@@ -1214,16 +1216,17 @@ components:
 
     ProjectCreate:
       type: object
-      required: [name, startDate, endDate, phase, status, managerId]
+      required: [name, startDate, endDate, phase, status]
       additionalProperties: false
+      description: 'The manager is not sent, because it is the creator, who comes from the session (R19, A44). A `managerId` is refused with 400.'
       properties:
         name:
           type: string
-          minLength: 1
+          minLength: 3
           maxLength: 100
         description:
           type: string
-          maxLength: 2000
+          maxLength: 1000
         startDate:
           type: string
           format: date
@@ -1245,10 +1248,6 @@ components:
           $ref: '#/components/schemas/ProjectPhase'
         status:
           $ref: '#/components/schemas/ProjectStatus'
-        managerId:
-          type: integer
-          minimum: 1
-          description: A user with the role Project manager (R19, M10).
 
     ProjectUpdate:
       type: object
@@ -1258,11 +1257,11 @@ components:
       properties:
         name:
           type: string
-          minLength: 1
+          minLength: 3
           maxLength: 100
         description:
           type: [string, 'null']
-          maxLength: 2000
+          maxLength: 1000
         startDate:
           type: string
           format: date

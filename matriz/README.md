@@ -135,7 +135,7 @@ Mecanismo (T3, S5): **sessão no servidor, identificada por um cookie `SESSION`*
 | Passo | O que acontece |
 |---|---|
 | Iniciar sessão | `POST /auth/login` com `username` e `password`. Credenciais certas: `200` com `id`, `name` e `role`, e o cookie com um identificador novo. Erradas (utilizador ou palavra-passe): `401 INVALID_CREDENTIALS`, igual nos dois casos |
-| Durante a sessão | O cliente envia o cookie em cada pedido. O servidor tira a identidade da sessão: quem faz o pedido e o autor dos comentários nunca vêm do pedido. O gestor de um projeto novo é indicado por quem o cria (R19) e validado no servidor (M10) |
+| Durante a sessão | O cliente envia o cookie em cada pedido. O servidor tira a identidade da sessão: quem faz o pedido e o autor dos comentários nunca vêm do pedido. O gestor de um projeto novo é quem o cria, tirado da sessão (R19, A44); o pedido não leva gestor |
 | Perfil | `GET /auth/me` devolve o nome e o papel |
 | Fim | `POST /auth/logout` (`204`), ou 3 horas sem qualquer pedido |
 | Sem sessão válida | `401 UNAUTHENTICATED`. Se o pedido trazia cookie, a mensagem é "Your session has ended. Sign in again to continue."; caso contrário, "Sign in to continue." A interface deve levar o utilizador ao início de sessão e mostrar a mensagem |
@@ -171,7 +171,7 @@ Operações: `createProject`, `updateProject`, `listMembers`, `addMember`, `remo
 
 | Regra | Como se aplica |
 |---|---|
-| Criar projetos (F01, R19) | Só um gestor (403 se for membro). Quem cria indica o gestor, que tem de ter o papel de gestor (422 `MANAGER_NOT_A_MANAGER`); se for outra pessoa, o criador deixa de ver o projeto |
+| Criar projetos (F01, R19, A44) | Só um gestor (403 se for membro), que passa a ser o gestor do projeto: o pedido não leva `managerId` (um `managerId` dá 400). Para passar a gestão usa-se `updateProject` (A12, M10) |
 | Datas (R16, R29, P26) | Obrigatórias (400). O fim não é anterior ao início (422 `END_BEFORE_START`; um só dia sem horas é aceite). O início não está no passado, sendo hoje aceite (422 `START_DATE_IN_PAST`), no fuso do projeto (Lisboa por defeito) |
 | Alterar o projeto (R12) | Só o gestor (403), que pode passá-lo a outro gestor: o novo gestor perde a linha de membro e o antigo fica como membro se tiver tarefas nele (A12). `Attention` e `Late` não se definem (400). Um projeto concluído não se altera nem reabre (422 `PROJECT_COMPLETED`, R28) |
 | Equipa (R11, P20, P22) | Só o gestor adiciona e remove membros. Um membro de outro projeto em aberto é recusado (422 `MEMBER_IN_OTHER_OPEN_PROJECT`), exceto num projeto suspenso e para gestores. Ao retomar o projeto, quem entretanto entrou noutro projeto em aberto aparece com `inOtherOpenProject: true` (etiqueta vermelha) |

@@ -120,12 +120,14 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor tenta adicionar o Rui como novo membro do projeto "Website"
 - **Then** a ação é recusada, com uma mensagem a explicar que o Rui já está noutro projeto em aberto (R11), e a remoção da Ana não é concluída.
 
-**Cenário 1.15: tamanho máximo do nome e da descrição do projeto**
+**Cenário 1.15: tamanho do nome e da descrição do projeto**
 - **Given** um gestor de projeto identificado
-- **When** cria um projeto com um nome de 100 caracteres e uma descrição de 2000 caracteres
+- **When** cria um projeto com um nome de 100 caracteres e uma descrição de 1000 caracteres
 - **Then** o projeto é criado.
-- **When** tenta criar um projeto com um nome de 101 caracteres ou uma descrição de 2001 caracteres
+- **When** tenta criar um projeto com um nome de 101 caracteres ou uma descrição de 1001 caracteres
 - **Then** o projeto não é criado e é indicado o limite excedido.
+- **When** tenta criar um projeto com um nome de 2 caracteres, ou vazio
+- **Then** o projeto não é criado e é indicado que o nome tem de ter de 3 a 100 caracteres. A mesma regra vale ao alterar o nome ou a descrição de um projeto.
 
 **Cenário 1.16: a etiqueta vermelha desaparece**
 - **Given** o projeto "Website" retomado, com a Ana na lista de membros com etiqueta vermelha por estar também no projeto "Intranet", que está em aberto
@@ -142,10 +144,12 @@ As funcionalidades da v2 (Should) ainda não têm user story: F11 (etiquetas), F
 - **When** o gestor abre as opções de estado do projeto
 - **Then** os estados "atenção" e "atrasado" não estão disponíveis para escolha.
 
-**Cenário 1.19: o criador indica o gestor do projeto**
+**Cenário 1.19: o criador é o gestor do projeto**
 - **Given** os gestores "Marta" e "Pedro"
-- **When** a Marta cria o projeto "Website" e indica o Pedro como gestor
-- **Then** o Pedro é o gestor do projeto "Website", o projeto aparece na lista do Pedro e não aparece na lista da Marta.
+- **When** a Marta cria o projeto "Website"
+- **Then** a Marta é a gestora do projeto "Website", o projeto aparece na lista da Marta e não aparece na lista do Pedro.
+- **When** a Marta tenta criar um projeto indicando o Pedro como gestor
+- **Then** o projeto não é criado: o gestor não se indica ao criar, é sempre quem cria. Para passar a gestão ao Pedro, a Marta usa a passagem da gestão (cenário 1.31).
 
 **Cenário 1.20: fuso horário por defeito**
 - **Given** um gestor de projeto identificado
@@ -844,7 +848,7 @@ Regras usadas (ver [P5](constraints.md#2-pressupostos-assumidos) e [P16](constra
 | A5 | "Fechada" para subtarefas | Concluída, cancelada ou duplicada ([R5](requirements.md#4-regras-de-negócio)) |
 | A6 | Prazo no passado | Não é aceite na criação ([R13](requirements.md#4-regras-de-negócio)) |
 | A7 | Progresso sem tarefas contáveis | Etiqueta "sem tarefas" em vez de 0% ([P16](constraints.md#2-pressupostos-assumidos)) |
-| A8 | Tamanho de título e descrição | 100 e 2000 caracteres ([R14](requirements.md#4-regras-de-negócio), [P17](constraints.md#2-pressupostos-assumidos)) |
+| A8 | Tamanho de título e descrição | Tarefas: 100 e 2000 caracteres; projetos: nome de 3 a 100 e descrição até 1000, desde 2026-11-14 ([R14](requirements.md#4-regras-de-negócio), [P17](constraints.md#2-pressupostos-assumidos)) |
 | A9 | "Recusada" e "não disponível" | Definidos na secção 1 ([NF08](requirements.md#5-requisitos-não-funcionais)) |
 | A10 | Quando se aplicam R2 e R13 | Sempre que o prazo é definido ou alterado (cenários 2.7 e 4.5) |
 | A11 | Apagar tarefas-mãe, estados finais e subtarefas apagadas | [R9](requirements.md#4-regras-de-negócio), [P8](constraints.md#2-pressupostos-assumidos) |
