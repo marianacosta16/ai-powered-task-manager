@@ -3,6 +3,8 @@ package com.matriz.architecture;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.matriz.access.UserDirectory;
+import com.matriz.tasks.TaskQueries;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -56,6 +58,15 @@ class ModuleBoundariesTest {
 
     @ArchTest
     static final ArchRule noCycles = slices().matching(BASE + "(*)..").should().beFreeOfCycles()
+            .allowEmptyShould(true);
+
+    /** The lock order (people first, then tasks) is kept in one place: only Locks takes these locks. */
+    @ArchTest
+    static final ArchRule onlyLocksLocksPeopleAndTasks = noClasses()
+            .that().doNotHaveFullyQualifiedName(BASE + "usecases.Locks")
+            .should().callMethod(UserDirectory.class, "findForUpdate", long.class)
+            .orShould().callMethod(TaskQueries.class, "findByIdForUpdate", long.class)
+            .orShould().callMethod(TaskQueries.class, "lockOpenTaskIdsOf", long.class, long.class)
             .allowEmptyShould(true);
 
     private static ArchRule independent(String module, String... others) {

@@ -38,11 +38,13 @@ public class TaskUseCases {
     private final TaskQueries queries;
     private final TaskCommands commands;
     private final TaskRules rules;
+    private final Locks locks;
 
-    TaskUseCases(TaskQueries queries, TaskCommands commands, TaskRules rules) {
+    TaskUseCases(TaskQueries queries, TaskCommands commands, TaskRules rules, Locks locks) {
         this.queries = queries;
         this.commands = commands;
         this.rules = rules;
+        this.locks = locks;
     }
 
     /**
@@ -58,13 +60,14 @@ public class TaskUseCases {
         if (c.assigneeIds().size() != new HashSet<>(c.assigneeIds()).size()) {
             throw new InvalidRequestException("An assignee is repeated.", "assigneeIds", "Each person once.");
         }
+        locks.people(c.assigneeIds()); // locks: people first, then tasks, always by id (see Locks)
         TaskRecord parent = null;
         if (c.parentTaskId() != null) {
             // Check the project before locking, so nobody locks tasks of a project they cannot reach
             queries.findById(c.parentTaskId()).filter(p -> p.projectId() == projectId)
                     .orElseThrow(() -> new NotFoundException("The parent task was not found."));
             // The parent row is locked: a subtask cannot appear while its parent's deadline or status changes (R2, R4)
-            parent = queries.findByIdForUpdate(c.parentTaskId())
+            parent = locks.task(c.parentTaskId())
                     .orElseThrow(() -> new NotFoundException("The parent task was not found."));
             if (parent.isSubtask()) {
                 throw new BusinessRuleException("PARENT_IS_SUBTASK", "A subtask cannot have subtasks.");
@@ -79,7 +82,6 @@ public class TaskUseCases {
             throw new BusinessRuleException("SUBTASK_DEADLINE_AFTER_PARENT",
                     "The deadline is later than the deadline of the parent task.");
         }
-        rules.lockPeople(c.assigneeIds()); // so none of them can be removed from the project meanwhile (R21)
         c.assigneeIds().forEach(id -> rules.requireEligible(project, id));
 
         long id = commands.insert(new NewTask(projectId, c.parentTaskId(), c.title(), c.description(), c.deadline(),
@@ -101,8 +103,8 @@ public class TaskUseCases {
 
         // Lock the parent first, then the task: the same order as createTask and the other updates
         Optional<TaskRecord> parent = context.task().isSubtask()
-                ? queries.findByIdForUpdate(context.task().parentTaskId()) : Optional.empty();
-        TaskRecord task = queries.findByIdForUpdate(taskId)
+                ? locks.task(context.task().parentTaskId()) : Optional.empty();
+        TaskRecord task = locks.task(taskId)
                 .orElseThrow(() -> new NotFoundException("The task was not found."));
         if (patch.version() != task.version()) { // R30, T13
             throw new ConflictException("TASK_CHANGED", "This task was changed by someone else. Reload it and try again.");

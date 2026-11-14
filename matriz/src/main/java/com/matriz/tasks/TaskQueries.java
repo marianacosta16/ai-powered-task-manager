@@ -47,6 +47,29 @@ public class TaskQueries {
                 TaskQueries::map, id).stream().findFirst();
     }
 
+    /**
+     * The open tasks and subtasks of a person in a project (R17, P24), by id, with their rows locked
+     * until the end of the transaction. The locks follow the order people first, then tasks.
+     */
+    public List<Long> lockOpenTaskIdsOf(long projectId, long userId) {
+        return jdbc.queryForList("""
+                SELECT t.id FROM task t JOIN task_assignee a ON a.task_id = t.id
+                WHERE t.project_id = ? AND a.user_id = ? AND t.deleted_at IS NULL AND t.status NOT IN """ + FINAL + """
+
+                ORDER BY t.id FOR UPDATE OF t
+                """, Long.class, projectId, userId);
+    }
+
+    /** As lockOpenTaskIdsOf, without the locks: for checks that run before anything is locked. */
+    public List<Long> openTaskIdsOf(long projectId, long userId) {
+        return jdbc.queryForList("""
+                SELECT t.id FROM task t JOIN task_assignee a ON a.task_id = t.id
+                WHERE t.project_id = ? AND a.user_id = ? AND t.deleted_at IS NULL AND t.status NOT IN """ + FINAL + """
+
+                ORDER BY t.id
+                """, Long.class, projectId, userId);
+    }
+
     public List<TaskRecord> subtasksOf(long parentId) {
         return jdbc.query("SELECT " + COLUMNS + " FROM task WHERE parent_task_id = ? AND deleted_at IS NULL ORDER BY id",
                 TaskQueries::map, parentId);

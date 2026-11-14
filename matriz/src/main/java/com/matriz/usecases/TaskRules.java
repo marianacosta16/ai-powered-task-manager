@@ -63,14 +63,6 @@ class TaskRules {
         return context;
     }
 
-    /**
-     * Locks the rows of these people until the end of the transaction, in a fixed order, so that
-     * assigning someone and removing them from the project (R21) are done one after the other.
-     */
-    void lockPeople(List<Long> userIds) {
-        userIds.stream().sorted().forEach(users::findForUpdate);
-    }
-
     ProjectRecord loadProject(AuthenticatedUser user, long projectId) {
         ProjectRecord project = projects.findById(projectId)
                 .orElseThrow(() -> new NotFoundException("The project was not found."));
