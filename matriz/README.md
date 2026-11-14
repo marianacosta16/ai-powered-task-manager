@@ -232,6 +232,26 @@ curl -s -b /tmp/ana.txt -H 'Content-Type: application/json' -d '{"content":"Falt
 curl -s -b /tmp/ana.txt localhost:8081/tasks/1/comments
 ```
 
+## Lista e Matriz (incremento 4)
+
+Operação nova: `listProjectTasks` (a pesquisa de projetos, `listProjects` com `search`, já existia). Só lê: o módulo `views` consulta os dados das Tarefas sem os escrever (ver [docs/architecture.md](docs/architecture.md)).
+
+| Regra | Como se aplica |
+|---|---|
+| Quem vê (R8) | Quem vê o projeto vê as tarefas, em qualquer estado do projeto, também concluído (403 para os outros, 404 se não existe) |
+| Só tarefas principais (R18) | As subtarefas vêm dentro da sua tarefa principal e nunca sozinhas; tarefas e subtarefas apagadas não aparecem |
+| Ordem (R23) | Abertas primeiro e depois as fechadas; em cada grupo por prazo, depois urgência e importância (mais altas primeiro); em empate, a ordem de criação (A29) |
+| Filtros (R25, P29) | `mine`, `status` e `quadrant` combinam-se e aplicam-se às tarefas principais. "As minhas" inclui a tarefa principal se a pessoa for responsável por uma das suas subtarefas (P25) |
+| Quadrante | Urgência e importância de nível 3 ou mais são altas: `Do first` (ambas), `Schedule` (só importante), `Delegate` (só urgente), `Later` |
+| Matriz (P10) | A API devolve também as tarefas fechadas, com o estado; é a interface que as esconde na Matriz (V10) |
+| Valor de filtro desconhecido (A28) | 400, depois da verificação de acesso |
+
+Os pressupostos A28 e A29 estão por confirmar no [openapi.yaml](openapi.yaml).
+
+```bash
+curl -s -b /tmp/ana.txt 'localhost:8081/projects/1/tasks?mine=true&status=To%20do&quadrant=Do%20first'
+```
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.
@@ -248,6 +268,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Em curso: incrementos 0 (fundações), 1 (contas e sessão) e 2 (projetos e equipa) concluídos; próximo, o incremento 3 (tarefas, subtarefas e responsáveis) |
+| Implementação | Em curso: incrementos 0 a 4 e 6 concluídos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, comentários); próximo, o incremento 5 (painel e progresso) |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.
