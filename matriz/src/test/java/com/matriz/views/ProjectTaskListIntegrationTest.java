@@ -415,27 +415,12 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
     }
 
     private long newProject(String name) {
-        long marta = userId("marta");
-        long id = jdbc.queryForObject("""
-                INSERT INTO project (name, start_date, end_date, phase, status, manager_id)
-                VALUES (?, DATE '2026-01-01', DATE '2027-12-31', 'Execution', 'In progress', ?) RETURNING id
-                """, Long.class, name + " " + System.nanoTime(), marta);
-        for (String member : List.of("ana", "rui", "luis")) {
-            jdbc.update("INSERT INTO project_member (project_id, user_id) VALUES (?, ?)", id, userId(member));
-        }
-        return id;
+        return insertProject(name, "In progress", "2026-01-01", "2027-12-31", "marta", "ana", "rui", "luis");
     }
 
     private long newTask(long projectId, String title, String status, String deadline, int urgency, int importance,
             Long parentTaskId, String... assignees) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO task (project_id, parent_task_id, title, status, deadline, urgency, importance)
-                VALUES (?, ?, ?, ?, CAST(? AS date), ?, ?) RETURNING id
-                """, Long.class, projectId, parentTaskId, title, status, deadline, urgency, importance);
-        for (String username : assignees) {
-            jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", id, userId(username));
-        }
-        return id;
+        return insertTask(projectId, parentTaskId, title, status, deadline, urgency, importance, assignees);
     }
 
     private static List<String> titles(ResponseEntity<String> list) {

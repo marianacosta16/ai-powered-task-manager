@@ -286,7 +286,7 @@ Operações: `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject` e
 | O que cada um vê | O gestor vê os seus projetos apagados; os membros e o gestor vêem as tarefas e subtarefas dos seus projetos, e só o gestor recupera projetos (403 aos outros) |
 | Não se recupera já (A38) | Se o projeto ou a tarefa-mãe está na reciclagem (`CANNOT_RESTORE`), ou o projeto foi concluído (`PROJECT_COMPLETED`); a lista mostra `restorable: false` e o motivo |
 | Subtarefa (A43) | Em curso sob uma mãe fechada: 422 `PARENT_TASK_CLOSED`; com prazo depois do da mãe: 422 `SUBTASK_DEADLINE_AFTER_PARENT` |
-| Responsável que saiu (P36, A42) | 422 `ASSIGNEE_REQUIRED` com o nome de quem saiu; volta-se a recuperar com `{"assigneeIds": [...]}`, que substitui só quem saiu |
+| Responsável que saiu (P36, A42) | 422 `ASSIGNEE_REQUIRED` com o nome de quem saiu; volta-se a recuperar com `{"assigneeIds": [...]}`, que substitui só quem saiu; se ninguém saiu, o corpo é recusado com 400 |
 | 30 dias (R20, A39) | Com 30 dias exatos já não existe; a lista e a recuperação ignoram o que expirou, mesmo que a eliminação ainda não tenha corrido; `daysLeft` arredonda para cima |
 | Eliminação definitiva (M14) | `RecyclePurgeJob`, todos os dias às 03:00 (`matriz.recycle.purge.cron`), apaga também comentários, responsáveis e membros; um duplicado cujo original sai fica `Duplicate` sem original e com `originalEliminated: true`, para a interface mostrar uma nota, e `originalInRecycleBin: true` enquanto o original só está na reciclagem (A41); continua a poder editar-se |
 

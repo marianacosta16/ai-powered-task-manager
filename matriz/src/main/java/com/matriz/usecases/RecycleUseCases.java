@@ -194,6 +194,8 @@ public class RecycleUseCases {
         if (ProjectStatus.fromLabel("status", project.status()) == ProjectStatus.COMPLETED) {
             throw NotRestorable.PROJECT_COMPLETED.toException();
         }
+        // The task is read again now that the project and the parent are locked: the first read, which decided 404
+        // and 403, took no lock, so it may be out of date (it may have been eliminated or restored meanwhile).
         DeletedTask locked = locks.deletedTask(taskId, now).orElseThrow(() -> new NotFoundException(NOT_FOUND));
         if (parent != null) {
             requireParentAllowsSubtask(locked, parent);
@@ -240,6 +242,10 @@ public class RecycleUseCases {
             }
         }
         if (departedByTask.isEmpty()) {
+            if (newAssignees != null) { // nobody to replace: refused, so the client does not think they were added
+                throw new InvalidRequestException("Nobody has left the project, so nobody is replaced.", "assigneeIds",
+                        "Restore without assigneeIds: nobody who was assigned has left the project.");
+            }
             return;
         }
         if (newAssignees == null) {

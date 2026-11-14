@@ -444,6 +444,22 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void aBodyIsRefusedWhenNobodyLeftTheProject() { // A42
+        long project = newProject("Web", "In progress", "marta", "ana", "rui");
+        long task = newTask(project, "T", "To do", null, "ana", "rui");
+        delete("/tasks/" + task, sessionOf("ana"));
+
+        ResponseEntity<String> refused = post("/recycle-bin/tasks/" + task + "/restore", sessionOf("ana"),
+                Map.of("assigneeIds", List.of(userId("rui"))));
+
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(json(refused, "$.code")).isEqualTo("VALIDATION_ERROR");
+        assertThat(bin("ana")).hasSize(1); // nothing was restored
+        assertThat(post("/recycle-bin/tasks/" + task + "/restore", sessionOf("ana"), null).getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT); // without the body it comes back
+    }
+
+    @Test
     void theNewAssigneesAreCheckedAfterTheAccess() {
         long project = newProject("Web", "In progress", "marta", "ana");
         long task = newTask(project, "T", "To do", null, "ana");
@@ -739,27 +755,12 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
         return jdbc.queryForObject("SELECT count(*) FROM task WHERE id = ?", Integer.class, taskId);
     }
 
-    /** A project, named "name#unique" so that names never clash; manager and members given by username. */
     private long newProject(String name, String status, String manager, String... members) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO project (name, start_date, end_date, phase, status, manager_id)
-                VALUES (?, DATE '2026-01-01', DATE '2027-12-31', 'Execution', ?, ?) RETURNING id
-                """, Long.class, name + "#" + System.nanoTime(), status, userId(manager));
-        for (String member : members) {
-            jdbc.update("INSERT INTO project_member (project_id, user_id) VALUES (?, ?)", id, userId(member));
-        }
-        return id;
+        return insertProject(name, status, "2026-01-01", "2027-12-31", manager, members);
     }
 
-    /** A task (or a subtask when a parent is given) with a deadline in December 2026 and the given assignees. */
+    /** A task (or a subtask when a parent is given) with a deadline in December 2026. */
     private long newTask(long projectId, String title, String status, Long parentTaskId, String... assignees) {
-        long id = jdbc.queryForObject("""
-                INSERT INTO task (project_id, parent_task_id, title, status, deadline, urgency, importance)
-                VALUES (?, ?, ?, ?, DATE '2026-12-31', 3, 3) RETURNING id
-                """, Long.class, projectId, parentTaskId, title, status);
-        for (String username : assignees) {
-            jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", id, userId(username));
-        }
-        return id;
+        return insertTask(projectId, parentTaskId, title, status, "2026-12-31", 3, 3, assignees);
     }
 }

@@ -55,7 +55,7 @@ info:
     - A39 (confirmed): an item that has been in the bin exactly 30 days is already gone. `daysLeft` is rounded up, so it goes from 30 down to 1.
     - A40 (confirmed): when a parent task is eliminated for good, its subtasks that were still in the bin are gone too, each by its own 30 days: a subtask deleted before its parent is older, so it expires first. Restoring an item that is gone is 404. The reason `PARENT_MISSING` of the first draft of the contract never happens and was removed.
     - A41 (confirmed): a task that is a duplicate keeps the status `Duplicate` when its original is eliminated for good, and loses the link to the original (`originalTaskId` becomes empty). The task then has `originalEliminated: true`, so the client can show a note saying that the original was eliminated. While the original is only in the recycle bin the link stays and the task has `originalInRecycleBin: true`, because opening the original gives 404 until it is restored. A duplicate is still edited while its original is in the recycle bin or eliminated; the original is only checked when the task becomes a duplicate or its original is changed.
-    - A42 (confirmed): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36).
+    - A42 (confirmed): the body of `restoreTask`, `assigneeIds`, gives the people who take over from those who left the project. In each task or subtask that comes back, those who left are replaced by them; the others stay. Without the body, and with someone who left, the answer is 422 `ASSIGNEE_REQUIRED` (P36). With the body and nobody who left, the answer is 400: the body is not ignored in silence.
     - A43 (confirmed): a subtask that is open is not restored under a parent that was closed while it was in the bin (`PARENT_TASK_CLOSED`, P35), nor when its deadline is later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`, R2): the parent is changed first.
 
 tags:
@@ -882,7 +882,7 @@ paths:
       description: |
         A member of the project or its manager restores tasks and subtasks (R9), with the subtasks that were deleted with it; those deleted before stay in the bin. It is refused with `CANNOT_RESTORE` while its project, or its parent task, is in the recycle bin, and with `PROJECT_COMPLETED` if the project is completed (scenarios 7.7 and 7.8, R28). A subtask that is open does not come back under a parent that is closed (`PARENT_TASK_CLOSED`), nor with a deadline later than the parent's (`SUBTASK_DEADLINE_AFTER_PARENT`) (A43).
 
-        If someone who was assigned has left the project meanwhile, the restore is refused with `ASSIGNEE_REQUIRED`, which says who left (P36). The client then restores again with `assigneeIds`, the people who take over from those who left, in each task that comes back (A42). The body is optional.
+        If someone who was assigned has left the project meanwhile, the restore is refused with `ASSIGNEE_REQUIRED`, which says who left (P36). The client then restores again with `assigneeIds`, the people who take over from those who left, in each task that comes back (A42). The body is optional, and it is refused with 400 when nobody who was assigned has left the project, because there is nobody to replace (A42).
       requestBody:
         required: false
         content:
@@ -902,6 +902,8 @@ paths:
       responses:
         '204':
           description: Task restored.
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

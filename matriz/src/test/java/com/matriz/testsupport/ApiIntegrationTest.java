@@ -109,6 +109,35 @@ public abstract class ApiIntegrationTest {
         return jdbc.queryForObject("SELECT id FROM task WHERE title = ?", Long.class, title);
     }
 
+    /**
+     * Inserts a project straight into the database, so that the rule of one open project per member (R11) does
+     * not get in the way of a test set-up. Named "name#unique" so that names never clash; the manager and the
+     * members are given by username.
+     */
+    protected long insertProject(String name, String status, String start, String end, String manager, String... members) {
+        long id = jdbc.queryForObject("""
+                INSERT INTO project (name, start_date, end_date, phase, status, manager_id)
+                VALUES (?, CAST(? AS date), CAST(? AS date), 'Execution', ?, ?) RETURNING id
+                """, Long.class, name + "#" + System.nanoTime(), start, end, status, userId(manager));
+        for (String member : members) {
+            jdbc.update("INSERT INTO project_member (project_id, user_id) VALUES (?, ?)", id, userId(member));
+        }
+        return id;
+    }
+
+    /** Inserts a task, or a subtask when a parent is given, straight into the database, with its assignees (by username). */
+    protected long insertTask(long projectId, Long parentTaskId, String title, String status, String deadline, int urgency,
+            int importance, String... assignees) {
+        long id = jdbc.queryForObject("""
+                INSERT INTO task (project_id, parent_task_id, title, status, deadline, urgency, importance)
+                VALUES (?, ?, ?, ?, CAST(? AS date), ?, ?) RETURNING id
+                """, Long.class, projectId, parentTaskId, title, status, deadline, urgency, importance);
+        for (String username : assignees) {
+            jdbc.update("INSERT INTO task_assignee (task_id, user_id) VALUES (?, ?)", id, userId(username));
+        }
+        return id;
+    }
+
     protected int count(String table) {
         return jdbc.queryForObject("SELECT count(*) FROM " + table, Integer.class);
     }

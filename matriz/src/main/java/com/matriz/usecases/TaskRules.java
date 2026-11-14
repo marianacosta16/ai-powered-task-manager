@@ -20,6 +20,7 @@ import com.matriz.shared.NotFoundException;
 import com.matriz.tasks.Quadrant;
 import com.matriz.tasks.TaskQueries;
 import com.matriz.tasks.TaskRecord;
+import com.matriz.tasks.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +124,7 @@ class TaskRules {
 
     /** A duplicate always has its original (R6), so one without it lost it when the original was eliminated (A41). */
     private static boolean isDuplicateWithoutOriginal(TaskRecord t) {
-        return t.statusValue() == com.matriz.tasks.TaskStatus.DUPLICATE && t.originalTaskId() == null;
+        return t.statusValue() == TaskStatus.DUPLICATE && t.originalTaskId() == null;
     }
 
     private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
