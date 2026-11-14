@@ -2,8 +2,6 @@ package com.matriz.views;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +64,7 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
 
         assertThat(titles(list("ana", project, Map.of("mine", "true")))).containsExactly("Ana's", "Both");
         assertThat(titles(list("ana", project, Map.of()))).containsExactly("Ana's", "Rui's", "Both"); // off: everyone's
+        assertThat(titles(list("ana", project, Map.of("mine", "false")))).containsExactly("Ana's", "Rui's", "Both");
     }
 
     @Test
@@ -258,6 +257,7 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
         assertThat(list("ana", 999999, Map.of()).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         // 403 comes before 400
         assertThat(list("sofia", project, Map.of("status", "Party")).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(list("sofia", project, Map.of("mine", "maybe")).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -326,20 +326,16 @@ class ProjectTaskListIntegrationTest extends ApiIntegrationTest {
     // ---- helpers ----
 
     private ResponseEntity<String> list(String username, long projectId, Map<String, String> query) {
-        Map<String, String> params = new LinkedHashMap<>(query);
         StringBuilder url = new StringBuilder("/projects/" + projectId + "/tasks");
-        List<Object> values = new ArrayList<>();
         String separator = "?";
-        for (var entry : params.entrySet()) {
-            url.append(separator).append(entry.getKey()).append("={").append(entry.getKey()).append("}");
-            values.add(entry.getValue());
+        for (String key : query.keySet()) {
+            url.append(separator).append(key).append("={").append(key).append("}");
             separator = "&";
         }
         // the values are given as URI variables, so the client encodes them once (a "%20" would be encoded twice)
-        Map<String, String> variables = new LinkedHashMap<>(params);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, sessionOf(username));
-        return http.exchange(url.toString(), HttpMethod.GET, new HttpEntity<>(headers), String.class, variables);
+        return http.exchange(url.toString(), HttpMethod.GET, new HttpEntity<>(headers), String.class, query);
     }
 
     private long newProject(String name) {

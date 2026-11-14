@@ -55,7 +55,7 @@ class TaskController {
      */
     @GetMapping("/projects/{projectId}/tasks")
     List<TaskView> listProjectTasks(@AuthenticationPrincipal AuthenticatedUser user,
-            @PathVariable @Min(1) long projectId, @RequestParam(defaultValue = "false") boolean mine,
+            @PathVariable @Min(1) long projectId, @RequestParam(required = false) String mine,
             @RequestParam(required = false) String status, @RequestParam(required = false) String quadrant) {
         return taskList.listProjectTasks(user, projectId, mine, status, quadrant);
     }

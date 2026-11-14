@@ -23,6 +23,8 @@ import com.matriz.tasks.TaskRecord;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Rules shared by the use cases of tasks and assignees: finding a task the user can reach, what
@@ -111,15 +113,10 @@ class TaskRules {
 
     TaskView view(TaskRecord task, boolean withSubtasks) {
         List<TaskRecord> subtasks = withSubtasks && !task.isSubtask() ? tasks.subtasksOf(task.id()) : List.of();
-        List<Long> ids = new ArrayList<>(List.of(task.id()));
-        subtasks.forEach(s -> ids.add(s.id()));
-        var assignees = tasks.assigneeIdsByTask(ids);
-        var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
-        List<TaskView> subtaskViews = subtasks.stream().map(s -> toView(s, assignees.get(s.id()), infos, null)).toList();
-        return toView(task, assignees.get(task.id()), infos, task.isSubtask() ? null : subtaskViews);
+        return build(List.of(task), Map.of(task.id(), subtasks)).get(0);
     }
 
-    private static TaskView toView(TaskRecord t, List<Long> assigneeIds, java.util.Map<Long, UserInfo> infos,
+    private static TaskView toView(TaskRecord t, List<Long> assigneeIds, Map<Long, UserInfo> infos,
             List<TaskView> subtasks) {
         List<UserInfo> assignees = assigneeIds == null ? List.of() : assigneeIds.stream().map(infos::get).toList();
         return new TaskView(t.id(), t.version(), t.projectId(), t.parentTaskId(), t.title(), t.description(), t.status(),
@@ -133,13 +130,18 @@ class TaskRules {
      */
     List<TaskView> viewsOfMainTasks(List<TaskRecord> mainTasks) {
         var subtasksByParent = tasks.subtasksOfAll(mainTasks.stream().map(TaskRecord::id).toList()).stream()
-                .collect(java.util.stream.Collectors.groupingBy(TaskRecord::parentTaskId));
-        List<Long> ids = new ArrayList<>(mainTasks.stream().map(TaskRecord::id).toList());
+                .collect(Collectors.groupingBy(TaskRecord::parentTaskId));
+        return build(mainTasks, subtasksByParent);
+    }
+
+    /** The one place where views are built: the assignees and the people are read once for all the tasks given. */
+    private List<TaskView> build(List<TaskRecord> roots, Map<Long, List<TaskRecord>> subtasksByParent) {
+        List<Long> ids = new ArrayList<>(roots.stream().map(TaskRecord::id).toList());
         subtasksByParent.values().forEach(list -> list.forEach(s -> ids.add(s.id())));
         var assignees = tasks.assigneeIdsByTask(ids);
         var infos = users.findByIds(assignees.values().stream().flatMap(List::stream).distinct().toList());
-        return mainTasks.stream().map(t -> toView(t, assignees.get(t.id()), infos,
-                subtasksByParent.getOrDefault(t.id(), List.of()).stream()
+        return roots.stream().map(t -> toView(t, assignees.get(t.id()), infos, t.isSubtask() ? null
+                : subtasksByParent.getOrDefault(t.id(), List.of()).stream()
                         .map(s -> toView(s, assignees.get(s.id()), infos, null)).toList())).toList();
     }
 

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -18,10 +19,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TaskQueries {
 
-    private static final String COLUMNS = """
-            id, project_id, parent_task_id, original_task_id, title, description, status, deadline,
-            urgency, importance, block_reason, version
-            """;
+    private static final List<String> COLUMN_NAMES = List.of("id", "project_id", "parent_task_id", "original_task_id",
+            "title", "description", "status", "deadline", "urgency", "importance", "block_reason", "version");
+    private static final String COLUMNS = String.join(", ", COLUMN_NAMES);
     private static final String FINAL = "('Done', 'Cancelled', 'Duplicate')";
 
     private final JdbcTemplate jdbc;
@@ -117,11 +117,7 @@ public class TaskQueries {
 
     /** The columns of a task, prefixed with the alias of the table, for queries that join other tables. */
     public static String columns(String alias) {
-        StringBuilder prefixed = new StringBuilder();
-        for (String column : COLUMNS.split(",")) {
-            prefixed.append(prefixed.isEmpty() ? "" : ", ").append(alias).append('.').append(column.strip());
-        }
-        return prefixed.toString();
+        return COLUMN_NAMES.stream().map(column -> alias + "." + column).collect(Collectors.joining(", "));
     }
 
     /** Builds a task from a row that has the columns above. */

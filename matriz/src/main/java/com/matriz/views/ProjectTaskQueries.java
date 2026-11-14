@@ -1,5 +1,6 @@
 package com.matriz.views;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -19,7 +20,9 @@ import com.matriz.tasks.TaskStatus;
 @Repository
 public class ProjectTaskQueries {
 
-    private static final String FINAL = "('Done', 'Cancelled', 'Duplicate')";
+    /** The labels of the final statuses (closed tasks), taken from {@link TaskStatus}. */
+    private static final List<String> FINAL_STATUSES = Arrays.stream(TaskStatus.values())
+            .filter(TaskStatus::isFinal).map(TaskStatus::label).toList();
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -60,7 +63,8 @@ public class ProjectTaskQueries {
                     """);
             params.addValue("uid", assigneeId);
         }
-        sql.append(" ORDER BY CASE WHEN t.status IN " + FINAL + " THEN 1 ELSE 0 END,"
+        params.addValue("final", FINAL_STATUSES);
+        sql.append(" ORDER BY CASE WHEN t.status IN (:final) THEN 1 ELSE 0 END,"
                 + " t.deadline, t.urgency DESC, t.importance DESC, t.id");
         return jdbc.query(sql.toString(), params, TaskQueries::map);
     }

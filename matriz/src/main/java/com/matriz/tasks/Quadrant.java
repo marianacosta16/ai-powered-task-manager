@@ -43,14 +43,11 @@ public enum Quadrant implements Labelled {
     }
 
     public static Quadrant of(int urgency, int importance) {
-        boolean urgent = urgency >= HIGH_LEVEL;
         boolean important = importance >= HIGH_LEVEL;
-        for (Quadrant q : values()) {
-            if (q.urgent == urgent && q.important == important) {
-                return q;
-            }
+        if (urgency >= HIGH_LEVEL) {
+            return important ? DO_FIRST : DELEGATE;
         }
-        throw new IllegalStateException("Unreachable");
+        return important ? SCHEDULE : LATER;
     }
 
     public static Quadrant fromLabel(String field, String label) {
