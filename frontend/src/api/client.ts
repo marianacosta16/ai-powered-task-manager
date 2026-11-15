@@ -13,6 +13,19 @@ type UnauthorizedHandler = (error: ApiError) => void
 let unauthorizedHandler: UnauthorizedHandler | null = null
 
 /**
+ * Which session the requests belong to. It goes up each time who is signed in changes (a sign in, a sign out, a 401).
+ * A request takes the number when it starts, and a 401 that arrives for an older number is ignored: it is the answer
+ * of a session that is already over, and it must not sign out the one that came after (or show "Your session has
+ * ended" to someone who signed out on purpose).
+ */
+let sessionNumber = 0
+
+/** Tells the client that who is signed in has changed, so the answers of the requests under way no longer count for a 401. */
+export function startNewSession(): void {
+  sessionNumber += 1
+}
+
+/**
  * Registers what happens when the API says the session is not valid (401) in a request other than signing in:
  * the application sends the user to the sign in screen with the message of the API (P33).
  */
@@ -26,6 +39,7 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, signal } = options
+  const session = sessionNumber
   let response: Response
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -46,13 +60,23 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (response.ok) {
-    return (response.status === 204 ? undefined : await response.json()) as T
+    return (response.status === 204 ? undefined : await readJson(response)) as T
   }
   const error = await toApiError(response)
-  if (response.status === 401 && path !== '/auth/login') {
+  if (response.status === 401 && path !== '/auth/login' && session === sessionNumber) {
+    startNewSession() // the session is over: the 401 of any other request under way is the same news
     unauthorizedHandler?.(error)
   }
   throw error
+}
+
+/** The JSON of a success answer; a body that is not JSON (a proxy, a bug) is an error of the API like any other. */
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json()
+  } catch {
+    throw new ApiError(response.status, UNEXPECTED_ERROR, 'Something went wrong. Try again in a moment.')
+  }
 }
 
 async function toApiError(response: Response): Promise<ApiError> {

@@ -92,3 +92,5 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_API_URL: https://matriz.invalid # a production build needs an address; this one is never called

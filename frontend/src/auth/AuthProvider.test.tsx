@@ -6,13 +6,14 @@ import { AuthProvider } from './AuthProvider'
 import { useAuth } from './useAuth'
 
 function Probe() {
-  const { state, signOut } = useAuth()
+  const { state, signIn, signOut } = useAuth()
   return (
     <div>
       <p data-testid="status">{state.status}</p>
       <p data-testid="user">{state.status === 'signedIn' ? state.user.name : ''}</p>
       <p data-testid="message">{state.status === 'signedOut' ? (state.message ?? '') : ''}</p>
       <button onClick={() => void signOut()}>out</button>
+      <button onClick={() => void signIn('ana', 'secret')}>in</button>
     </div>
   )
 }
@@ -74,6 +75,45 @@ describe('the session of the user', () => {
 
     expect(screen.getByTestId('status')).toHaveTextContent('signedOut')
     expect(screen.getByTestId('message')).toHaveTextContent('Your session has ended')
+  })
+
+  it('is not signed out by a late 401 of a request that started before the user signed in', async () => {
+    let late: (response: Response) => void = () => undefined
+    mockFetch(jsonResponse(401, SIGN_IN_NEEDED), () => new Promise<Response>((resolve) => (late = resolve)), jsonResponse(200, ANA))
+    renderProbe()
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signedOut'))
+    const slow = request('/projects').catch(() => undefined) // started with no session
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'in' }).click()
+    })
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signedIn'))
+    late(jsonResponse(401, SIGN_IN_NEEDED))
+    await act(async () => {
+      await slow
+    })
+
+    expect(screen.getByTestId('status')).toHaveTextContent('signedIn') // the new session was not thrown out
+  })
+
+  it('does not show "session ended" for a late 401 after the user signed out on purpose', async () => {
+    let late: (response: Response) => void = () => undefined
+    mockFetch(jsonResponse(200, ANA), () => new Promise<Response>((resolve) => (late = resolve)), jsonResponse(204))
+    renderProbe()
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signedIn'))
+    const slow = request('/projects').catch(() => undefined) // under way
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'out' }).click()
+    })
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signedOut'))
+    late(jsonResponse(401, SESSION_ENDED))
+    await act(async () => {
+      await slow
+    })
+
+    expect(screen.getByTestId('status')).toHaveTextContent('signedOut')
+    expect(screen.getByTestId('message')).toHaveTextContent('') // no "Your session has ended" for someone who signed out
   })
 
   it('is signed out, without a message, when the user signs out', async () => {

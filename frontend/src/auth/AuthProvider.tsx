@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import * as authApi from '../api/auth'
-import { setUnauthorizedHandler } from '../api/client'
+import { setUnauthorizedHandler, startNewSession } from '../api/client'
 import { ApiError } from '../api/errors'
 import { AuthContext, type AuthContextValue, type AuthState } from './context'
 
@@ -35,11 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (username: string, password: string) => {
     const user = await authApi.signIn(username, password)
+    startNewSession() // the requests of the session before this one no longer count
     setState({ status: 'signedIn', user })
     return user
   }, [])
 
   const signOut = useCallback(async () => {
+    startNewSession() // a late 401 of the session that is ending is not news, and must not show a message
     await authApi.signOut()
     setState({ status: 'signedOut' })
   }, [])

@@ -15,8 +15,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * {@code matriz.cors.allowed-origins} may call the API from a browser, and with credentials, because the session is
  * a cookie (T3). The list is exact: a wildcard is refused at start, since it cannot go with credentials and would
  * open the API to any site. The answer exposes {@code X-Total-Count} so the interface can show the totals (A31).
- * The CSRF protection stays off (P31): the cookie is {@code SameSite=Lax}, the API only takes JSON (415 otherwise,
- * so a form from another site cannot reach it) and the origins are limited here.
+ * The CSRF protection stays off (P31). What keeps a page of another site from changing data with the session of
+ * the user: (1) the browser sends an {@code Origin} with a request that changes data, and this configuration refuses
+ * the ones that are not in the list with 403 before anything runs, also for the requests that need no body (sign
+ * out, restore); (2) the cookie is {@code SameSite=Lax}, so it does not go with a POST from another site; (3) a
+ * request with a body must be JSON (415 otherwise). It does not cover a page of the same site on another port or
+ * subdomain, which the Lax cookie lets through (CorsIntegrationTest).
  */
 @Configuration
 class CorsConfig {

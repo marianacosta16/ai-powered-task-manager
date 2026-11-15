@@ -98,6 +98,41 @@ class CorsIntegrationTest extends ApiIntegrationTest {
     }
 
     @Test
+    void aRequestThatChangesDataFromAnotherOriginIsRefusedAndNotRun() { // P31
+        String ana = sessionOf("ana");
+        long task = taskId("Design homepage");
+        long project = projectId("Website");
+        int tasks = count("task");
+
+        // the requests that need no body (sign out, restore) are the ones a form of another site could try
+        ResponseEntity<String> signOut = send(HttpMethod.POST, "/auth/logout", OTHER, ana, null);
+        ResponseEntity<String> restore = send(HttpMethod.POST, "/recycle-bin/tasks/" + task + "/restore", OTHER, ana, null);
+        ResponseEntity<String> restoreProject = send(HttpMethod.POST, "/recycle-bin/projects/" + project + "/restore", OTHER, ana, null);
+        ResponseEntity<String> delete = send(HttpMethod.DELETE, "/tasks/" + task, OTHER, ana, null);
+        ResponseEntity<String> create = send(HttpMethod.POST, "/projects/" + project + "/tasks", OTHER, ana,
+                "{\"title\":\"Sneaky\",\"deadline\":\"2026-12-20\",\"urgency\":3,\"importance\":3,\"assigneeIds\":[" + userId("ana") + "]}");
+
+        for (ResponseEntity<String> refused : List.of(signOut, restore, restoreProject, delete, create)) {
+            assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(refused.getHeaders().getAccessControlAllowOrigin()).isNull();
+        }
+        assertThat(get("/auth/me", ana).getStatusCode()).isEqualTo(HttpStatus.OK); // the session was not ended
+        assertThat(get("/tasks/" + task, ana).getStatusCode()).isEqualTo(HttpStatus.OK); // the task was not deleted
+        assertThat(count("task")).isEqualTo(tasks); // nothing was created
+    }
+
+    @Test
+    void theSameRequestsFromTheAllowedOriginAreRun() {
+        String ana = sessionOf("ana");
+
+        ResponseEntity<String> signOut = send(HttpMethod.POST, "/auth/logout", ALLOWED, ana, null);
+
+        assertThat(signOut.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(signOut.getHeaders().getAccessControlAllowOrigin()).isEqualTo(ALLOWED);
+        assertThat(get("/auth/me", ana).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED); // it did end the session
+    }
+
+    @Test
     void aWildcardOrASlashInTheAllowedOriginsStopsTheStart() {
         CorsConfig config = new CorsConfig();
 
@@ -115,6 +150,16 @@ class CorsIntegrationTest extends ApiIntegrationTest {
         request.set(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, method);
         request.set(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, headers);
         return http.exchange("/projects", HttpMethod.OPTIONS, new HttpEntity<>(request), String.class);
+    }
+
+    private ResponseEntity<String> send(HttpMethod method, String path, String origin, String cookie, String json) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setOrigin(origin);
+        headers.add(HttpHeaders.COOKIE, cookie);
+        if (json != null) {
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        }
+        return http.exchange(path, method, new HttpEntity<>(json, headers), String.class);
     }
 
     private ResponseEntity<String> withOrigin(String path, String origin, String cookie) {

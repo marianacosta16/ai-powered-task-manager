@@ -17,7 +17,7 @@ A interface abre em `http://localhost:5173`. O backend aceita essa origem por om
 
 ## Configuração
 
-O endereço do backend está num só sítio, `src/config.ts`, e vem da variável `VITE_API_URL` (por omissão `http://localhost:8081`). Tudo o que fala com a API passa por `src/api/client.ts`.
+O endereço do backend está num só sítio, `src/config.ts`, e vem da variável `VITE_API_URL`. Em desenvolvimento, sem a variável, usa `http://localhost:8081`; num *build* de produção a variável é obrigatória (`src/buildChecks.ts`). Tudo o que fala com a API passa por `src/api/client.ts`.
 
 ## Comandos
 
@@ -26,7 +26,7 @@ O endereço do backend está num só sítio, `src/config.ts`, e vem da variável
 | `npm run dev` | Servidor de desenvolvimento, em `http://localhost:5173` |
 | `npm test` | Testes dos componentes (Vitest e Testing Library) |
 | `npm run lint` | Verificação do código (oxlint) |
-| `npm run build` | Verifica os tipos e gera `dist/` |
+| `npm run build` | Verifica os tipos e gera `dist/`. Precisa de `VITE_API_URL` (o *build* falha sem ela, para a página nunca apontar por engano para `localhost`): `VITE_API_URL=https://... npm run build` |
 
 ## Organização
 

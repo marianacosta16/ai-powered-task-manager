@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_URL } from '../config'
 import { jsonResponse, mockFetch } from '../test/helpers'
-import { request, setUnauthorizedHandler } from './client'
+import { request, setUnauthorizedHandler, startNewSession } from './client'
 import { ApiError, NETWORK_ERROR, UNEXPECTED_ERROR } from './errors'
 
 afterEach(() => setUnauthorizedHandler(null))
@@ -94,6 +94,44 @@ describe('the client of the API', () => {
 
     expect(handler).toHaveBeenCalledTimes(1)
     expect(handler.mock.calls[0][0]).toMatchObject({ status: 401, message: 'Sign in to continue.' })
+  })
+
+  it('ignores the 401 of a request that started in a session that is already over', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    let answer: (response: Response) => void = () => undefined
+    mockFetch(() => new Promise<Response>((resolve) => (answer = resolve)))
+
+    const slow = request('/projects').catch(() => undefined) // starts in the first session
+    startNewSession() // the user signs out and signs in again
+    answer(jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' }))
+    await slow
+
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('counts a 401 once: the other requests under way are of a session that ended', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    const unauthorized = jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' })
+    mockFetch(unauthorized, unauthorized)
+
+    await Promise.all([request('/projects').catch(() => undefined), request('/dashboard').catch(() => undefined)])
+
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws an ApiError when a success answer is not JSON', async () => {
+    mockFetch(new Response('<html>proxy</html>', { status: 200 }), new Response('', { status: 200 }))
+
+    const html = (await request('/projects').catch((e: unknown) => e)) as ApiError
+    const empty = (await request('/projects').catch((e: unknown) => e)) as ApiError
+
+    for (const error of [html, empty]) {
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.code).toBe(UNEXPECTED_ERROR)
+      expect(error.status).toBe(200)
+    }
   })
 
   it('does not tell the application about other errors', async () => {
