@@ -1,0 +1,105 @@
+/* ---- the sign in screen ---- */
+.auth {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 26rem;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.auth__demo {
+  margin: var(--space-3) 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* ---- the frame of the screens after signing in ---- */
+.shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.topbar__brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.topbar__toggle {
+  display: none;
+}
+
+.topbar__menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar__user {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.topbar__role {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+/* tablet */
+@media (max-width: 1024px) {
+  .topbar,
+  .page {
+    padding-inline: var(--space-3);
+  }
+}
+
+/* phone: the user and the sign out button fold into a menu */
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar__toggle {
+    display: inline-flex;
+  }
+
+  .topbar__menu {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar__menu--open {
+    display: flex;
+  }
+
+  .page {
+    padding: var(--space-3);
+  }
+}
