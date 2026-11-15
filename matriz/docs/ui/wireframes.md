@@ -227,3 +227,18 @@ O código **W** é local aos wireframes e continua a numeração de [matrix-wire
 | W14 | Tarefa cujo projeto está na reciclagem | Só se recupera depois de o projeto ser recuperado ("Cannot restore: restore the project first.") | Confirmado |
 | W15 | Equipa: pessoas indisponíveis e substituição | Quem já está noutro projeto em aberto aparece desativado ao adicionar, com o motivo. Na remoção, as tarefas podem ser repartidas por substitutos já no projeto ou novos, até 5 tarefas em aberto cada (R17). O aviso de projeto retomado fica no topo | Confirmado |
 | W16 | Mensagem quando a sessão deixa de ser válida | A interface leva ao início de sessão e mostra a mensagem que o servidor devolve no 401 ("Your session has ended. Sign in again to continue.", ou "Sign in to continue." se nunca houve sessão). Depende do P33 | Por confirmar |
+
+## 10. Larguras de ecrã
+
+Os wireframes mostram o computador. Desde 2026-11-14 o layout adapta-se também a tablet e a telemóvel (NF02, Exercício 7), com larguras fluidas e três pontos de quebra a rever no incremento 9 (por exemplo, abaixo de 1024 e de 640 píxeis). Não há wireframes novos: as regras são estas.
+
+| Elemento | Computador | Tablet | Telemóvel |
+|---|---|---|---|
+| Barra superior | Completa, com o caminho e o utilizador | Completa, com o caminho mais curto | Recolhida num botão de menu; o caminho passa a ser só o ecrã atual |
+| Tabelas (projetos, tarefas, equipa, reciclagem) | Tabela | Tabela com menos colunas (as outras vão para o detalhe) | Uma lista de cartões, um por linha, com os dados principais e as ações |
+| Formulário ao lado da lista (W8, W9) | Painel ao lado | Painel por baixo da lista | Ecrã próprio, que se abre e se fecha |
+| Painel inicial (W7) | Cartões em grelha | Cartões em duas colunas | Cartões numa coluna; os 7 mosaicos de contagem em duas colunas |
+| Matriz | Os 4 quadrantes lado a lado, 2 por 2 | 2 por 2, mais estreitos | Os 4 quadrantes empilhados, por ordem: Do first, Schedule, Delegate, Later |
+| Caixas de confirmação | Ao centro | Ao centro | Ocupam a largura do ecrã |
+
+Os botões e os campos têm uma área de toque suficiente nas larguras estreitas, e nenhum ecrã precisa de deslocação horizontal.

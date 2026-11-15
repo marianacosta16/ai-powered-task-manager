@@ -92,7 +92,7 @@ O estilo de arquitetura (monólito modular) e a stack (Java 21, Spring Boot e Po
 
 | ID | Decisão pendente | Condiciona |
 |---|---|---|
-| T1 | Forma de execução da aplicação (por exemplo, acesso por navegador ou aplicação instalada). **Decidido em parte:** API REST primeiro; a interface decide-se depois | NF02 |
+| T1 | Forma de execução da aplicação (por exemplo, acesso por navegador ou aplicação instalada). **Decidido:** aplicação web, com a API REST primeiro (incrementos 0 a 8) e depois a interface em React com TypeScript e Vite, em inglês (2026-11-14) | NF02 |
 | T2 | Onde e como se guardam os dados, e se há um local central partilhado pelas equipas. **Decidido:** PostgreSQL, uma base central | F10, F06, F09, F13 |
 | T3 | Mecanismo de autenticação e de controlo de acesso por papel e por projeto. **Decidido:** sessão no servidor com cookie, e controlo de acesso feito no servidor. **Implementado no incremento 1** com Spring Security: cookie `SESSION` (`HttpOnly`, `SameSite=Lax`), 3 horas sem atividade, palavras-passe com hash BCrypt, permissões por projeto no módulo Acesso (ver P30 a P33) | S1, S2, S5 e S6 |
 | T4 | Como se disparam os lembretes e alertas de atraso dentro da aplicação | F12, P11 |

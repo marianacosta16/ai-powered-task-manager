@@ -197,7 +197,7 @@ Só estão aqui os requisitos que foram definidos ou que decorrem de decisões j
 | ID | Requisito | Origem | Versão |
 |---|---|---|---|
 | NF01 | A interface está em inglês | Decisão | v1 |
-| NF02 | A aplicação é usada em computador | Decisão | v1 |
+| NF02 | A aplicação é usada em computador, e o layout adapta-se também a tablet e a telemóvel (larguras estreitas): a tabela passa a cartões, a barra superior fica recolhida e os quatro quadrantes da Matriz empilham-se. Alterado em 2026-11-14 a pedido da autora, para cumprir o Exercício 7 | Decisão | v1 |
 | NF03 | Dimensão da v1: 10 utilizadores de demonstração (2 gestores e 8 membros) e os projetos que os gestores criarem; a dimensão de cada equipa é definida por quem cria o projeto | Decisão (P18) | v1 |
 | NF04 | Controlo de acesso por papel e por projeto, com o utilizador autenticado por sessão (F10, S5) | Pressuposto (P15), regra R8 | v1 |
 | NF05 | Rastreabilidade: ficam registados quem fez o quê e quando (criar, editar, mudar de estado, apagar) | Pressuposto (P14) | v2 |
