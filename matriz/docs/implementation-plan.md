@@ -1,6 +1,6 @@
 # Matriz — Plano de implementação
 
-> Sequência de incrementos para construir a v1 (MVP) da Matriz, com componentes e ficheiros previstos, operações da API, critérios de aceitação e formas de verificação. Atualiza-se ao longo da implementação: o estado de cada incremento está na secção 2.
+> Sequência de incrementos para construir a v1 (MVP) da Matriz: 0 a 8 são o backend (concluídos) e 9 a 13 a interface, com componentes e ficheiros previstos, operações da API, critérios de aceitação e formas de verificação. Atualiza-se ao longo da implementação: o estado de cada incremento está na secção 2.
 > Criado em 2026-11-12. Documentos de base: [requirements.md](requirements.md), [user-stories.md](user-stories.md), [constraints.md](constraints.md), [architecture.md](architecture.md), [database.md](database.md), [openapi.yaml](../openapi.yaml), [ui/wireframes.md](ui/wireframes.md) e a análise em [plan.md](plan.md).
 
 ## 1. Ponto de partida
@@ -9,11 +9,11 @@
 |---|---|
 | Âmbito | v1: F01 a F10, F17 e F22 ([requirements.md](requirements.md#6-âmbito-do-mvp-v1)) |
 | Arquitetura | Monólito modular, com os módulos de [architecture.md](architecture.md#4-componentes-e-responsabilidades) |
-| Stack | **Java 21, Spring Boot e PostgreSQL**, interface depois da API, sessão no servidor com cookie. Registada em [architecture.md](architecture.md#8-stack-e-decisões-técnicas) |
+| Stack | **Java 21, Spring Boot e PostgreSQL** no backend, sessão no servidor com cookie; **React com TypeScript e Vite** na interface (decidido em 2026-11-14). Registada em [architecture.md](architecture.md#8-stack-e-decisões-técnicas) |
 | Contrato | [openapi.yaml](../openapi.yaml): 28 operações, uma por cada ação da v1 |
 | Permissões | Tabela em [requirements.md](requirements.md#21-permissões-por-papel-e-por-projeto) |
 | Onde se desenvolve | Numa **VM Ubuntu**, que a autora indicou ter a stack instalada (por confirmar: versões). O PostgreSQL é o da VM; não se usa PostgreSQL embutido |
-| Ordem | **API primeiro**: cada incremento entrega operações da API testadas contra o contrato. A interface escolhe-se depois do incremento 8, com os wireframes já feitos |
+| Ordem | **API primeiro**: os incrementos 0 a 8 entregaram as 28 operações da API, testadas contra o contrato. A interface vem depois, em 5 incrementos (9 a 13), um por grupo de ecrãs dos wireframes já feitos, e cada um começa por uma análise e um plano que a autora valida (Exercício 7) |
 
 **Regras do plano**
 - Um incremento só se dá por concluído quando os cenários indicados passam e as verificações estão feitas. Não se avança com um incremento a meio.
@@ -36,6 +36,11 @@ Como atualizar: ao terminar um incremento, passar o estado a **Concluído**, ind
 | 6 | Comentários | Concluído | 2026-11-14 | Cenários 11.1 a 11.6 e 11.8 a 11.11, a primeira metade do 11.7 (os comentários de uma tarefa apagada não aparecem), EC32, EC34 e EC48, em testes HTTP com relógio controlável e um de concorrência (23 testes novos; 154 no total, verdes). Verificado por mutação: sem a regra do autor, sem a da tarefa fechada (a adicionar e a editar ou apagar), sem o bloqueio da tarefa nas escritas de comentários, sem a contagem de caracteres e sem a leitura do corpo depois do acesso, sem a do projeto concluído, sem a ordenação por data e sem a verificação das linhas atualizadas os testes falham. O autor e a data vêm sempre do servidor. Pressupostos A24 a A27 do contrato, confirmados em 2026-11-14. Os limites de 100 e 2000 passaram a contar caracteres (pontos de código) em todos os textos, também nos de tarefas e projetos (R14): um emoji conta uma vez. A segunda metade do 11.7 (voltam quando a tarefa é recuperada) é do incremento 7 |
 | 7 | Reciclagem e eliminações | Concluído | 2026-11-14 | Cenários 7.1 a 7.10 e a segunda metade do 11.7; EC7, EC21, EC23, EC36 e EC49 a EC51, em 35 testes HTTP novos com relógio controlável (inclui 5 de concorrência, que esperam pelo bloqueio): apagar e recuperar projetos e tarefas, só o que foi apagado junto volta (R9), 29 e 31 dias e exatamente 30, dias restantes, o que cada papel vê e recupera, P36 (novo responsável), subtarefa em curso sob mãe fechada, prazo da subtarefa, projeto concluído, R11 com projeto apagado e a eliminação definitiva com comentários, responsáveis, membros e o original de duplicados. Verificado por mutação (25 mutantes mortos): sem a regra das subtarefas em aberto, sem a cascata, sem as tarefas do projeto, a recuperar tudo, o limite dos 30 dias (listar e recuperar), tarefas do projeto listadas à parte, utilizadores sem acesso, membro a recuperar projetos, projeto concluído, ligação ao original, comentários, substituição de responsáveis, mãe fechada, prazo, bloqueio da tarefa, dias restantes e as redes de segurança da eliminação. Pressupostos A35 a A41 e A43 do contrato confirmados em 2026-11-14 (a A41 com a nota de que o original foi eliminado, `originalEliminated`, e outra de que está na reciclagem, `originalInRecycleBin`); A42 confirmada em 2026-11-14 (o corpo substitui só quem saiu). Não verificado: o ecrã da reciclagem, a tarefa agendada às 03:00 com o relógio real (só se chama a eliminação nos testes) e a ordem dos bloqueios da eliminação definitiva contra pedidos ao mesmo tempo (V12) |
 | 8 | Fecho do MVP | Concluído | 2026-11-14 | 28 testes novos (278 no total, verdes). **R28 e a eliminação:** todos os caminhos de escrita num projeto (criar e alterar tarefas, responsáveis, comentários, membros, apagar e recuperar tarefas, alterar e apagar o projeto) bloqueiam a linha do projeto e leem o estado com o bloqueio; 10 testes de concorrência, que cobrem cada caminho de escrita, em que o projeto é concluído ou apagado enquanto o pedido espera, mais 2 (a conclusão que espera pelas escritas em curso e várias escritas ao mesmo tempo no mesmo projeto), e a ordem projeto, pessoas, tarefas imposta por `Locks` e pelo ArchUnit. **Contrato igual à implementação:** um teste percorre as 28 operações com pedidos reais e confirma o estado HTTP e o corpo contra o esquema do `openapi.yaml` (campos obrigatórios, tipos, valores dos enumerados e campos que o contrato não conhece), e que as rotas da aplicação são as do contrato; a recusa traz sempre um código e uma mensagem (NF08). **Cenário MVP-1** de ponta a ponta. **Cenários e códigos:** um teste confirma que todos os cenários e casos excecionais da v1 são nomeados por um teste (só o EC39 fica para a interface, V1) e outro que os códigos P, T, R, EC, M, V e A são únicos, sem falhas e sem referências a códigos que não existem. Verificado por mutação (18 mutantes mortos): os 7 caminhos de bloqueio, o modo partilhado, a guarda da ordem, uma rota, um estado HTTP, um campo e um enumerado do contrato, e os testes de códigos (3) e de cobertura (2). O contrato passa à versão 1.0.0, com as 28 operações. Todas as verificações da v1 que dependem da interface ficam nos itens V1 a V12 |
+| 9 | Interface: base e início de sessão | Por fazer | | |
+| 10 | Interface: painel e projetos | Por fazer | | |
+| 11 | Interface: detalhe do projeto e tarefas | Por fazer | | |
+| 12 | Interface: detalhe da tarefa, responsáveis e comentários | Por fazer | | |
+| 13 | Interface: equipa, reciclagem e fecho | Por fazer | | |
 
 ## 3. Estrutura prevista
 
@@ -173,6 +178,85 @@ src/test/java/...                         testes por cenário Given / When / The
 | **Aceitação** | O cenário MVP-1 passa de ponta a ponta; o critério de aceitação do MVP ([requirements.md](requirements.md#6-âmbito-do-mvp-v1)) cumpre-se |
 | **Verificação** | Todos os cenários e casos excecionais da v1 verdes; o contrato e a implementação coincidem; documentação revista |
 
+### A interface: regras para os incrementos 9 a 13
+
+A interface é a aplicação web **React com TypeScript e Vite**, em inglês (NF01), numa pasta `frontend/` na raiz do repositório (a confirmar no plano do incremento 9). Liga-se **à API real**, nunca a dados simulados; ao fechar cada incremento não fica nenhum mock das funcionalidades concluídas. Seguem-se as regras do Exercício 7, que valem para todos os ecrãs:
+
+| Regra | O que significa |
+|---|---|
+| Configuração do endereço | O endereço do backend está num só sítio (uma variável de ambiente, `VITE_API_URL`, lida por um só módulo). O endereço de exemplo do OpenAPI não corresponde a um serviço ativo |
+| Estados de cada pedido | Todo o ecrã trata o carregamento, a lista vazia, o sucesso e o erro, com a mensagem que a API dá (NF08) |
+| Formulários | Os mesmos componentes, estilos e mensagens em todos os formulários; os erros de validação aparecem junto ao campo. Se a submissão falha, o que a pessoa escreveu fica no formulário |
+| Sem submissões repetidas | Enquanto um pedido está em curso, o botão fica desativado; a interface usa a resposta confirmada pela API para se atualizar, sem criar um registo duas vezes |
+| Listas e contagens | Depois de criar, alterar ou apagar, as listas, os filtros e as contagens atualizam-se sem recarregar a página. Os totais vêm do servidor (`X-Total-Count`, `getDashboard`), por isso refletem todos os dados que interessam e não só a página que se vê |
+| Sessão | Um 401 leva ao início de sessão com a mensagem que a API dá ("Your session has ended..." ou "Sign in to continue.", P33) |
+| Controlos | O que a pessoa não pode fazer não aparece (NF08), com a API a recusar na mesma |
+| Larguras de ecrã | O layout adapta-se a larguras diferentes (proposta, por confirmar: computador, tablet e telemóvel; ver a secção 7) |
+| Verificação | Testes de componentes (Vitest e Testing Library) e testes de ponta a ponta com **Playwright**, contra o backend real e a base de dados de teste. Cada incremento fecha os itens V que lhe cabem |
+
+As dependências de cada incremento (React, React Router, `openapi-typescript` para gerar os tipos a partir do `openapi.yaml`, Vitest, Testing Library, Playwright e outras que a análise propuser) listam-se no plano do incremento e instalam-se só depois de a autora as aprovar; o Playwright já foi aceite em 2026-11-14.
+
+### Incremento 9 — Interface: base e início de sessão (F10; US10)
+
+| | |
+|---|---|
+| **Componentes e ficheiros** | `frontend/` (projeto Vite, configuração do endereço do backend, cliente da API com os erros `{code, message, details}`, tipos gerados do contrato, rotas, barra superior, componentes comuns: botão, campo de texto com erro, aviso, carregamento, lista vazia e caixa de confirmação); no backend, a configuração de CORS |
+| **Ecrãs** | [Início de sessão](ui/wireframes.md#1-início-de-sessão-f10-us10) e a barra superior (com o fim de sessão) |
+| **API** | `signIn`, `signOut`, `getAuthenticatedUser` |
+| **Backend** | **CORS com credenciais**, decidido pela autora em 2026-11-14: só as origens indicadas numa propriedade (`matriz.cors.allowed-origins`), com cookies, os métodos e cabeçalhos que a API usa e o cabeçalho `X-Total-Count` exposto. Revê-se a P31 (CSRF desligado) e regista-se a decisão: o cookie é `SameSite=Lax`, a API só aceita JSON e as origens estão limitadas; um teste mostra que uma origem não permitida não recebe os cabeçalhos CORS |
+| **Depende de** | Incrementos 1 e 8 |
+| **Aceitação** | Cenários 10.1 a 10.6 pela interface, incluindo o encaminhamento para o início de sessão e a mensagem quando a sessão deixa de ser válida; mensagens de campo vazio do W6 |
+| **Fecha** | V4 (e a parte do V5 que se vê) |
+| **Verificação** | Testes de componentes do formulário (validação, erro da API, botão desativado durante o pedido, dados preservados); teste de ponta a ponta: iniciar sessão com credenciais certas e erradas, e sair; teste do backend para o CORS |
+
+### Incremento 10 — Interface: painel e projetos (F07, F01, F22; US13, US06, US01, US12)
+
+| | |
+|---|---|
+| **Componentes e ficheiros** | `frontend/` (ecrã do painel e dos projetos, cartão de projeto com os 7 mosaicos, barra de progresso, formulário de projeto num painel ao lado da lista, caixas de confirmação) |
+| **Ecrãs** | [Painel inicial](ui/wireframes.md#2-painel-inicial-f07-us13) e [Projetos](ui/wireframes.md#3-projetos-f01-f22-us01-us12) |
+| **API** | `getDashboard`, `listProjects` (com `search`), `getProject`, `createProject`, `updateProject`, `deleteProject` |
+| **Depende de** | Incremento 9 |
+| **Aceitação** | Cenários 13.1 a 13.5 e 6.1 a 6.15 como se veem no painel; 1.1 a 1.3, 1.9 a 1.11, 1.15, 1.19 a 1.23 e 12.1 a 12.3 pela interface; criar, editar, concluir (com confirmação) e eliminar (com confirmação) um projeto, com a lista e as contagens atualizadas sem recarregar |
+| **Fecha** | V1, V2 (nos projetos), V11, V12 (a confirmação ao apagar um projeto), V13 (**o primeiro percurso completo do Exercício 4**: iniciar sessão, criar um projeto, vê-lo na lista, recarregar a página e reiniciar o backend, e voltar a consultá-lo depois de iniciar sessão de novo, P32) |
+| **Verificação** | Testes de componentes (estados de carregamento, vazio, erro e sucesso; formulário; confirmação); testes de ponta a ponta contra o backend e a base de dados reais, com o percurso do V13 |
+
+### Incremento 11 — Interface: detalhe do projeto e tarefas (F02, F04, F05, F22; US02, US03, US09, US12)
+
+| | |
+|---|---|
+| **Componentes e ficheiros** | `frontend/` (detalhe do projeto com os separadores *Matrix* e *List*, filtros "as minhas", estado e quadrante, paginação com o total do servidor, formulário de tarefa num painel ao lado da tabela, seletor de data comum) |
+| **Ecrãs** | [Detalhe do projeto](ui/wireframes.md#4-detalhe-do-projeto-f01-f02-f05-f22-us01-us02-us09-us12) e a [Matriz](ui/matrix-wireframe.md) |
+| **API** | `listProjectTasks`, `createTask`, `listAssignableUsers` |
+| **Depende de** | Incremento 10 |
+| **Aceitação** | Cenários 2.1 a 2.8, 3.1 a 3.6, 9.1 a 9.5 e 12.4 a 12.6 pela interface; os filtros combinam-se; depois de criar uma tarefa a lista, a Matriz e as contagens atualizam-se; o total mostrado é o do servidor |
+| **Fecha** | V7 (os controlos de criar), V10 (a Matriz esconde as tarefas finais), V14 (os erros de validação junto ao campo), V15 (as listas e as contagens que se atualizam) |
+| **Verificação** | Testes de componentes (filtros, paginação, lista vazia, erro); teste de ponta a ponta: criar uma tarefa e ver-a na Matriz, na Lista e nas contagens do painel |
+
+### Incremento 12 — Interface: detalhe da tarefa, responsáveis e comentários (F03, F08, F17; US04, US05, US11)
+
+| | |
+|---|---|
+| **Componentes e ficheiros** | `frontend/` (detalhe da tarefa num só ecrã, edição com a `version`, estado e prioridade (urgência e importância), responsáveis, subtarefas, comentários, apagar com confirmação) |
+| **Ecrãs** | [Detalhe da tarefa](ui/wireframes.md#5-detalhe-da-tarefa-f02-f03-f08-f17-us02-us04-us11) |
+| **API** | `getTask`, `updateTask`, `deleteTask`, `addAssignee`, `removeAssignee`, `listAssignableUsers`, `listComments`, `addComment`, `editComment`, `deleteComment` |
+| **Depende de** | Incrementos 6, 7 e 11 |
+| **Aceitação** | Cenários 2.9 a 2.15, 4.1 a 4.7, 5.1 a 5.4 e 11.1 a 11.12 pela interface: um 409 `TASK_CHANGED` pede para recarregar sem perder o que se escreveu; um responsável repetido mostra a mensagem do 409; só o autor vê editar e apagar o comentário; as tarefas e comentários fechados só se leem |
+| **Fecha** | V6 (o texto mostra-se literalmente), V7, V9, V16 (a escolha de responsáveis e os comentários com autor e data) |
+| **Verificação** | Testes de componentes (conflito, erros, texto com `<b>x</b>`); teste de ponta a ponta: editar, mudar o estado, atribuir, comentar e reabrir, com os comentários e os responsáveis que continuam lá |
+
+### Incremento 13 — Interface: equipa, reciclagem e fecho (F01, F09; US01, US07; Exercício 7)
+
+| | |
+|---|---|
+| **Componentes e ficheiros** | `frontend/` (equipa, reciclagem, ajustes finais de layout e de componentes) |
+| **Ecrãs** | [Equipa](ui/wireframes.md#6-equipa-f01-us01) e [Reciclagem](ui/wireframes.md#7-reciclagem-f09-us07) |
+| **API** | `listMembers`, `addMember`, `removeMember`, `listCandidateMembers`, `listRecycleBin`, `restoreProject`, `restoreTask` |
+| **Depende de** | Incrementos 10 a 12 |
+| **Aceitação** | Cenários 1.4 a 1.8, 1.12 a 1.14, 1.24 a 1.28, 7.1 a 7.10 pela interface; o cenário MVP-1 de ponta a ponta pela interface; as larguras de ecrã decididas; nenhum mock a restar |
+| **Fecha** | V3, V8, V12 (o resto) e a revisão final de V1 a V16 |
+| **Verificação** | Testes de ponta a ponta do cenário MVP-1 e dos percursos da equipa e da reciclagem; revisão do diff; relatório do que ficou por verificar |
+
 ## 5. Operações do contrato por incremento
 
 | Incremento | Operações |
@@ -184,6 +268,11 @@ src/test/java/...                         testes por cenário Given / When / The
 | 5 | `getDashboard` |
 | 6 | `listComments`, `addComment`, `editComment`, `deleteComment` |
 | 7 | `deleteProject`, `deleteTask`, `listRecycleBin`, `restoreProject`, `restoreTask` |
+| 9 | (interface) `signIn`, `signOut`, `getAuthenticatedUser` |
+| 10 | (interface) `getDashboard`, `listProjects`, `getProject`, `createProject`, `updateProject`, `deleteProject` |
+| 11 | (interface) `listProjectTasks`, `createTask`, `listAssignableUsers` |
+| 12 | (interface) `getTask`, `updateTask`, `deleteTask`, `addAssignee`, `removeAssignee`, `listComments`, `addComment`, `editComment`, `deleteComment` |
+| 13 | (interface) `listMembers`, `addMember`, `removeMember`, `listCandidateMembers`, `listRecycleBin`, `restoreProject`, `restoreTask` |
 
 ## 6. Notas para retomar o incremento 0
 
@@ -207,7 +296,9 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 | Tema | Nota |
 |---|---|
 | Prazo | O MVP cresceu para 13 user stories; o prazo de cerca de 1 mês mantém-se por decisão da autora |
-| Interface | Escolhe-se depois da API. Enquanto isso, a API testa-se por testes automáticos |
+| Interface | **React com TypeScript e Vite**, escolhida pela autora em 2026-11-14, em 5 incrementos (9 a 13). Para quem nunca a usou, a adaptação leva alguns dias: por isso o incremento 9 começa por um corte vertical (início de sessão ligado à API real) que a autora revê antes de se replicar o padrão aos outros ecrãs |
+| Larguras de ecrã | O NF02 diz "usada em computador", e o Exercício 7 pede que o layout se adapte a larguras diferentes. Proposta, por confirmar: layout fluido com três larguras (computador, tablet e telemóvel), em que a tabela vira cartões e os quadrantes da Matriz se empilham em ecrãs estreitos. É trabalho de estilos da interface, sem mudar a API; se a autora confirmar, o NF02 passa a dizer que se usa em computador e que o layout se adapta a ecrãs mais estreitos |
+| CORS, CSRF e sessões com a interface | O backend não tem CORS. Decidido em 2026-11-14: CORS com credenciais para as origens indicadas (incremento 9), em vez de um *proxy* do servidor de desenvolvimento; a P31 revê-se nesse incremento. As sessões continuam em memória (P32): reiniciar o backend leva a interface ao início de sessão |
 | Corpo que não é JSON válido | Um corpo malformado (por exemplo só `{`) é recusado pelo Spring com 400 antes de o caso de uso verificar o acesso, por isso quem não tem acesso recebe 400 em vez de 403 ou 404. Só revela que o corpo estava malformado, não dados. Registado em 2026-11-14 por decisão da autora, sem mudar o padrão dos endpoints com corpo |
 | Ligação do que foi apagado junto | O que foi apagado numa ação liga-se pelo mesmo `deleted_at` (microssegundos). Duas eliminações no mesmo instante, ou com o relógio do sistema atrás, juntam-se como se fossem uma só: uma tarefa apagada à parte e o seu projeto, por exemplo, voltam juntos. Na prática é raro, e nos testes o relógio controla-se. Uma coluna com o identificador de cada eliminação resolveria, com uma migração. Registado em 2026-11-14 por decisão da autora, a rever se aparecer um caso real |
 | Concluir ou apagar um projeto e escrever nele ao mesmo tempo | **Resolvido no incremento 8 (2026-11-14).** Toda a escrita num projeto bloqueia a sua linha em modo partilhado e lê o estado com o bloqueio; concluir, alterar ou apagar o projeto bloqueia-a em modo exclusivo, por isso uma escrita ou acontece antes ou vê o estado novo. Um teste de concorrência por caminho de escrita. A rede de segurança da eliminação definitiva (incremento 7) mantém-se |
@@ -217,7 +308,7 @@ Pontos de partida acordados com a autora em 2026-11-12, para quem continuar a im
 
 ## 8. Verificações adiadas para a fase da interface
 
-Itens que a API não consegue verificar sozinha e que não se podem esquecer quando a interface for feita. Quando um item for verificado, indica-se aqui a data e como.
+Itens que a API não consegue verificar sozinha e que não se podem esquecer quando a interface for feita. Cada incremento da interface (9 a 13, secção 4) diz quais fecha. Quando um item for verificado, indica-se aqui a data e como.
 
 | # | Item | Origem | Incremento | Estado |
 |---|---|---|---|---|

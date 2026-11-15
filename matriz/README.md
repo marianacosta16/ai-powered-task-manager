@@ -333,7 +333,7 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Conciliação com o novo âmbito funcional | Registada em [docs/requirements.md](docs/requirements.md#8-conciliação-com-o-novo-âmbito-funcional); pressupostos P27 a P29 confirmados |
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
-| Plano de implementação | Criado, com 9 incrementos (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
+| Plano de implementação | Criado, com 14 incrementos: 0 a 8 do backend (concluídos) e 9 a 13 da interface (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
 | Implementação | Backend do MVP concluído: os 9 incrementos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem e fecho do MVP): o backend do MVP está completo; falta a interface |
 
-Stack decidida: Java 21, Spring Boot e PostgreSQL, com a interface do utilizador escolhida depois da API.
+Stack decidida: Java 21, Spring Boot e PostgreSQL no backend, e React com TypeScript e Vite na interface (escolhida em 2026-11-14).

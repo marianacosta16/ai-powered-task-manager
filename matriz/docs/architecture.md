@@ -106,7 +106,7 @@ Todos os módulos ──► Persistência (cada um só aos seus dados)
 | v3 | Importação e exportação (F19) | Novo módulo |
 
 ## 7. O que este documento não decide
-- A tecnologia da interface do utilizador, o ambiente onde a aplicação corre, e as cópias de segurança: continuam em T1, T8, T10 e T11 ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
+- O ambiente onde a aplicação corre, os navegadores suportados e as cópias de segurança: continuam em T8, T10 e T11 (a tecnologia da interface ficou decidida em T1, em 2026-11-14) ([constraints.md](constraints.md#4-decisões-técnicas-pendentes)).
 - A estrutura interna de cada módulo e os nomes das suas interfaces: ficam para o desenho detalhado.
 
 ## 8. Stack e decisões técnicas
@@ -117,14 +117,16 @@ Escolhida em 2026-11-12 com a autora do projeto, por ser a mais simples que serv
 |---|---|---|---|
 | Linguagem e framework | **Java 21 com Spring Boot** | Decidido | Uma só aplicação executável, com módulos como pacotes; validação, segurança e geração do contrato OpenAPI maduras |
 | Base de dados | **PostgreSQL** | Decidido | O modelo de dados é relacional, com chaves e transações que as regras R11, R17 e R20 precisam ([database.md](database.md)) |
-| Forma de execução e interface | **API REST primeiro**; a interface escolhe-se depois da API (T1) | Decidido | A API testa-se contra o [openapi.yaml](../openapi.yaml) sem depender da interface; os wireframes já existem |
+| Forma de execução e interface | **API REST primeiro** (incrementos 0 a 8); depois a interface web, em **React com TypeScript e Vite**, em inglês (T1) | Decidido (2026-11-14) | A API testa-se contra o [openapi.yaml](../openapi.yaml) sem depender da interface; os wireframes já existem. React por ser mais leve de aprender e ter muito material |
 | Autenticação | **Sessão no servidor, identificada por um cookie**, que termina ao terminar sessão ou após 3 horas sem atividade; controlo de acesso por papel e por projeto feito no servidor | Decidido | Expira e termina com facilidade; a S1 exige recusar o acesso também por ligação direta |
 | Build | Maven | Adotado (incremento 0) | É o arranque habitual do Spring Boot |
 | Acesso aos dados e migrações | Flyway para o esquema; consultas e escritas por JDBC (`JdbcTemplate`); o Spring Data JPA não se usa e foi retirado das dependências | Adotado: Flyway e JDBC; o JPA não se usa (decidido em 2026-11-13) | Esquema versionado (T12). O seed corre ao arrancar e não numa migração, porque precisa do hash da palavra-passe. Até agora o JDBC bastou; decide-se se se usa JPA quando houver escritas mais complexas (incremento 2) |
 | Testes | JUnit 5 e Spring Boot Test, com um PostgreSQL de teste (`matriz_test`); ArchUnit para as fronteiras; swagger-parser para validar o contrato | Adotado (incremento 0) | Cada cenário Given / When / Then passa a ser um teste (T9) |
 | Datas e horas | `java.time` com o fuso do projeto | Proposta | Cumpre o P26 e o cálculo do tempo decorrido (T5) |
 | Segurança | Spring Security, com um serviço de utilizadores sobre `app_user`, hash BCrypt e filtros que devolvem 401 e 403 em JSON | Adotado (incremento 1) | Entrou só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 |
-| Proteção CSRF e sessões | CSRF desligado (API só JSON e cookie `SameSite=Lax`); sessões em memória | Pressuposto (P31, P32) | Simples para a v1; rever com a interface (T1) |
+| Proteção CSRF e sessões | CSRF desligado (API só JSON e cookie `SameSite=Lax`); sessões em memória | Pressuposto (P31, P32), a rever no incremento 9 | Simples para a v1; com a interface passa a haver CORS com credenciais para as origens permitidas (incremento 9) |
+| Ligação da interface ao backend | **CORS com credenciais** para as origens indicadas na configuração; o endereço do backend está numa só variável de ambiente da interface; o cabeçalho `X-Total-Count` fica exposto | Decidido (2026-11-14) | O cookie de sessão é `SameSite=Lax` e `localhost` com portas diferentes conta como o mesmo *site*; em vez de um *proxy* de desenvolvimento, que não existiria em produção |
+| Testes da interface | Vitest e Testing Library para os componentes; **Playwright** para os percursos completos, contra o backend e a base de dados de teste | Decidido (2026-11-14); dependências a aprovar em cada incremento | O enunciado pede verificar o percurso completo com a API e a base de dados |
 | Verificação automática | GitHub Actions: `mvn verify` com um PostgreSQL de teste (`.github/workflows/ci.yml`) | Adotado | Corre os testes em cada pull request e em cada push à `main`, sem depender da máquina de quem desenvolve (T9) |
 
 **Como a stack respeita a arquitetura**
