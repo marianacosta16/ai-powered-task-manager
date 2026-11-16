@@ -11,41 +11,42 @@ import {
   TASK_TITLE_MIN,
 } from './limits'
 
-/** The text of one schema of the contract, up to the next schema. */
-function schema(yaml: string, name: string): string {
-  const start = yaml.indexOf(`\n    ${name}:\n`)
-  expect(start, `schema ${name} in openapi.yaml`).toBeGreaterThan(-1)
-  const rest = yaml.slice(start + 1)
-  const next = rest.slice(1).search(/\n    [A-Za-z]+:\n/)
-  return next === -1 ? rest : rest.slice(0, next + 1)
+const indentOf = (line: string) => line.length - line.trimStart().length
+
+/** The lines of a block: the ones after `key:` that are indented more than it (blank lines and comments included). */
+function block(lines: string[], key: string, from = 0): string[] {
+  const start = lines.findIndex((line, i) => i >= from && line.trim() === `${key}:`)
+  expect(start, `${key} in openapi.yaml`).toBeGreaterThan(-1)
+  const indent = indentOf(lines[start])
+  const rest = lines.slice(start + 1)
+  const end = rest.findIndex((line) => line.trim() !== '' && !line.trim().startsWith('#') && indentOf(line) <= indent)
+  return end === -1 ? rest : rest.slice(0, end)
 }
 
-/** The number of a limit (minLength or maxLength) of one property of a schema; properties are indented 8 spaces. */
-function limit(text: string, property: string, key: 'minLength' | 'maxLength'): number {
-  const from = text.indexOf(`        ${property}:\n`)
-  expect(from, `property ${property}`).toBeGreaterThan(-1)
-  const after = text.slice(from + 1)
-  const end = after.search(/\n {8}\w+:\n/)
-  const block = end === -1 ? after : after.slice(0, end)
-  const match = new RegExp(`${key}: (\\d+)`).exec(block)
-  expect(match, `${key} of ${property}`).not.toBeNull()
+/** A limit (minLength or maxLength) of a property of a schema; it does not depend on how the file is indented. */
+function limit(yaml: string, schemaName: string, property: string, key: 'minLength' | 'maxLength'): number {
+  const lines = yaml.split('\n')
+  const schema = block(lines, schemaName, lines.findIndex((l) => l.trim() === 'schemas:'))
+  const properties = block(schema, 'properties')
+  const mine = block(properties, property)
+  const own = mine.filter((line) => indentOf(line) === Math.min(...mine.filter((l) => l.trim() !== '').map(indentOf)))
+  const match = own.map((line) => new RegExp(`^\\s*${key}: (\\d+)`).exec(line)).find(Boolean)
+  expect(match, `${key} of ${schemaName}.${property}`).toBeTruthy()
   return Number((match as RegExpExecArray)[1])
 }
 
 describe('the limits of a project in the interface', () => {
   const yaml = readFileSync(resolve(process.cwd(), '../matriz/openapi.yaml'), 'utf-8') // the tests run from frontend/
-  const create = schema(yaml, 'ProjectCreate')
 
   it('are the ones of the contract (R14, A45), so a change there fails here', () => {
-    expect(PROJECT_NAME_MIN).toBe(limit(create, 'name', 'minLength'))
-    expect(PROJECT_NAME_MAX).toBe(limit(create, 'name', 'maxLength'))
-    expect(PROJECT_DESCRIPTION_MAX).toBe(limit(create, 'description', 'maxLength'))
+    expect(PROJECT_NAME_MIN).toBe(limit(yaml, 'ProjectCreate', 'name', 'minLength'))
+    expect(PROJECT_NAME_MAX).toBe(limit(yaml, 'ProjectCreate', 'name', 'maxLength'))
+    expect(PROJECT_DESCRIPTION_MAX).toBe(limit(yaml, 'ProjectCreate', 'description', 'maxLength'))
   })
 
   it('are the ones of the contract for a task too (R14, A46)', () => {
-    const task = schema(yaml, 'TaskCreate')
-    expect(TASK_TITLE_MIN).toBe(limit(task, 'title', 'minLength'))
-    expect(TASK_TITLE_MAX).toBe(limit(task, 'title', 'maxLength'))
-    expect(TASK_DESCRIPTION_MAX).toBe(limit(task, 'description', 'maxLength'))
+    expect(TASK_TITLE_MIN).toBe(limit(yaml, 'TaskCreate', 'title', 'minLength'))
+    expect(TASK_TITLE_MAX).toBe(limit(yaml, 'TaskCreate', 'title', 'maxLength'))
+    expect(TASK_DESCRIPTION_MAX).toBe(limit(yaml, 'TaskCreate', 'description', 'maxLength'))
   })
 })

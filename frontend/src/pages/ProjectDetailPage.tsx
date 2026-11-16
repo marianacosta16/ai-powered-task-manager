@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ApiError } from '../api/errors'
-import { deleteProject, getProject } from '../api/projects'
+import { getProject } from '../api/projects'
 import { QUADRANTS, STATUSES_OF_TASK, listProjectTasks } from '../api/tasks'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
-import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { LoadError } from '../components/LoadError'
 import { Notice } from '../components/Notice'
@@ -14,6 +12,8 @@ import { Select } from '../components/Select'
 import { Spinner } from '../components/Spinner'
 import { StatusBadge } from '../components/StatusBadge'
 import { useLoad } from '../hooks/useLoad'
+import { DeleteProjectDialog } from '../projects/DeleteProjectDialog'
+import { deletedMessage } from '../projects/messages'
 import { ProjectEditor } from '../projects/ProjectEditor'
 import { TaskCreator } from '../tasks/TaskCreator'
 import { TaskList } from '../tasks/TaskList'
@@ -29,6 +29,11 @@ type Panel = 'closed' | 'new-task' | 'edit-project'
  */
 export function ProjectDetailPage() {
   const id = Number(useParams().projectId)
+  // A key by project: going from one project to another starts from a clean screen (no open form or old message)
+  return <ProjectDetail key={id} id={id} />
+}
+
+function ProjectDetail({ id }: { id: number }) {
   const { state: auth } = useAuth()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
@@ -36,7 +41,6 @@ export function ProjectDetailPage() {
   const [panel, setPanel] = useState<Panel>('closed')
   const [message, setMessage] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const project = useLoad((signal) => getProject(id, signal), [id])
   const tasks = useLoad(
@@ -60,18 +64,6 @@ export function ProjectDetailPage() {
     setParams(toParams({ ...query, page: 1, ...next }))
   }
 
-  async function handleDelete() {
-    setDeleting(true)
-    try {
-      await deleteProject(id)
-      navigate('/projects', { state: { message: `Project "${name}" is in the Recycle bin for 30 days.` } })
-    } catch (cause) {
-      setDeleteError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
-      setDeleting(false)
-      setConfirmDelete(false)
-    }
-  }
-
   if (project.state.status === 'loading') {
     return <Spinner label="Loading the project..." />
   }
@@ -79,7 +71,6 @@ export function ProjectDetailPage() {
     return <LoadError message={project.state.message} onRetry={project.retry} />
   }
   const data = project.state.data
-  const name = data.name
   const completed = data.status === 'Completed'
   const manages = data.manager.id === user.id && !completed
   const canCreate = data.status !== 'Completed' && data.status !== 'Suspended' // R22
@@ -91,6 +82,7 @@ export function ProjectDetailPage() {
         <Link to="/projects">Projects</Link> / {data.name}
       </p>
       <h1>{data.name}</h1>
+      {project.state.refreshError ? <Notice kind="error">{project.state.refreshError}</Notice> : null}
       {message ? <Notice kind="success">{message}</Notice> : null}
       {deleteError ? <Notice kind="error">{deleteError}</Notice> : null}
       <p>
@@ -119,24 +111,22 @@ export function ProjectDetailPage() {
         </div>
       ) : null}
 
-      <div className="tabs" role="tablist" aria-label="View of the tasks">
+      <nav className="tabs" aria-label="View of the tasks">
         <Link
-          role="tab"
-          aria-selected={query.view === 'matrix'}
+          aria-current={query.view === 'matrix' ? 'page' : undefined}
           className="tabs__tab"
           to={{ search: toParams({ ...query, view: 'matrix', page: 1 }).toString() }}
         >
           Matrix
         </Link>
         <Link
-          role="tab"
-          aria-selected={query.view === 'list'}
+          aria-current={query.view === 'list' ? 'page' : undefined}
           className="tabs__tab"
           to={{ search: toParams({ ...query, view: 'list', page: 1 }).toString() }}
         >
           List
         </Link>
-      </div>
+      </nav>
 
       <div className="toolbar">
         <div className="filters">
@@ -182,7 +172,18 @@ export function ProjectDetailPage() {
           ) : null}
           {tasks.state.status === 'ready' ? (
             tasks.state.data.items.length === 0 ? (
-              <EmptyState>{filtersOn ? 'No tasks match the filters.' : 'This project has no tasks yet.'}</EmptyState>
+              <>
+                <EmptyState>
+                  {query.page > 1
+                    ? 'There are no tasks on this page.'
+                    : filtersOn
+                      ? 'No tasks match the filters.'
+                      : 'This project has no tasks yet.'}
+                </EmptyState>
+                {query.view === 'list' && query.page > 1 ? (
+                  <Pagination page={query.page} size={LIST_SIZE} total={tasks.state.data.total} onPage={(page) => change({ page })} />
+                ) : null}
+              </>
             ) : query.view === 'list' ? (
               <>
                 <TaskList tasks={tasks.state.data.items} />
@@ -209,6 +210,7 @@ export function ProjectDetailPage() {
         {panel === 'new-task' && canCreate ? (
           <TaskCreator
             projectId={id}
+            timezone={data.timezone}
             onCreated={(task) => {
               setPanel('closed')
               setMessage(`Task "${task.title}" created.`)
@@ -221,6 +223,11 @@ export function ProjectDetailPage() {
           <ProjectEditor
             projectId={id}
             onSaved={(saved) => {
+              if (saved.manager.id !== user.id) {
+                // handed over: this user no longer sees the project (R19), so the page leaves it
+                navigate('/projects', { state: { message: `Project "${saved.name}" saved. ${saved.manager.name} is now its manager.` } })
+                return
+              }
               setPanel('closed')
               setMessage(`Project "${saved.name}" saved.`)
               project.reload()
@@ -231,17 +238,15 @@ export function ProjectDetailPage() {
       </div>
 
       {confirmDelete ? (
-        <ConfirmDialog
-          title="Delete project?"
-          confirmLabel="Delete"
-          busy={deleting}
-          onConfirm={() => void handleDelete()}
+        <DeleteProjectDialog
+          project={data}
+          onDeleted={() => navigate('/projects', { state: { message: deletedMessage(data.name) } })}
+          onFailed={(text) => {
+            setDeleteError(text)
+            setConfirmDelete(false)
+          }}
           onCancel={() => setConfirmDelete(false)}
-        >
-          <p>
-            "{data.name}" and its tasks go to the Recycle bin for 30 days. Only the project manager can restore them.
-          </p>
-        </ConfirmDialog>
+        />
       ) : null}
     </>
   )

@@ -23,8 +23,8 @@ export const EMPTY_TASK: TaskFormValues = {
   assigneeIds: [],
 }
 
-/** What can be warned about before the request (the server checks everything again, W13). */
-export function validateTask(values: TaskFormValues): TaskFormErrors {
+/** What can be warned about before the request (the server checks everything again, W13). The deadline is read in the time zone of the project. */
+export function validateTask(values: TaskFormValues, timezone: string): TaskFormErrors {
   const errors: TaskFormErrors = {}
   const title = values.title.trim()
   if (title.length < TASK_TITLE_MIN || title.length > TASK_TITLE_MAX) {
@@ -35,7 +35,7 @@ export function validateTask(values: TaskFormValues): TaskFormErrors {
   }
   if (values.deadline === '') {
     errors.deadline = 'Choose the deadline.'
-  } else if (values.deadline < today()) {
+  } else if (values.deadline < today(timezone)) {
     errors.deadline = 'The deadline cannot be in the past. Choose today or a later date.'
   }
   if (values.urgency === '') errors.urgency = 'Choose the urgency.'

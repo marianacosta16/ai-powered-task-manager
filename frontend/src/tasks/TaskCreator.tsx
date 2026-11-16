@@ -6,12 +6,13 @@ import { TaskForm } from './TaskForm'
 
 interface TaskCreatorProps {
   projectId: number
+  timezone: string
   onCreated: (task: Task) => void
   onCancel: () => void
 }
 
 /** Loads who can be assigned (listAssignableUsers) and then shows the form of a new task. */
-export function TaskCreator({ projectId, onCreated, onCancel }: TaskCreatorProps) {
+export function TaskCreator({ projectId, timezone, onCreated, onCancel }: TaskCreatorProps) {
   const { state, retry } = useLoad((signal) => listAssignableUsers(projectId, signal), [projectId])
   if (state.status === 'loading') {
     return <Spinner label="Loading the project members..." />
@@ -19,5 +20,5 @@ export function TaskCreator({ projectId, onCreated, onCancel }: TaskCreatorProps
   if (state.status === 'error') {
     return <LoadError message={state.message} onRetry={retry} />
   }
-  return <TaskForm projectId={projectId} people={state.data} onCreated={onCreated} onCancel={onCancel} />
+  return <TaskForm projectId={projectId} timezone={timezone} people={state.data} onCreated={onCreated} onCancel={onCancel} />
 }

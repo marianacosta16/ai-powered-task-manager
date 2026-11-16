@@ -57,9 +57,21 @@ export function valuesOf(project: Project): FormValues {
   }
 }
 
-/** Today in the browser's time zone, as the native date field writes it. */
-export function today(): string {
+/**
+ * Today as the native date field writes it (yyyy-mm-dd), in the given time zone. The dates of a project and the
+ * deadlines of its tasks are read in the time zone of the project (P26, R13, R29), not in the one of the browser, so
+ * the form must ask the same question as the server. Without a zone, or with one the browser does not know, it is the
+ * browser's own day.
+ */
+export function today(timezone?: string): string {
   const now = new Date()
+  if (timezone) {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
+    } catch {
+      // not a zone this browser knows: falls to the browser's day
+    }
+  }
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const day = String(now.getDate()).padStart(2, '0')
   return `${now.getFullYear()}-${month}-${day}`
@@ -80,7 +92,7 @@ export function validate(values: FormValues, original: Project | null): FormErro
   }
   if (values.startDate === '') {
     errors.startDate = 'Choose the start date.'
-  } else if ((original === null || values.startDate !== original.startDate) && values.startDate < today()) {
+  } else if ((original === null || values.startDate !== original.startDate) && values.startDate < today(values.timezone)) {
     errors.startDate = 'The start date cannot be in the past.'
   }
   if (values.endDate === '') {

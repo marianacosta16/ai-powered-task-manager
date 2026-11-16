@@ -57,4 +57,3 @@ export function levelLabel(level: number): string {
 
 export const MATRIX_SIZE = 200
 export const LIST_SIZE = 50
-export type { TaskStatus }

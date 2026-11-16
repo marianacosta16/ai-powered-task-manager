@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import {
@@ -12,6 +12,9 @@ import {
   summary,
   task,
 } from '../test/helpers'
+import { Link, MemoryRouter } from 'react-router-dom'
+import App from '../App'
+import { AuthProvider } from '../auth/AuthProvider'
 import { renderApp } from '../test/renderApp'
 import { today } from '../projects/projectForm'
 
@@ -52,7 +55,7 @@ describe('the project and its tasks (F02, F04, F05, F22)', () => {
     expect(await screen.findByRole('heading', { name: 'Website Redesign' })).toBeInTheDocument()
     expect(screen.getByText('The new site')).toBeInTheDocument()
     expect(screen.getByText(/2026-12-01 to 2026-12-31 \(Europe\/Lisbon\)/)).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Matrix' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('link', { name: 'Matrix' })).toHaveAttribute('aria-current', 'page')
     const doFirst = await screen.findByRole('region', { name: 'Do first' })
     expect(within(doFirst).getByRole('link', { name: 'Fix payment bug' })).toHaveAttribute('href', '/tasks/10')
     expect(within(screen.getByRole('region', { name: 'Schedule' })).getByText('Plan the launch')).toBeInTheDocument()
@@ -140,14 +143,26 @@ describe('the project and its tasks (F02, F04, F05, F22)', () => {
 
     await userEvent.selectOptions(screen.getByLabelText('Quadrant'), 'Later') // a filter changes: first page again
     await screen.findByText('Page 1 of 3')
-    await userEvent.click(screen.getByRole('tab', { name: 'Matrix' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Matrix' }))
     await screen.findByRole('region', { name: 'Do first' })
-    await userEvent.click(screen.getByRole('tab', { name: 'List' }))
+    await userEvent.click(screen.getByRole('link', { name: 'List' }))
 
     expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toHaveValue('')
     expect(screen.getByLabelText('Quadrant')).toHaveValue('')
     expect(api.callsTo(TASKS).map((call) => call.url)).toContain('/projects/1/tasks?status=Blocked&quadrant=Later&page=1&size=50')
+  })
+
+  it('keeps the way back when the page asked is past the last one', async () => {
+    const api = mockApi(routes(ANA, { [TASKS]: [pageResponse([], 120), pageResponse([task(10, 'Fix payment bug')], 120)] }))
+    renderApp('/projects/1?view=list&page=9')
+
+    expect(await screen.findByText('There are no tasks on this page.')).toBeInTheDocument()
+    expect(screen.getByText('120 tasks')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(await screen.findByRole('link', { name: 'Fix payment bug' })).toBeInTheDocument()
+    expect(api.callsTo(TASKS)[1].url).toBe('/projects/1/tasks?page=8&size=50')
   })
 
   it('does not go past the last page', async () => {
@@ -167,7 +182,7 @@ describe('the project and its tasks (F02, F04, F05, F22)', () => {
     expect(screen.queryByLabelText('Status')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByLabelText('My tasks'))
-    await userEvent.click(screen.getByRole('tab', { name: 'List' }))
+    await userEvent.click(screen.getByRole('link', { name: 'List' }))
 
     expect(await screen.findByLabelText('Status')).toBeInTheDocument()
     expect(screen.getByLabelText('My tasks')).toBeChecked()
@@ -272,6 +287,45 @@ describe('the controls of the project (V2, V7, R22, R28)', () => {
     expect(api.callsTo('PATCH /projects/1')[0].body).toEqual({ name: 'Website 2' })
   })
 
+  it('leaves the project when it is handed over to another manager, who is the only one that sees it now (R19)', async () => {
+    mockApi(
+      routes(MARTA, {
+        'GET /projects/1/members': jsonResponse(200, []),
+        'GET /projects/1/candidate-members': jsonResponse(200, [{ user: { id: 2, name: 'Pedro', role: 'Project manager' }, available: true }]),
+        'PATCH /projects/1': jsonResponse(200, { ...PROJECT, manager: { id: 2, name: 'Pedro', role: 'Project manager' } }),
+        'GET /projects': jsonResponse(200, []),
+      }),
+    )
+    renderApp('/projects/1')
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit project' }))
+    await screen.findByRole('heading', { name: 'Edit project' })
+
+    await userEvent.selectOptions(screen.getByLabelText('Manager *'), 'Pedro')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument()
+    expect(screen.getByText('Project "Website Redesign" saved. Pedro is now its manager.')).toBeInTheDocument()
+  })
+
+  it('says so when the project cannot be refreshed after saving', async () => {
+    mockApi(
+      routes(MARTA, {
+        'GET /projects/1': [jsonResponse(200, PROJECT), jsonResponse(200, PROJECT), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'The project could not be refreshed.' })],
+        'GET /projects/1/members': jsonResponse(200, []),
+        'GET /projects/1/candidate-members': jsonResponse(200, []),
+        'PATCH /projects/1': jsonResponse(200, { ...PROJECT, name: 'Website 2' }),
+      }),
+    )
+    renderApp('/projects/1')
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit project' }))
+    await screen.findByRole('heading', { name: 'Edit project' })
+
+    change('Name *', 'Website 2')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('The project could not be refreshed.')).toBeInTheDocument()
+  })
+
   it('deletes the project after the confirmation and goes back to the list with the message', async () => {
     const api = mockApi(
       routes(MARTA, {
@@ -286,7 +340,7 @@ describe('the controls of the project (V2, V7, R22, R28)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument()
-    expect(screen.getByText('Project "Website Redesign" is in the Recycle bin for 30 days.')).toBeInTheDocument()
+    expect(screen.getByText('"Website Redesign" is in the Recycle bin for 30 days.')).toBeInTheDocument()
     expect(api.callsTo('DELETE /projects/1')).toHaveLength(1)
   })
 
@@ -338,6 +392,46 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
     expect(screen.getByText('Choose at least one assignee.')).toBeInTheDocument()
     expect(screen.getByLabelText('Title *')).toHaveFocus()
     expect(api.callsTo('POST /projects/1/tasks')).toHaveLength(0)
+  })
+
+  it('puts the focus on the first assignee when that is the only thing missing', async () => {
+    await openForm()
+    fillValid()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+
+    expect(screen.getByText('Choose at least one assignee.')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Marta' })).toHaveFocus()
+    expect(screen.getByRole('checkbox', { name: 'Marta' })).toBeInvalid()
+    expect(screen.getByRole('checkbox', { name: 'Ana' })).toBeValid() // only the first one carries the error
+  })
+
+  it('reads today in the time zone of the project: the deadline and its minimum (P26, R13)', async () => {
+    const ahead = today('Pacific/Kiritimati') // UTC+14: always a day before the next one
+    const behind = today('Pacific/Pago_Pago') // UTC-11
+    expect(ahead).not.toBe(behind)
+    const api = mockApi(
+      routes(ANA, {
+        'GET /projects/1': jsonResponse(200, { ...PROJECT, timezone: 'Pacific/Kiritimati' }),
+        'GET /projects/1/assignable-users': jsonResponse(200, PEOPLE),
+        'POST /projects/1/tasks': jsonResponse(201, task(20, 'Prepare the demo')),
+      }),
+    )
+    renderApp('/projects/1?view=list')
+    await userEvent.click(await screen.findByRole('button', { name: '+ New task' }))
+    await screen.findByRole('heading', { name: 'New task' })
+    expect(screen.getByLabelText('Deadline *')).toHaveAttribute('min', ahead)
+    fillValid()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Ana' }))
+
+    change('Deadline *', behind) // still today where the user is, but past in the project
+    await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+    expect(screen.getByText(/cannot be in the past/)).toBeInTheDocument()
+    expect(api.callsTo('POST /projects/1/tasks')).toHaveLength(0)
+
+    change('Deadline *', ahead)
+    await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+    await waitFor(() => expect(api.callsTo('POST /projects/1/tasks')).toHaveLength(1))
   })
 
   it('refuses a deadline in the past, a too long title and description, and sets the minimum of the date (R13)', async () => {
@@ -478,7 +572,55 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
   })
 })
 
+describe('going between projects', () => {
+  it('starts from a clean screen in the other project: no open form, no old message', async () => {
+    mockApi({
+      'GET /auth/me': jsonResponse(200, ANA),
+      'GET /projects/1': jsonResponse(200, PROJECT),
+      'GET /projects/2': jsonResponse(200, fullProject(2, 'Other Project')),
+      [TASKS]: pageResponse([]),
+      'GET /projects/2/tasks': pageResponse([]),
+      'GET /projects/1/assignable-users': jsonResponse(200, [ANA]),
+      'GET /projects/2/assignable-users': () => new Promise<Response>(() => undefined), // never answers: the panel would stay loading
+    })
+    render(
+      <MemoryRouter initialEntries={['/projects/1']}>
+        <AuthProvider>
+          <App />
+          <Link to="/projects/2">go to the other project</Link>
+        </AuthProvider>
+      </MemoryRouter>,
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '+ New task' }))
+    await screen.findByRole('heading', { name: 'New task' })
+
+    await userEvent.click(screen.getByRole('link', { name: 'go to the other project' })) // same component, other id
+
+    expect(await screen.findByRole('heading', { name: 'Other Project' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'New task' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Loading the project members...')).not.toBeInTheDocument() // the panel would start loading at once
+  })
+})
+
 describe('the task (provisional until the next increment)', () => {
+  it('goes back to the Matrix when it was opened from the Matrix', async () => {
+    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }))
+    renderApp('/projects/1?mine=true')
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
+
+    expect(await screen.findByRole('link', { name: '← Project' })).toHaveAttribute('href', '/projects/1?mine=true')
+  })
+
+  it('goes back to the List with its filters when it was opened from there', async () => {
+    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }))
+    renderApp('/projects/1?view=list&status=To%20do')
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
+
+    expect(await screen.findByRole('link', { name: '← Project' })).toHaveAttribute('href', '/projects/1?view=list&status=To%20do')
+  })
+
   it('opens from the List and shows its title, with a way back to the project', async () => {
     mockApi(
       routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }),

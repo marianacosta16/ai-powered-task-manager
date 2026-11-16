@@ -14,6 +14,8 @@ import { EMPTY_TASK, toTaskCreate, validateTask, type TaskFormErrors, type TaskF
 
 interface TaskFormProps {
   projectId: number
+  /** The time zone of the project: "today" for the deadline is its day (P26). */
+  timezone: string
   /** The members of the project and its manager (R21). */
   people: User[]
   onCreated: (task: Task) => void
@@ -25,7 +27,7 @@ interface TaskFormProps {
  * what was typed stays, the message of the API is shown with the field it points to, and while the request is under
  * way the button waits.
  */
-export function TaskForm({ projectId, people, onCreated, onCancel }: TaskFormProps) {
+export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(EMPTY_TASK)
   const [errors, setErrors] = useState<TaskFormErrors>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -51,7 +53,7 @@ export function TaskForm({ projectId, people, onCreated, onCancel }: TaskFormPro
       return
     }
     setServerError(null)
-    const found = validateTask(values)
+    const found = validateTask(values, timezone)
     setErrors(found)
     if (Object.keys(found).length > 0) {
       setFocusToken((token) => token + 1)
@@ -106,7 +108,7 @@ export function TaskForm({ projectId, people, onCreated, onCancel }: TaskFormPro
           label="Deadline *"
           name="deadline"
           type="date"
-          min={today()}
+          min={today(timezone)}
           value={values.deadline}
           error={errors.deadline}
           onChange={(event) => set('deadline', event.target.value)}

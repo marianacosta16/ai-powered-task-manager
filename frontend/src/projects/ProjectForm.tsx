@@ -151,7 +151,7 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
             type="date"
             value={values.startDate}
             error={errors.startDate}
-            min={project === null ? today() : undefined}
+            min={project === null ? today(values.timezone) : undefined}
             onChange={(event) => set('startDate', event.target.value)}
           />
           <TextField
