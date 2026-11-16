@@ -1,7 +1,16 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { ANA, BAD_CREDENTIALS, MARTA, SESSION_ENDED, SIGN_IN_NEEDED, jsonResponse, mockFetch } from '../test/helpers'
+import {
+  ANA,
+  BAD_CREDENTIALS,
+  MARTA,
+  SESSION_ENDED,
+  SIGN_IN_NEEDED,
+  deferredResponse,
+  jsonResponse,
+  mockFetch,
+} from '../test/helpers'
 import { renderApp } from '../test/renderApp'
 
 /** The calls to the API that are not the check of the session at the start. */
@@ -97,11 +106,8 @@ describe('the sign in screen', () => {
   })
 
   it('does not send the same sign in twice while the request is under way', async () => {
-    let finish: (response: Response) => void = () => undefined
-    const pending = new Promise<Response>((resolve) => {
-      finish = resolve
-    })
-    const fetch = await openSignIn(() => pending)
+    const pending = deferredResponse()
+    const fetch = await openSignIn(pending.fetch)
     await userEvent.type(screen.getByLabelText('Username'), 'ana')
     await userEvent.type(screen.getByLabelText('Password'), 'secret')
 
@@ -112,16 +118,13 @@ describe('the sign in screen', () => {
     await userEvent.type(screen.getByLabelText('Password'), '{Enter}') // Enter in the form does not send it again either
 
     expect(loginCalls(fetch)).toHaveLength(1)
-    finish(jsonResponse(200, ANA))
+    pending.respond(jsonResponse(200, ANA))
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
   })
 
   it('does not send the same sign in twice even if the form is submitted again by other means', async () => {
-    let finish: (response: Response) => void = () => undefined
-    const pending = new Promise<Response>((resolve) => {
-      finish = resolve
-    })
-    const fetch = await openSignIn(() => pending)
+    const pending = deferredResponse()
+    const fetch = await openSignIn(pending.fetch)
     await userEvent.type(screen.getByLabelText('Username'), 'ana')
     await userEvent.type(screen.getByLabelText('Password'), 'secret')
     const form = screen.getByRole('button', { name: 'Sign in' }).closest('form') as HTMLFormElement
@@ -130,7 +133,7 @@ describe('the sign in screen', () => {
     fireEvent.submit(form)
 
     expect(loginCalls(fetch)).toHaveLength(1)
-    finish(jsonResponse(200, ANA))
+    pending.respond(jsonResponse(200, ANA))
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
   })
 

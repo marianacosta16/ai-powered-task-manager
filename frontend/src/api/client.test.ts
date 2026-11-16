@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_URL } from '../config'
-import { jsonResponse, mockFetch } from '../test/helpers'
+import { deferredResponse, jsonResponse, mockFetch } from '../test/helpers'
 import { request, setUnauthorizedHandler, startNewSession } from './client'
 import { ApiError, NETWORK_ERROR, UNEXPECTED_ERROR } from './errors'
 
@@ -99,15 +99,47 @@ describe('the client of the API', () => {
   it('ignores the 401 of a request that started in a session that is already over', async () => {
     const handler = vi.fn()
     setUnauthorizedHandler(handler)
-    let answer: (response: Response) => void = () => undefined
-    mockFetch(() => new Promise<Response>((resolve) => (answer = resolve)))
+    const slowAnswer = deferredResponse()
+    mockFetch(slowAnswer.fetch)
 
     const slow = request('/projects').catch(() => undefined) // starts in the first session
     startNewSession() // the user signs out and signs in again
-    answer(jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' }))
+    slowAnswer.respond(jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' }))
     await slow
 
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('takes back a change of session only if no other change happened since', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    const unauthorized = jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' })
+    const slowAnswer = deferredResponse()
+    mockFetch(slowAnswer.fetch, unauthorized)
+    const old = request('/projects').catch(() => undefined) // started in the session before the changes
+    const undoFirst = startNewSession() // a sign out that fails later...
+    startNewSession() // ...while the user signed in again
+    undoFirst() // must not bring the old session back to life
+
+    slowAnswer.respond(unauthorized)
+    await old
+
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('takes back a change of session that nothing else touched', async () => {
+    const handler = vi.fn()
+    setUnauthorizedHandler(handler)
+    const slowAnswer = deferredResponse()
+    mockFetch(slowAnswer.fetch)
+    const underWay = request('/projects').catch(() => undefined)
+    const undo = startNewSession()
+    undo() // the sign out failed: the same session goes on
+
+    slowAnswer.respond(jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Your session has ended.' }))
+    await underWay
+
+    expect(handler).toHaveBeenCalledTimes(1)
   })
 
   it('counts a 401 once: the other requests under way are of a session that ended', async () => {

@@ -41,8 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    startNewSession() // a late 401 of the session that is ending is not news, and must not show a message
-    await authApi.signOut()
+    const undo = startNewSession() // a late 401 of the session that is ending is not news, and must not show a message
+    try {
+      await authApi.signOut()
+    } catch (error) {
+      undo() // the sign out failed: the user is still in the same session
+      throw error
+    }
     setState({ status: 'signedOut' })
   }, [])
 

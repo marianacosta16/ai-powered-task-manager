@@ -10,6 +10,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import com.matriz.testsupport.ApiIntegrationTest;
@@ -86,7 +87,7 @@ class CorsIntegrationTest extends ApiIntegrationTest {
     void signingInFromTheAllowedOriginAnswersWithCredentialsAllowed() {
         HttpHeaders headers = new HttpHeaders();
         headers.setOrigin(ALLOWED);
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
         ResponseEntity<String> login = http.exchange("/auth/login", HttpMethod.POST,
                 new HttpEntity<>("{\"username\":\"ana\",\"password\":\"" + password + "\"}", headers), String.class);
@@ -157,7 +158,7 @@ class CorsIntegrationTest extends ApiIntegrationTest {
         headers.setOrigin(origin);
         headers.add(HttpHeaders.COOKIE, cookie);
         if (json != null) {
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.setContentType(MediaType.APPLICATION_JSON);
         }
         return http.exchange(path, method, new HttpEntity<>(json, headers), String.class);
     }

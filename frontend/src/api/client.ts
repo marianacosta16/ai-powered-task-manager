@@ -20,9 +20,21 @@ let unauthorizedHandler: UnauthorizedHandler | null = null
  */
 let sessionNumber = 0
 
-/** Tells the client that who is signed in has changed, so the answers of the requests under way no longer count for a 401. */
-export function startNewSession(): void {
+/**
+ * Tells the client that who is signed in has changed, so the answers of the requests under way no longer count for a
+ * 401. It gives back a function that takes it back, for the case that the change did not happen (a sign out that
+ * failed): the user is still in the same session, and the 401 of a request under way is still news. It does nothing
+ * if the session changed again meanwhile.
+ */
+export function startNewSession(): () => void {
+  const before = sessionNumber
   sessionNumber += 1
+  const started = sessionNumber
+  return () => {
+    if (sessionNumber === started) {
+      sessionNumber = before
+    }
+  }
 }
 
 /**
@@ -64,7 +76,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
   const error = await toApiError(response)
   if (response.status === 401 && path !== '/auth/login' && session === sessionNumber) {
-    startNewSession() // the session is over: the 401 of any other request under way is the same news
+    startNewSession() // the session is over: the 401 of any other request under way is the same news (never taken back)
     unauthorizedHandler?.(error)
   }
   throw error

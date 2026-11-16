@@ -26,6 +26,18 @@ export function mockFetch(...responses: Array<Response | (() => Promise<Response
   return fn
 }
 
+/**
+ * An answer of the API that comes later: `fetch` is the function to give to mockFetch, and `respond` sends the answer
+ * when the test decides. It is for the requests that are still under way when something else happens.
+ */
+export function deferredResponse() {
+  let send: (response: Response) => void = () => undefined
+  const promise = new Promise<Response>((resolve) => {
+    send = resolve
+  })
+  return { fetch: () => promise, respond: (response: Response) => send(response) }
+}
+
 export const ANA = { id: 3, name: 'Ana', role: 'Team member' } as const
 export const MARTA = { id: 1, name: 'Marta', role: 'Project manager' } as const
 
