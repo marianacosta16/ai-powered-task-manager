@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
   <title>Matriz - wireframe of the Projects screen (low fidelity)</title>
-  <desc>Low-fidelity wireframe of the Projects screen (F01, F09, F22, US01, US12): list and search, create and edit form with date picker, delete and completion confirmations. All data is fictitious.</desc>
+  <desc>Low-fidelity wireframe of the Projects screen (F01, F09, F22, US01, US12): list and search, create and edit form with native date fields (the manager field only when editing), delete and completion confirmations. All data is fictitious.</desc>
   <style>
     text{font-family:Arial,Helvetica,sans-serif;font-size:13px;fill:#333}
     .g{fill:#777}.b{font-weight:bold}.s{font-size:11px}.m{text-anchor:middle}.w{fill:#fff}.l{font-size:20px;font-weight:bold}.u{text-decoration:underline}
@@ -83,14 +83,14 @@
   <!-- Form panel (manager only) -->
   <rect class="dash" x="750" y="125" width="420" height="535"/>
   <text x="770" y="152" class="b" style="font-size:15px">New project</text>
-  <text x="870" y="152" class="s g">(the same form is used to edit)</text>
+  <text x="870" y="152" class="s g">(editing: the same form, plus Manager)</text>
 
   <text x="770" y="170" class="s b">Name *</text>
   <rect class="box" x="770" y="178" width="380" height="30" rx="3"/>
-  <text x="780" y="198" class="g">max 100 characters</text>
+  <text x="780" y="198" class="g">3 to 100 characters, not only spaces</text>
   <text x="770" y="232" class="s b">Description</text>
   <rect class="box" x="770" y="240" width="380" height="50" rx="3"/>
-  <text x="780" y="260" class="g">max 2000 characters</text>
+  <text x="780" y="260" class="g">max 1000 characters</text>
   <text x="770" y="308" class="s b">Start date *</text>
   <rect class="box" x="770" y="316" width="200" height="30" rx="3"/><text x="780" y="336">2026-11-15</text><text x="945" y="336">▦</text>
   <rect class="box" x="980" y="316" width="170" height="30" rx="3"/><text x="990" y="336" class="g">time (optional)</text>
@@ -103,28 +103,13 @@
   <rect class="box" x="770" y="500" width="185" height="30" rx="3"/><text x="780" y="520">Execution</text><text x="935" y="520">▼</text>
   <text x="965" y="492" class="s b">Status</text>
   <rect class="box" x="965" y="500" width="185" height="30" rx="3"/><text x="975" y="520">In progress</text><text x="1130" y="520">▼</text>
-  <text x="770" y="548" class="s b">Manager *</text>
-  <rect class="box" x="770" y="556" width="380" height="30" rx="3"/><text x="780" y="576">Marta</text><text x="1130" y="576">▼</text>
+  <text x="770" y="548" class="s b">Manager * (shown only when editing: hands the project over)</text>
+  <rect class="dash" x="770" y="556" width="380" height="30" rx="3"/><text x="780" y="576">Marta</text><text x="1130" y="576">▼</text>
   <rect class="dark" x="770" y="606" width="100" height="34" rx="3"/><text x="820" y="628" class="m w b">Save</text>
   <rect class="box" x="880" y="606" width="100" height="34" rx="3"/><text x="930" y="628" class="m">Cancel</text>
 
-  <!-- Calendar popup for the end date: past dates and dates before the start date are disabled -->
-  <rect x="770" y="406" width="250" height="214" fill="#ffffff" stroke="#333333" stroke-width="2"/>
-  <text x="895" y="428" class="m b">◀   November 2026   ▶</text>
-  <text x="787" y="450" class="m s g">S</text><text x="821" y="450" class="m s g">M</text><text x="855" y="450" class="m s g">T</text><text x="889" y="450" class="m s g">W</text><text x="923" y="450" class="m s g">T</text><text x="957" y="450" class="m s g">F</text><text x="991" y="450" class="m s g">S</text>
-  <g class="m s" style="fill:#bbb">
-    <text x="787" y="476">1</text><text x="821" y="476">2</text><text x="855" y="476">3</text><text x="889" y="476">4</text><text x="923" y="476">5</text><text x="957" y="476">6</text><text x="991" y="476">7</text>
-    <text x="787" y="504">8</text><text x="821" y="504">9</text><text x="855" y="504">10</text><text x="889" y="504">11</text><text x="923" y="504">12</text><text x="957" y="504">13</text><text x="991" y="504">14</text>
-  </g>
-  <rect x="773" y="518" width="28" height="20" fill="#ffffff" stroke="#333333"/>
-  <g class="m s">
-    <text x="787" y="532">15</text><text x="821" y="532">16</text><text x="855" y="532">17</text><text x="889" y="532">18</text><text x="923" y="532">19</text><text x="957" y="532">20</text><text x="991" y="532">21</text>
-    <text x="787" y="560">22</text><text x="821" y="560">23</text><text x="855" y="560">24</text><text x="889" y="560">25</text><text x="923" y="560">26</text><text x="957" y="560">27</text><text x="991" y="560">28</text>
-    <text x="787" y="588">29</text>
-  </g>
-  <rect x="807" y="574" width="28" height="20" fill="#333333"/>
-  <text x="821" y="588" class="m s w b">30</text>
-  <text x="780" y="612" class="s g">Dates before the start date are disabled.</text>
+  <!-- End date rule (native date field: earlier dates are disabled by the browser picker) -->
+  <text x="770" y="418" class="s g">The browser date picker disables dates before the start date.</text>
 
   <!-- Callouts -->
   <circle class="c" cx="30" cy="125" r="11"/><text class="n" x="30" y="129">1</text>
@@ -133,11 +118,11 @@
   <circle class="c" cx="662" cy="215" r="11"/><text class="n" x="662" y="219">4</text>
   <circle class="c" cx="560" cy="125" r="11"/><text class="n" x="560" y="129">5</text>
   <circle class="c" cx="750" cy="125" r="11"/><text class="n" x="750" y="129">6</text>
-  <circle class="c" cx="947" cy="482" r="11"/><text class="n" x="947" y="486">7</text>
-  <circle class="c" cx="770" cy="406" r="11"/><text class="n" x="770" y="410">8</text>
+  <circle class="c" cx="965" cy="500" r="11"/><text class="n" x="965" y="504">7</text>
+  <circle class="c" cx="770" cy="372" r="11"/><text class="n" x="770" y="376">8</text>
   <circle class="c" cx="120" cy="370" r="11"/><text class="n" x="120" y="374">9</text>
   <circle class="c" cx="120" cy="534" r="11"/><text class="n" x="120" y="538">10</text>
 
-  <text x="10" y="735">Dashed outline = shown only to the project manager. A thick outline marks an open field. Numbers refer to docs/ui/wireframes.md.</text>
+  <text x="10" y="735">Dashed outline = shown only to the project manager (Manager field: only when editing). A thick outline marks the end date rule. Numbers refer to docs/ui/wireframes.md.</text>
   <text x="10" y="753" class="g">Low-fidelity wireframe. All names are fictitious.</text>
 </svg>
