@@ -103,3 +103,69 @@
     padding: var(--space-3);
   }
 }
+
+.topbar__nav {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.topbar__nav a {
+  padding: var(--space-1) 0;
+  text-decoration: none;
+}
+
+.topbar__nav a[aria-current='page'] {
+  font-weight: 700;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+@media (max-width: 1024px) {
+  .split:has(.panel) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* phone: the table becomes a list of cards, the form fields stack and the nav is in the menu */
+@media (max-width: 640px) {
+  .topbar__nav {
+    flex-direction: column;
+  }
+
+  .toolbar__search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tr {
+    display: block;
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    border-bottom: 0;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+  }
+
+  .counts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

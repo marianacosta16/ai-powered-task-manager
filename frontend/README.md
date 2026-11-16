@@ -33,11 +33,14 @@ O endereço do backend está num só sítio, `src/config.ts`, e vem da variável
 ```
 src/
   config.ts          endereço do backend
-  api/               cliente da API, erros do contrato e as operações (auth)
+  limits.ts          limites dos textos de um projeto (o servidor decide; aqui só avisam)
+  api/               cliente da API, erros do contrato e as operações (auth, dashboard, projects, members)
+  hooks/             `useLoad`: carregar dados com os estados de carregamento, erro e dados
   auth/              a sessão do utilizador (contexto, hook)
-  components/        componentes comuns: botão, campo, aviso, carregamento
+  components/        componentes comuns: botão, campos, lista de escolha, aviso, carregamento, confirmação, barra de progresso
   layout/            a barra superior das páginas depois de iniciar sessão
-  pages/             os ecrãs
+  pages/             os ecrãs (início de sessão, painel, projetos, detalhe provisório do projeto)
+  projects/          o formulário de projeto (criar e editar) e as regras de validação
   routes/            a proteção das rotas que precisam de sessão
   styles/            variáveis, estilos base, dos componentes e do layout (três larguras)
   test/              preparação e auxiliares dos testes

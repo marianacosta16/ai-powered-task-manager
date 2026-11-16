@@ -9,15 +9,15 @@
 
 ## Seletor de data (componente comum)
 
-Todos os campos de data usam um **calendário**. Nos wireframes aparece aberto no prazo da tarefa (detalhe do projeto e detalhe da tarefa) e na data de fim do projeto (projetos). O hoje dos desenhos é 2026-11-12.
+Todos os campos de data usam o **campo de data nativo do navegador** (`<input type="date">`, com `<input type="time">` para a hora), com o atributo `min` a desativar as datas não permitidas. Nos wireframes de tarefas aparece um calendário aberto no prazo (detalhe do projeto e detalhe da tarefa); no ecrã de projetos o desenho mostra só os campos e a regra da data de fim. O hoje dos desenhos é 2026-11-12.
 
 | Campo | Datas disponíveis | Origem |
 |---|---|---|
 | Prazo de uma tarefa ou subtarefa | Só hoje e dias seguintes. As datas passadas aparecem desativadas | R13, cenários 2.4 e 2.7 |
 | Data de início do projeto | Só hoje e dias seguintes. Um projeto já em curso mantém a sua data de início, que só se valida quando é alterada | R29, cenário 1.23 |
-| Data de fim do projeto | Só a data de início e dias seguintes; as anteriores aparecem desativadas | R16, cenário 1.10 |
+| Data de fim do projeto | Só a data de início e dias seguintes; as anteriores ficam desativadas | R16, cenário 1.10 |
 
-O servidor continua a validar as datas, porque um pedido pode não vir deste calendário (W13).
+O servidor continua a validar as datas, porque um pedido pode não vir deste campo (W13).
 
 ## 1. Início de sessão (F10, US10)
 
@@ -69,7 +69,7 @@ Ficheiro: [dashboard-wireframe.svg](dashboard-wireframe.svg). Um cartão por pro
 
 ![Wireframe do ecrã Projects](projects-wireframe.svg)
 
-Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "web", o formulário de criação e edição com o calendário aberto na data de fim, e as confirmações de eliminar e de concluir.
+Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "web", o formulário de criação e edição com campos de data nativos (o campo do gestor só aparece ao editar), e as confirmações de eliminar e de concluir.
 
 | # | Elemento | O que mostra | Origem |
 |---|---|---|---|
@@ -78,9 +78,9 @@ Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "w
 | 3 | *View* | Abre o detalhe do projeto para consultar. Num projeto concluído continua a poder ver-se tudo, mas nada se altera (R28) | US13, R28 |
 | 4 | *Edit* e *Delete* (só gestor) | Editar abre o formulário; eliminar abre a confirmação. Num projeto concluído não aparecem | F01, R9, R28 |
 | 5 | *+ New project* (só gestor) | Abre o formulário de criação | F01 |
-| 6 | Formulário (só gestor) | Nome (máx. 100), descrição (máx. 2000), datas de início e de fim com hora opcional, fuso horário (por defeito Lisboa), fase, estado e gestor. É o mesmo para criar e editar | F01, R14, R16, R19, P26 |
+| 6 | Formulário (só gestor) | Nome (3 a 100 caracteres, não só espaços), descrição (máx. 1000), datas de início e de fim com hora opcional, fuso horário (por defeito Lisboa), fase e estado. É o mesmo para criar e editar; só ao **editar** aparece o campo *Manager*, para passar o projeto a outro gestor, porque quem cria fica gestor (A44) | F01, R14, R16, R19, P26 |
 | 7 | Estado | Só os estados que o gestor define: *Not started*, *In progress*, *Suspended* e *Completed*. *Attention* e *Late* não se escolhem | R12, EC27 |
-| 8 | Calendário da data de fim | Datas anteriores à data de início, e as passadas, desativadas | R16, R29, cenário 1.10 |
+| 8 | Data de fim | Campo nativo; as datas anteriores à data de início, e as passadas, ficam desativadas | R16, R29, cenário 1.10 |
 | 9 | Confirmação de eliminar | O projeto e as suas tarefas vão para a reciclagem durante 30 dias, e só o gestor os recupera | R9, R20, cenário 7.1 |
 | 10 | Confirmação de concluir | Aparece ao escolher *Completed*: avisa que o projeto deixa de poder ser alterado, reaberto ou apagado | R28, cenário 1.22 |
 

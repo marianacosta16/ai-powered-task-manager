@@ -8,21 +8,28 @@ import {
   SESSION_ENDED,
   SIGN_IN_NEEDED,
   deferredResponse,
+  fullProject,
   jsonResponse,
+  mockApi,
   mockFetch,
 } from '../test/helpers'
 import { renderApp } from '../test/renderApp'
 
 /** The calls to the API that are not the check of the session at the start. */
-function loginCalls(fetch: ReturnType<typeof mockFetch>) {
-  return fetch.mock.calls.filter((call) => String((call as unknown[])[0]).endsWith('/auth/login'))
+function loginCalls(api: ReturnType<typeof mockApi>) {
+  return api.callsTo('POST /auth/login')
 }
 
 async function openSignIn(...answers: Parameters<typeof mockFetch>) {
-  const fetch = mockFetch(jsonResponse(401, SIGN_IN_NEEDED), ...answers)
+  const api = mockApi({
+    'GET /auth/me': jsonResponse(401, SIGN_IN_NEEDED),
+    'POST /auth/login': answers.length > 0 ? answers : jsonResponse(200, ANA),
+    'GET /dashboard': jsonResponse(200, []),
+  })
+
   renderApp('/sign-in')
   await screen.findByRole('heading', { name: 'Sign in to Matriz' })
-  return fetch
+  return api
 }
 
 describe('the sign in screen', () => {
@@ -66,19 +73,16 @@ describe('the sign in screen', () => {
     expect(loginCalls(fetch)).toHaveLength(0)
   })
 
-  it('signs in and shows the home screen with the name and the role (scenario 10.1)', async () => {
+  it('signs in and shows the dashboard with the name and the role (scenario 10.1)', async () => {
     const fetch = await openSignIn(jsonResponse(200, ANA))
 
     await userEvent.type(screen.getByLabelText('Username'), '  ana ')
     await userEvent.type(screen.getByLabelText('Password'), 'secret')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
-    expect(screen.getByText('Welcome, Ana. You are signed in as Team member.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
     expect(screen.getByText('Team member', { selector: '.topbar__role' })).toBeInTheDocument()
-    const [url, init] = loginCalls(fetch)[0] as unknown as [string, RequestInit]
-    expect(url).toMatch(/\/auth\/login$/)
-    expect(init.body).toBe('{"username":"ana","password":"secret"}') // the name is trimmed, the password is not
+    expect(loginCalls(fetch)[0].body).toEqual({ username: 'ana', password: 'secret' }) // the name is trimmed, the password is not
   })
 
   it('shows the message of the API when the credentials are not correct, and keeps what was typed (scenario 10.2)', async () => {
@@ -119,7 +123,7 @@ describe('the sign in screen', () => {
 
     expect(loginCalls(fetch)).toHaveLength(1)
     pending.respond(jsonResponse(200, ANA))
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
   })
 
   it('does not send the same sign in twice even if the form is submitted again by other means', async () => {
@@ -134,7 +138,7 @@ describe('the sign in screen', () => {
 
     expect(loginCalls(fetch)).toHaveLength(1)
     pending.respond(jsonResponse(200, ANA))
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
   })
 
   it('tells why the user is here when the session ended (scenario 10.6)', async () => {
@@ -157,7 +161,11 @@ describe('the sign in screen', () => {
   })
 
   it('goes back to the screen that was asked for after signing in', async () => {
-    mockFetch(jsonResponse(401, SIGN_IN_NEEDED), jsonResponse(200, MARTA))
+    mockApi({
+      'GET /auth/me': jsonResponse(401, SIGN_IN_NEEDED),
+      'POST /auth/login': jsonResponse(200, MARTA),
+      'GET /projects/12': jsonResponse(200, fullProject(12, 'Website Redesign')),
+    })
     renderApp('/projects/12')
     await screen.findByRole('heading', { name: 'Sign in to Matriz' })
 
@@ -165,16 +173,16 @@ describe('the sign in screen', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'secret')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    // the path /projects/12 has no screen yet: the user lands on it, not on the home screen
-    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+    // the user lands on the screen that was asked for, not on the dashboard
+    expect(await screen.findByRole('heading', { name: 'Website Redesign' })).toBeInTheDocument()
   })
 
   it('sends someone who is already signed in away from the sign in screen', async () => {
-    mockFetch(jsonResponse(200, ANA))
+    mockApi({ 'GET /auth/me': jsonResponse(200, ANA), 'GET /dashboard': jsonResponse(200, []) })
 
     renderApp('/sign-in')
 
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByLabelText('Username')).not.toBeInTheDocument())
   })
 
