@@ -427,7 +427,7 @@ paths:
         - R1: the deadline is required.
         - R13: the deadline cannot be in the past; today is accepted.
         - R2: a subtask deadline cannot be later than its parent task deadline.
-        - R14: title up to 100 characters and description up to 2000.
+        - R14, A46: title from 3 to 150 characters and description up to 2000.
         - R21: every assignee must be a member of the project or its manager.
         - R22: tasks can only be created in an open project; a `Completed` or `Suspended` project refuses the creation (A19).
         - A14: a subtask is not created under a closed parent task (422 `PARENT_TASK_CLOSED`).
