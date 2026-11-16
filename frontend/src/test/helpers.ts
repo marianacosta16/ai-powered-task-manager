@@ -50,3 +50,55 @@ export const BAD_CREDENTIALS = {
   code: 'INVALID_CREDENTIALS',
   message: 'Credentials are not correct. Check your username and password and try again.',
 }
+
+type Answer = Response | (() => Promise<Response>) | Error | DOMException
+
+/**
+ * Like mockFetch, but the answers are chosen by the request ("GET /dashboard", "POST /auth/login"; the query string is
+ * left out). A route with a list answers one by one, the last one for the calls after. A request nobody expected makes
+ * the test fail, instead of getting the answer of another call. The calls of a route can be read with `callsTo`.
+ */
+export function mockApi(routes: Record<string, Answer | Answer[]>) {
+  const counters = new Map<string, number>()
+  const calls: Array<{ key: string; url: string; body: unknown }> = []
+  const fn = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(String(input))
+    const key = `${init?.method ?? 'GET'} ${url.pathname}`
+    calls.push({ key, url: url.pathname + url.search, body: init?.body ? JSON.parse(String(init.body)) : undefined })
+    const route = routes[key]
+    if (route === undefined) {
+      throw new Error(`Request not expected by the test: ${key}`)
+    }
+    const list = Array.isArray(route) ? route : [route]
+    const count = counters.get(key) ?? 0
+    counters.set(key, count + 1)
+    const next = list[Math.min(count, list.length - 1)]
+    if (next instanceof Error || next instanceof DOMException) {
+      throw next
+    }
+    return typeof next === 'function' ? next() : next.clone()
+  })
+  vi.stubGlobal('fetch', fn)
+  return { fetch: fn, calls, callsTo: (key: string) => calls.filter((call) => call.key === key) }
+}
+
+export const PROJECT_CONTRACT_DEFAULTS = {
+  description: null,
+  startDate: '2026-12-01',
+  startTime: null,
+  endDate: '2026-12-31',
+  endTime: null,
+  timezone: 'Europe/Lisbon',
+}
+
+/** A ProjectSummary of the tests. */
+export function summary(id: number, name: string, overrides: Record<string, unknown> = {}) {
+  return { id, name, phase: 'Execution', status: 'In progress', manager: MARTA, ...overrides }
+}
+
+/** A Project of the tests (the summary and the dates). */
+export function fullProject(id: number, name: string, overrides: Record<string, unknown> = {}) {
+  return { ...summary(id, name), ...PROJECT_CONTRACT_DEFAULTS, ...overrides }
+}
+
+export const NO_COUNTS = { toDo: 0, inProgress: 0, inReview: 0, blocked: 0, done: 0, cancelled: 0, duplicate: 0 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { ApiError } from '../api/errors'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
@@ -47,6 +47,12 @@ export function AppShell() {
           Menu
         </Button>
         <div id="topbar-menu" className={`topbar__menu${menuOpen ? ' topbar__menu--open' : ''}`}>
+          <nav className="topbar__nav" aria-label="Main">
+            <NavLink to="/">
+              Dashboard
+            </NavLink>
+            <NavLink to="/projects">Projects</NavLink>
+          </nav>
           <span className="topbar__user">
             <strong>{user.name}</strong>
             <span className="topbar__role">{user.role}</span>

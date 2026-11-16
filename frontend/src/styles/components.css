@@ -118,3 +118,214 @@
     animation-duration: 3s;
   }
 }
+
+.field__input--area {
+  padding: var(--space-2);
+  resize: vertical;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hint,
+.empty {
+  color: var(--color-muted);
+}
+
+.preline {
+  white-space: pre-line;
+}
+
+/* ---- badges and progress ---- */
+.badge {
+  display: inline-block;
+  margin-inline: var(--space-1);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.badge--attention {
+  border-color: #b26a00;
+  background: #fff4e0;
+}
+
+.badge--late {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.badge--done {
+  border-color: #2e7d32;
+  background: var(--color-success-bg);
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.progress__track {
+  flex: 1;
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.progress__fill {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+/* ---- dashboard cards ---- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.card__title {
+  margin: 0 0 var(--space-1);
+  font-size: 1.15rem;
+}
+
+.card__meta {
+  margin: 0 0 var(--space-2);
+  color: var(--color-muted);
+}
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+}
+
+.counts__item {
+  text-align: center;
+}
+
+.counts dt {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.counts dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* ---- the projects screen ---- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.toolbar__search {
+  display: flex;
+  flex: 1;
+  max-width: 28rem;
+  gap: var(--space-2);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.split:has(.panel) {
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+}
+
+.panel {
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.table__actions .button {
+  min-height: 2rem;
+  text-decoration: none;
+}
+
+/* ---- confirmation dialog ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgb(0 0 0 / 40%);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 30rem;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
