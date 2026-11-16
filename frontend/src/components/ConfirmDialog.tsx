@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { Button } from './Button'
 
 interface ConfirmDialogProps {
@@ -14,7 +14,8 @@ interface ConfirmDialogProps {
 
 /**
  * The confirmation before an action that cannot be undone by the user (delete, complete). Focus starts on Cancel, so
- * pressing Enter by accident does not confirm, and Escape cancels.
+ * pressing Enter by accident does not confirm; Tab stays inside the dialog; Escape cancels from anywhere (unless the
+ * request is under way); and when the dialog closes the focus goes back to where it was.
  */
 export function ConfirmDialog({
   title,
@@ -26,12 +27,56 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const latest = useRef({ busy, onCancel })
   useEffect(() => {
+    latest.current = { busy, onCancel }
+  })
+
+  useEffect(() => {
+    const before = document.activeElement as HTMLElement | null
     cancelRef.current?.focus()
+    function onEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape' && !latest.current.busy) {
+        latest.current.onCancel()
+      }
+    }
+    document.addEventListener('keydown', onEscape)
+    return () => {
+      document.removeEventListener('keydown', onEscape)
+      if (before?.isConnected) {
+        before.focus()
+      }
+    }
   }, [])
+
+  function keepFocusInside(event: KeyboardEvent) {
+    if (event.key !== 'Tab') {
+      return
+    }
+    const buttons = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+    if (buttons.length === 0) {
+      event.preventDefault() // everything is waiting: the focus stays where it is
+      return
+    }
+    const first = buttons[0]
+    const last = buttons[buttons.length - 1]
+    const active = document.activeElement
+    if (!dialogRef.current?.contains(active)) {
+      event.preventDefault()
+      first.focus()
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
-    <div className="overlay" onKeyDown={(event) => event.key === 'Escape' && !busy && onCancel()}>
-      <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <div className="overlay" onKeyDown={keepFocusInside}>
+      <div ref={dialogRef} className="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <h2 id="dialog-title">{title}</h2>
         <div className="dialog__body">{children}</div>
         <div className="dialog__actions">

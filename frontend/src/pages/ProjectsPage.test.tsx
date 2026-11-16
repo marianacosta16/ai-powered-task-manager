@@ -178,6 +178,7 @@ describe('creating a project (F01, A44)', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
     expect(screen.getByText(/name must have from 3 to 100 characters/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Name *')).toHaveFocus() // the first field with an error
     expect(screen.getByText('Choose the start date.')).toBeInTheDocument()
     expect(screen.getByText('Choose the end date.')).toBeInTheDocument()
 
@@ -273,6 +274,7 @@ describe('creating a project (F01, A44)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Some data is not valid.')
     expect(screen.getByText('The name must have from 3 to 100 characters.')).toBeInTheDocument()
     expect(screen.getByLabelText('Name *')).toHaveValue('Intranet')
+    expect(screen.getByLabelText('Name *')).toHaveFocus() // the field the API points to
     expect(screen.getByLabelText('End date *')).toHaveValue(FUTURE_END)
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
   })
@@ -318,6 +320,7 @@ describe('editing a project (F01, A12, R29)', () => {
     'GET /projects/1/members': jsonResponse(200, [{ ...ANA, openTaskCount: 1, inOtherOpenProject: false }]),
     'GET /projects/1/candidate-members': jsonResponse(200, [
       { user: OTHER_MANAGER, available: true },
+      { user: { id: 5, name: 'Pedro', role: 'Project manager' }, available: false, unavailableReason: 'IN_OTHER_OPEN_PROJECT' },
       { user: { id: 4, name: 'Zé', role: 'Team member' }, available: true },
     ]),
   }
@@ -336,7 +339,7 @@ describe('editing a project (F01, A12, R29)', () => {
     expect(screen.getByLabelText('Name *')).toHaveValue('Website Redesign')
     expect(screen.getByLabelText('Description')).toHaveValue('Old')
     const options = Array.from((screen.getByLabelText('Manager *') as HTMLSelectElement).options).map((o) => o.text)
-    expect(options).toEqual(['Marta', 'Rui']) // the manager and who else is a project manager; not the team members
+    expect(options).toEqual(['Marta', 'Rui']) // the manager and who else is a project manager and available (R11); not the team members
     expect(screen.getByLabelText('Manager *')).toHaveValue('1')
   })
 
@@ -425,6 +428,19 @@ describe('editing a project (F01, A12, R29)', () => {
     expect(screen.getByLabelText('Name *')).toHaveValue('Another name')
   })
 
+  it('closes the form of a project that is deleted meanwhile', async () => {
+    await openEditForm({
+      'GET /projects': [jsonResponse(200, [WEBSITE]), jsonResponse(200, [])],
+      'DELETE /projects/1': jsonResponse(204),
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete Website Redesign' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('You have no projects yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Edit project' })).not.toBeInTheDocument()
+  })
+
   it('shows the error when the data of the project cannot be loaded', async () => {
     mockApi({
       ...signedIn(MARTA),
@@ -463,12 +479,45 @@ describe('deleting a project (R9, R20)', () => {
     expect(screen.getByRole('link', { name: 'Website Redesign' })).toBeInTheDocument()
   })
 
-  it('closes the dialog with Escape', async () => {
+  it('closes the dialog with Escape, even when the focus is not on a button, and gives the focus back', async () => {
     await openDelete()
+    const opener = screen.getByRole('button', { name: 'Delete Website Redesign' })
 
+    await userEvent.click(screen.getByRole('heading', { name: 'Delete project?' })) // the focus leaves the buttons
     await userEvent.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('keeps the focus inside the dialog with Tab and Shift+Tab', async () => {
+    await openDelete()
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+    const confirm = screen.getByRole('button', { name: 'Delete' })
+    expect(cancel).toHaveFocus()
+
+    await userEvent.tab()
+    expect(confirm).toHaveFocus()
+    await userEvent.tab()
+    expect(cancel).toHaveFocus() // from the last button back to the first
+    await userEvent.tab({ shift: true })
+    expect(confirm).toHaveFocus() // and from the first to the last
+  })
+
+  it('keeps the list and shows the error when the list cannot be fetched again after deleting', async () => {
+    await openDelete({
+      'GET /projects': [
+        jsonResponse(200, [WEBSITE]),
+        jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'The list could not be loaded.' }),
+      ],
+      'DELETE /projects/1': jsonResponse(204),
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('The list could not be loaded.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Website Redesign' })).toBeInTheDocument()
+    expect(screen.getByText(/is in the Recycle bin for 30 days/)).toBeInTheDocument()
   })
 
   it('deletes after the confirmation and the list no longer has the project', async () => {

@@ -13,7 +13,7 @@ interface EditorData {
 
 /**
  * Loads what the edit form needs: the project and who can take it over. The managers come from the members and the
- * candidates of the project (no endpoint of its own), plus the current manager.
+ * candidates of the project (no endpoint of its own), plus the current manager. A candidate who is not available (R11) is left out: the API would refuse them.
  */
 async function loadEditor(id: number, signal: AbortSignal): Promise<EditorData> {
   const [project, members, candidates] = await Promise.all([
@@ -21,7 +21,7 @@ async function loadEditor(id: number, signal: AbortSignal): Promise<EditorData> 
     listMembers(id, signal),
     listCandidateMembers(id, signal),
   ])
-  const people: User[] = [project.manager, ...members, ...candidates.map((candidate) => candidate.user)]
+  const people: User[] = [project.manager, ...members, ...candidates.filter((candidate) => candidate.available).map((candidate) => candidate.user)]
   const managers = people
     .filter((person) => person.role === 'Project manager')
     .filter((person, index, all) => all.findIndex((other) => other.id === person.id) === index)

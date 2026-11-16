@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ApiError } from '../api/errors'
 import {
   PHASES,
@@ -49,7 +49,15 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
   const [pending, setPending] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const submitting = useRef(false)
-  const nameRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+  const [focusToken, setFocusToken] = useState(0)
+
+  // After a refused submit the focus goes to the first field with an error, as in the sign in form
+  useEffect(() => {
+    if (focusToken > 0) {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    }
+  }, [focusToken])
 
   function set<K extends keyof FormValues>(key: K, value: FormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }))
@@ -62,6 +70,7 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
     const found = validate(values, project)
     setErrors(found)
     if (Object.keys(found).length > 0) {
+      setFocusToken((token) => token + 1)
       return
     }
     const becomesCompleted = values.status === 'Completed' && project?.status !== 'Completed'
@@ -101,6 +110,7 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
           startDate: cause.issueFor('startDate'),
           endDate: cause.issueFor('endDate'),
         })
+        setFocusToken((token) => token + 1)
       } else {
         setServerError('Something went wrong. Try again in a moment.')
       }
@@ -117,9 +127,8 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
     <section className="panel" aria-label={project ? 'Edit project' : 'New project'}>
       <h2>{project ? 'Edit project' : 'New project'}</h2>
       {serverError ? <Notice kind="error">{serverError}</Notice> : null}
-      <form onSubmit={handleSubmit} noValidate>
+      <form ref={formRef} onSubmit={handleSubmit} noValidate>
         <TextField
-          ref={nameRef}
           label="Name *"
           name="name"
           value={values.name}

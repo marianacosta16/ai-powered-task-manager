@@ -74,4 +74,17 @@ describe('the top bar', () => {
     expect(screen.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('aria-current')
   })
+
+  it('closes the menu when a link is followed (narrow screens)', async () => {
+    mockApi({ 'GET /auth/me': jsonResponse(200, ANA), 'GET /dashboard': jsonResponse(200, []), 'GET /projects': jsonResponse(200, []) })
+    renderApp('/')
+    await screen.findByText('Ana')
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    expect(document.getElementById('topbar-menu')).toHaveClass('topbar__menu--open')
+
+    await userEvent.click(screen.getByRole('link', { name: 'Projects' }))
+
+    expect(document.getElementById('topbar-menu')).not.toHaveClass('topbar__menu--open')
+    expect(screen.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'false')
+  })
 })

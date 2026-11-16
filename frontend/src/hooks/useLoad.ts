@@ -3,7 +3,7 @@ import { ApiError } from '../api/errors'
 
 export type LoadState<T> =
   | { status: 'loading' }
-  | { status: 'ready'; data: T }
+  | { status: 'ready'; data: T; refreshError?: string }
   | { status: 'error'; message: string }
 
 /**
@@ -17,11 +17,16 @@ export function useLoad<T>(load: (signal: AbortSignal) => Promise<T>, inputs: De
   const [attempt, setAttempt] = useState(0)
   const silent = useRef(false)
   const loadRef = useRef(load)
-  loadRef.current = load
+
+  // The latest `load`, kept in an effect (not in render). It runs before the effect below, which is declared after it.
+  useEffect(() => {
+    loadRef.current = load
+  })
 
   useEffect(() => {
     const controller = new AbortController()
-    if (!silent.current) {
+    const wasSilent = silent.current
+    if (!wasSilent) {
       setState({ status: 'loading' })
     }
     silent.current = false
@@ -36,12 +41,12 @@ export function useLoad<T>(load: (signal: AbortSignal) => Promise<T>, inputs: De
         if (controller.signal.aborted) {
           return
         }
-        setState({
-          status: 'error',
-          message: cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.',
-        })
+        const message = cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.'
+        // A refresh that fails keeps what is on screen and says so; only a first load becomes an error screen
+        setState((current) => (wasSilent && current.status === 'ready' ? { ...current, refreshError: message } : { status: 'error', message }))
       })
     return () => controller.abort()
+    // `inputs` is the dependency list the caller chose (a spread, which the rule cannot check); `load` is read through loadRef
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...inputs, attempt])
 

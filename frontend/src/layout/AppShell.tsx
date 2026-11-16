@@ -47,7 +47,7 @@ export function AppShell() {
           Menu
         </Button>
         <div id="topbar-menu" className={`topbar__menu${menuOpen ? ' topbar__menu--open' : ''}`}>
-          <nav className="topbar__nav" aria-label="Main">
+          <nav className="topbar__nav" aria-label="Main" onClick={() => setMenuOpen(false)}>
             <NavLink to="/">
               Dashboard
             </NavLink>

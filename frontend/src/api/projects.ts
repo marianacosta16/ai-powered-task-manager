@@ -1,5 +1,5 @@
 import { request } from './client'
-import type { Role, User } from './auth'
+import type { User } from './auth'
 
 export const PHASES = ['Initiation', 'Planning', 'Execution', 'Monitoring', 'Evaluation'] as const
 export type ProjectPhase = (typeof PHASES)[number]
@@ -55,8 +55,6 @@ export interface ProjectUpdate {
   status?: ProjectStatus
   managerId?: number
 }
-
-export type { Role }
 
 /** listProjects: the accessible projects, filtered by the text of the name when there is one (P29). */
 export function listProjects(search: string, signal?: AbortSignal): Promise<ProjectSummary[]> {

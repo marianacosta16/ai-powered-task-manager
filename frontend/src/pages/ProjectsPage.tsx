@@ -51,6 +51,7 @@ export function ProjectsPage() {
     try {
       await deleteProject(toDelete.id)
       setMessage({ kind: 'success', text: `"${toDelete.name}" is in the Recycle bin for 30 days.` })
+      setPanel((current) => (current.kind === 'edit' && current.projectId === toDelete.id ? { kind: 'closed' } : current))
       reload()
     } catch (cause) {
       setMessage({
@@ -107,6 +108,7 @@ export function ProjectsPage() {
         <div className="split__list">
           {state.status === 'loading' ? <Spinner label="Loading the projects..." /> : null}
           {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
+          {state.status === 'ready' && state.refreshError ? <Notice kind="error">{state.refreshError}</Notice> : null}
           {state.status === 'ready' ? (
             state.data.length === 0 ? (
               <EmptyState>{search === '' ? 'You have no projects yet.' : 'No projects found.'}</EmptyState>
