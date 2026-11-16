@@ -33,6 +33,9 @@ management:
       show-components: always
 
 matriz:
+  cors:
+    # Origins of the web interface that may call the API from a browser, with credentials (exact, comma separated)
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   demo:
     # Demo accounts' password; set in the local .env, never in versioned files.
     # Without it, the demo data is not created.

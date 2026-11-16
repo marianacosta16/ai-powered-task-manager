@@ -140,6 +140,7 @@ Mecanismo (T3, S5): **sessão no servidor, identificada por um cookie `SESSION`*
 | Fim | `POST /auth/logout` (`204`), ou 3 horas sem qualquer pedido |
 | Sem sessão válida | `401 UNAUTHENTICATED`. Se o pedido trazia cookie, a mensagem é "Your session has ended. Sign in again to continue."; caso contrário, "Sign in to continue." A interface deve levar o utilizador ao início de sessão e mostrar a mensagem |
 | Sem acesso ao projeto | `403 FORBIDDEN`, também por ligação direta. Um projeto que não existe ou foi apagado dá `404` |
+| CORS (incremento 9) | Só as origens de `matriz.cors.allowed-origins` (variável `CORS_ALLOWED_ORIGINS`; por omissão `http://localhost:5173`) chamam a API de um navegador, com o cookie, e podem ler o cabeçalho `X-Total-Count`. Um `*` ou uma `/` no fim impedem o arranque. O CSRF continua desligado (P31) |
 
 Regras de acesso (R8, R19, S1): o gestor só vê os projetos que gere e o membro só aqueles de que faz parte. Estão no módulo `access` (`ProjectPermissions`), que as tarefas, comentários e atribuições dos próximos incrementos vão reutilizar. Já estão implementadas as operações de leitura `listProjects` e `getProject`, para as testar com dois utilizadores.
 
@@ -334,6 +335,6 @@ O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre
 | Base de conhecimento (esta documentação) | Concluído |
 | Decisões técnicas e desenho | Concluído em grande parte: arquitetura e stack decididas (ver [docs/architecture.md](docs/architecture.md)), modelo de dados ([docs/database.md](docs/database.md)), contrato OpenAPI com as 28 operações da v1 ([openapi.yaml](openapi.yaml)) e wireframes dos ecrãs. Restam decisões técnicas (ver T1, T8, T10 e T11 em [docs/constraints.md](docs/constraints.md#4-decisões-técnicas-pendentes)) |
 | Plano de implementação | Criado, com 14 incrementos: 0 a 8 do backend (concluídos) e 9 a 13 da interface (ver [docs/implementation-plan.md](docs/implementation-plan.md)) |
-| Implementação | Backend do MVP concluído: os 9 incrementos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem e fecho do MVP): o backend do MVP está completo; falta a interface |
+| Implementação | Backend do MVP concluído: os 9 incrementos (fundações, contas e sessão, projetos e equipa, tarefas, Lista e Matriz, painel e progresso, comentários, reciclagem e fecho do MVP): o backend do MVP está completo; a interface está em curso: o incremento 9 (base e início de sessão) está concluído e os 10 a 13 estão por fazer |
 
 Stack decidida: Java 21, Spring Boot e PostgreSQL no backend, e React com TypeScript e Vite na interface (escolhida em 2026-11-14).

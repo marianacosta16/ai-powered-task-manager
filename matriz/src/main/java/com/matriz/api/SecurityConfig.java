@@ -20,8 +20,8 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, ApiErrorHandlers errors) throws Exception {
         http
-                // CSRF protection is off for now: JSON-only API and a SameSite=Lax cookie.
-                // Review when the interface is chosen (T1); see README.
+                // CSRF protection is off (P31): JSON-only API, a SameSite=Lax cookie and the origins of CorsConfig.
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)

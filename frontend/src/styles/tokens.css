@@ -1,0 +1,28 @@
+/* The design tokens of the whole application: change a value here and it changes everywhere. */
+:root {
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-text: #1b2430;
+  --color-muted: #5a6575;
+  --color-border: #c9d0da;
+  --color-primary: #1f5fbf;
+  --color-primary-dark: #17488f;
+  --color-primary-text: #ffffff;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fdeceb;
+  --color-info-bg: #e8f0fb;
+  --color-success-bg: #e7f5ea;
+  --color-focus: #f2a900;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius: 6px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+
+  /* The widths where the layout changes (NF02): they are written in the media queries, as CSS cannot use them there. */
+  /* tablet: up to 1024px; phone: up to 640px */
+  --touch-target: 2.75rem;
+}
