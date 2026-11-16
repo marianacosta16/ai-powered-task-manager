@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_URL } from '../config'
 import { deferredResponse, jsonResponse, mockFetch } from '../test/helpers'
-import { request, setUnauthorizedHandler, startNewSession } from './client'
+import { request, requestPage, setUnauthorizedHandler, startNewSession } from './client'
 import { ApiError, NETWORK_ERROR, UNEXPECTED_ERROR } from './errors'
 
 afterEach(() => setUnauthorizedHandler(null))
@@ -175,5 +175,28 @@ describe('the client of the API', () => {
     await request('/projects/2').catch(() => undefined)
 
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('reads the total of a page from X-Total-Count, and falls back to the items when the header is missing or wrong (A31)', async () => {
+    const page = (total: string | null) =>
+      new Response(JSON.stringify([{ id: 1 }, { id: 2 }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...(total === null ? {} : { 'X-Total-Count': total }) },
+      })
+
+    mockFetch(page('120'))
+    expect(await requestPage('/x')).toEqual({ items: [{ id: 1 }, { id: 2 }], total: 120 })
+    mockFetch(page(null))
+    expect((await requestPage('/x')).total).toBe(2)
+    mockFetch(page('abc'))
+    expect((await requestPage('/x')).total).toBe(2)
+    mockFetch(page('1')) // less than what came: not possible, the items are the truth
+    expect((await requestPage('/x')).total).toBe(2)
+  })
+
+  it('treats an error of a list like any other error of the API', async () => {
+    mockFetch(jsonResponse(403, { code: 'FORBIDDEN', message: 'No.' }))
+
+    await expect(requestPage('/x')).rejects.toMatchObject({ status: 403, code: 'FORBIDDEN' })
   })
 })

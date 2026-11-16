@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   ANA,
   MARTA,
@@ -221,6 +221,21 @@ describe('creating a project (F01, A44)', () => {
     change('Name *', 'n'.repeat(100))
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(api.callsTo('POST /projects')).toHaveLength(1))
+  })
+
+  it('reads the minimum of the start date in the time zone chosen for the project (R29)', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-16T23:30:00Z')) // already the 17th in Berlin
+    try {
+      await openCreateForm()
+
+      change('Time zone', 'UTC')
+      expect(screen.getByLabelText('Start date *')).toHaveAttribute('min', '2026-11-16')
+      change('Time zone', 'Europe/Berlin')
+      expect(screen.getByLabelText('Start date *')).toHaveAttribute('min', '2026-11-17')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('sets the minimum of the date fields so the picker disables the dates that are not allowed (R16, R29)', async () => {

@@ -9,7 +9,7 @@
 
 ## Seletor de data (componente comum)
 
-Todos os campos de data usam o **campo de data nativo do navegador** (`<input type="date">`, com `<input type="time">` para a hora), com o atributo `min` a desativar as datas não permitidas. Nos wireframes de tarefas aparece um calendário aberto no prazo (detalhe do projeto e detalhe da tarefa); no ecrã de projetos o desenho mostra só os campos e a regra da data de fim. O hoje dos desenhos é 2026-11-12.
+Todos os campos de data usam o **campo de data nativo do navegador** (`<input type="date">`, com `<input type="time">` para a hora), com o atributo `min` a desativar as datas não permitidas. Os desenhos mostram só os campos e a regra de cada data. O hoje dos desenhos é 2026-11-12.
 
 | Campo | Datas disponíveis | Origem |
 |---|---|---|
@@ -95,7 +95,7 @@ Ficheiro: [projects-wireframe.svg](projects-wireframe.svg). Mostra a pesquisa "w
 
 ![Wireframe do ecrã Project detail](project-detail-wireframe.svg)
 
-Ficheiro: [project-detail-wireframe.svg](project-detail-wireframe.svg). Mostra o separador *List* e o calendário aberto no prazo; o separador *Matrix* é o ecrã de [matrix-wireframe.md](matrix-wireframe.md).
+Ficheiro: [project-detail-wireframe.svg](project-detail-wireframe.svg). Mostra o separador *List* e o formulário de nova tarefa com a regra do prazo; o separador *Matrix* é o ecrã de [matrix-wireframe.md](matrix-wireframe.md).
 
 | # | Elemento | O que mostra | Origem |
 |---|---|---|---|
@@ -106,8 +106,8 @@ Ficheiro: [project-detail-wireframe.svg](project-detail-wireframe.svg). Mostra o
 | 5 | Filtros | Por estado, por quadrante (a "prioridade") e *My tasks*. Combinam-se | F22, R25, P29, cenários 12.4 a 12.6 |
 | 6 | *+ New task* | Abre o formulário de nova tarefa. Não aparece num projeto suspenso ou concluído | R22, cenário 2.10 |
 | 7 | Tabela de tarefas | Título (ligação para o detalhe da tarefa), número de subtarefas, estado, prazo, urgência, importância e responsáveis. As em aberto vêm primeiro; cada grupo por prazo mais próximo. Só tarefas principais | F05, R15, R18, R23, cenários 9.2 e 9.5 |
-| 8 | Formulário de nova tarefa | Título, descrição, prazo, urgência, importância e responsáveis, escolhidos entre os membros do projeto | F02, F03, R1, R14, R21, R26 |
-| 9 | Calendário do prazo | Só hoje e dias seguintes; as datas passadas aparecem desativadas | R13, cenário 2.4 |
+| 8 | Formulário de nova tarefa | Título (3 a 150, não só espaços), descrição (máx. 2000), prazo, urgência, importância e responsáveis, que se marcam numa lista com os membros do projeto e o gestor (pelo menos um) | F02, F03, R1, R14, R21, R26 |
+| 9 | Prazo | Campo de data nativo; só hoje e dias seguintes, as datas passadas ficam desativadas | R13, cenário 2.4 |
 
 Num projeto **suspenso**, as tarefas editam-se, mudam de estado e apagam-se, mas o botão *+ New task* não aparece. Num projeto **concluído** não há nenhum controlo de criar, editar ou apagar (R22, R27 e R28).
 
@@ -127,10 +127,10 @@ Ficheiro: [task-detail-wireframe.svg](task-detail-wireframe.svg). Uma subtarefa 
 
 | # | Elemento | O que mostra | Origem |
 |---|---|---|---|
-| 1 | Título da tarefa | Rótulo *Task title* e o nome da tarefa (máx. 100), com o quadrante calculado a partir da urgência e da importância | F02, F03, R14, R25 |
+| 1 | Título da tarefa | Rótulo *Task title* e o nome da tarefa (3 a 150 caracteres, não só espaços), com o quadrante calculado a partir da urgência e da importância | F02, F03, R14, R25 |
 | 2 | Descrição | Editável (máx. 2000) | R14 |
 | 3 | Estado, urgência e importância | Listas de escolha. Reabrir uma tarefa em estado final só o gestor | F02, F03, P8 |
-| 4 | Calendário do prazo | Só hoje e dias seguintes. O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe | R2, R3, R13, W13 |
+| 4 | Prazo | Campo de data nativo; só hoje e dias seguintes. O prazo de uma subtarefa não pode ser posterior ao da tarefa-mãe | R2, R3, R13, W13 |
 | 5 | Motivo de bloqueio e tarefa original | Só aparecem em *Blocked* (máx. 100) e em *Duplicate* (do mesmo projeto, diferente e não duplicada) | R6, R14 |
 | 6 | Responsáveis | Podem ser vários, escolhidos entre os membros; remover o último é recusado | R21, R26, cenário 2.11 |
 | 7 | Subtarefas | Estado, prazo e responsáveis de cada uma, e *+ Add subtask* | F08, R2 a R5, US04 |

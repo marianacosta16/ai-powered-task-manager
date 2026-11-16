@@ -50,6 +50,27 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
  * {@link ApiError} for an error of the API, and for a request that could not be made (code NETWORK_ERROR).
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await send(path, options)
+  return (response.status === 204 ? undefined : await readJson(response)) as T
+}
+
+/** One page of a list: the items and the total of the server, in all the pages (`X-Total-Count`, A31). */
+export interface Page<T> {
+  items: T[]
+  total: number
+}
+
+/** Like {@link request} for a list that comes in pages: it also reads the total from the header. */
+export async function requestPage<T>(path: string, options: RequestOptions = {}): Promise<Page<T>> {
+  const response = await send(path, options)
+  const items = (await readJson(response)) as T[]
+  const header = Number(response.headers.get('X-Total-Count'))
+  // A missing or wrong header is NaN or 0 (or less than what came): the items are the truth
+  return { items, total: header >= items.length ? header : items.length }
+}
+
+/** Makes the request and gives back the answer when it is a success; every failure is thrown as an ApiError. */
+async function send(path: string, options: RequestOptions): Promise<Response> {
   const { method = 'GET', body, signal } = options
   const session = sessionNumber
   let response: Response
@@ -72,7 +93,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (response.ok) {
-    return (response.status === 204 ? undefined : await readJson(response)) as T
+    return response
   }
   const error = await toApiError(response)
   if (response.status === 401 && path !== '/auth/login' && session === sessionNumber) {

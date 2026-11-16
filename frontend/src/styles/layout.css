@@ -169,3 +169,14 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* phone: the quadrants stack */
+@media (max-width: 640px) {
+  .matrix__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .matrix__axis--urgency {
+    display: none;
+  }
+}

@@ -1,16 +1,16 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { ApiError } from '../api/errors'
-import { deleteProject, listProjects, type ProjectSummary } from '../api/projects'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { listProjects, type ProjectSummary } from '../api/projects'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
-import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { LoadError } from '../components/LoadError'
 import { Notice } from '../components/Notice'
 import { Spinner } from '../components/Spinner'
 import { StatusBadge } from '../components/StatusBadge'
 import { useLoad } from '../hooks/useLoad'
+import { DeleteProjectDialog } from '../projects/DeleteProjectDialog'
+import { deletedMessage } from '../projects/messages'
 import { ProjectEditor } from '../projects/ProjectEditor'
 import { ProjectForm } from '../projects/ProjectForm'
 import { PROJECT_NAME_MAX } from '../limits'
@@ -28,8 +28,19 @@ export function ProjectsPage() {
   const [search, setSearch] = useState('')
   const [panel, setPanel] = useState<Panel>({ kind: 'closed' })
   const [toDelete, setToDelete] = useState<ProjectSummary | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  // The project page sends the message of a project it deleted
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(() => {
+    const text = (location.state as { message?: unknown } | null)?.message
+    return typeof text === 'string' ? { kind: 'success', text } : null
+  })
+  // The message came in the state of the navigation, which a reload or going back would bring again: it is used once
+  useEffect(() => {
+    if ((location.state as { message?: unknown } | null)?.message !== undefined) {
+      navigate(location.pathname + location.search, { replace: true, state: null })
+    }
+  }, [location, navigate])
   const { state, reload, retry } = useLoad((signal) => listProjects(search, signal), [search])
 
   if (auth.status !== 'signedIn') {
@@ -41,28 +52,6 @@ export function ProjectsPage() {
   function handleSearch(event: FormEvent) {
     event.preventDefault()
     setSearch(typed.trim())
-  }
-
-  async function confirmDelete() {
-    if (toDelete === null) {
-      return
-    }
-    setDeleting(true)
-    try {
-      await deleteProject(toDelete.id)
-      setMessage({ kind: 'success', text: `"${toDelete.name}" is in the Recycle bin for 30 days.` })
-      setPanel((current) => (current.kind === 'edit' && current.projectId === toDelete.id ? { kind: 'closed' } : current))
-      reload()
-    } catch (cause) {
-      setMessage({
-        kind: 'error',
-        text: cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.',
-      })
-      reload() // the project may have changed meanwhile: show what the server has
-    } finally {
-      setDeleting(false)
-      setToDelete(null)
-    }
   }
 
   function saved(text: string) {
@@ -188,18 +177,21 @@ export function ProjectsPage() {
         ) : null}
       </div>
       {toDelete ? (
-        <ConfirmDialog
-          title="Delete project?"
-          confirmLabel="Delete"
-          busy={deleting}
-          onConfirm={() => void confirmDelete()}
+        <DeleteProjectDialog
+          project={toDelete}
+          onDeleted={() => {
+            setMessage({ kind: 'success', text: deletedMessage(toDelete.name) })
+            setPanel((current) => (current.kind === 'edit' && current.projectId === toDelete.id ? { kind: 'closed' } : current))
+            setToDelete(null)
+            reload()
+          }}
+          onFailed={(text) => {
+            setMessage({ kind: 'error', text })
+            setToDelete(null)
+            reload() // the project may have changed meanwhile: show what the server has
+          }}
           onCancel={() => setToDelete(null)}
-        >
-          <p>
-            "{toDelete.name}" and its tasks go to the Recycle bin for 30 days. Only the project manager can restore
-            them.
-          </p>
-        </ConfirmDialog>
+        />
       ) : null}
     </>
   )
