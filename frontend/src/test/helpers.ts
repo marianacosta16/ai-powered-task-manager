@@ -102,3 +102,34 @@ export function fullProject(id: number, name: string, overrides: Record<string, 
 }
 
 export const NO_COUNTS = { toDo: 0, inProgress: 0, inReview: 0, blocked: 0, done: 0, cancelled: 0, duplicate: 0 }
+
+/** A Task of the contract for the tests; a main task in the quadrant Do first unless said otherwise. */
+export function task(id: number, title: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    version: 1,
+    projectId: 1,
+    parentTaskId: null,
+    title,
+    description: null,
+    status: 'To do',
+    deadline: '2099-03-01',
+    urgency: 3,
+    importance: 4,
+    quadrant: 'Do first',
+    blockReason: null,
+    originalEliminated: false,
+    originalInRecycleBin: false,
+    assignees: [ANA],
+    subtasks: [],
+    ...overrides,
+  }
+}
+
+/** The answer of a list in pages: the items, and the total of the server in `X-Total-Count`. */
+export function pageResponse(items: unknown[], total = items.length): Response {
+  return new Response(JSON.stringify(items), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'X-Total-Count': String(total) },
+  })
+}

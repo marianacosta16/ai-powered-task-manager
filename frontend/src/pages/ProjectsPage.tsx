@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ApiError } from '../api/errors'
 import { deleteProject, listProjects, type ProjectSummary } from '../api/projects'
 import { useAuth } from '../auth/useAuth'
@@ -29,7 +29,12 @@ export function ProjectsPage() {
   const [panel, setPanel] = useState<Panel>({ kind: 'closed' })
   const [toDelete, setToDelete] = useState<ProjectSummary | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+  const location = useLocation()
+  // The project page sends the message of a project it deleted
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(() => {
+    const text = (location.state as { message?: unknown } | null)?.message
+    return typeof text === 'string' ? { kind: 'success', text } : null
+  })
   const { state, reload, retry } = useLoad((signal) => listProjects(search, signal), [search])
 
   if (auth.status !== 'signedIn') {

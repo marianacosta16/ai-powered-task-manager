@@ -2,7 +2,14 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { PROJECT_DESCRIPTION_MAX, PROJECT_NAME_MAX, PROJECT_NAME_MIN } from './limits'
+import {
+  PROJECT_DESCRIPTION_MAX,
+  PROJECT_NAME_MAX,
+  PROJECT_NAME_MIN,
+  TASK_DESCRIPTION_MAX,
+  TASK_TITLE_MAX,
+  TASK_TITLE_MIN,
+} from './limits'
 
 /** The text of one schema of the contract, up to the next schema. */
 function schema(yaml: string, name: string): string {
@@ -33,5 +40,12 @@ describe('the limits of a project in the interface', () => {
     expect(PROJECT_NAME_MIN).toBe(limit(create, 'name', 'minLength'))
     expect(PROJECT_NAME_MAX).toBe(limit(create, 'name', 'maxLength'))
     expect(PROJECT_DESCRIPTION_MAX).toBe(limit(create, 'description', 'maxLength'))
+  })
+
+  it('are the ones of the contract for a task too (R14, A46)', () => {
+    const task = schema(yaml, 'TaskCreate')
+    expect(TASK_TITLE_MIN).toBe(limit(task, 'title', 'minLength'))
+    expect(TASK_TITLE_MAX).toBe(limit(task, 'title', 'maxLength'))
+    expect(TASK_DESCRIPTION_MAX).toBe(limit(task, 'description', 'maxLength'))
   })
 })

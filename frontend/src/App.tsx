@@ -5,6 +5,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { SignInPage } from './pages/SignInPage'
+import { TaskPage } from './pages/TaskPage'
 import { RequireAuth } from './routes/RequireAuth'
 
 /** The screens. Everything except signing in needs a session (RequireAuth). */
@@ -17,6 +18,7 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+          <Route path="tasks/:taskId" element={<TaskPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
