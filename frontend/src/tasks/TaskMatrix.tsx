@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { TaskLink } from './TaskLink'
 import { QUADRANTS, type Quadrant, type Task } from '../api/tasks'
 import { StatusBadge } from '../components/StatusBadge'
 import { isFinal, quadrantOf } from './taskView'
@@ -16,7 +16,6 @@ const DESCRIPTIONS: Record<Quadrant, string> = {
  * quadrant keeps that order.
  */
 export function TaskMatrix({ tasks }: { tasks: Task[] }) {
-  const here = useLocation()
   const open = tasks.filter((task) => !isFinal(task))
   return (
     <div className="matrix">
@@ -38,7 +37,7 @@ export function TaskMatrix({ tasks }: { tasks: Task[] }) {
                 <ul className="quadrant__cards">
                   {inQuadrant.map((task) => (
                     <li key={task.id} className="task-card">
-                      <Link to={`/tasks/${task.id}`} state={{ from: here.pathname + here.search }}>{task.title}</Link>
+                      <TaskLink id={task.id} title={task.title} />
                       <div className="task-card__meta">
                         <StatusBadge value={task.status} /> {task.deadline}
                       </div>

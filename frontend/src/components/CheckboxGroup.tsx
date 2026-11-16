@@ -12,15 +12,14 @@ interface CheckboxGroupProps {
 export function CheckboxGroup({ legend, options, selected, error, onChange }: CheckboxGroupProps) {
   const errorId = `${useId()}-error`
   return (
-    <fieldset className={`field checks${error ? ' field--invalid' : ''}`}>
+    <fieldset className={`field checks${error ? ' field--invalid' : ''}`} aria-describedby={error ? errorId : undefined}>
       <legend className="field__label">{legend}</legend>
       {options.map((option, index) => (
         <label key={option.value} className="checks__item">
           <input
             type="checkbox"
-            // a fieldset cannot take the focus: the first check box carries the error, so the focus can go to it
+            // a fieldset cannot take the focus: the first check box carries the state, so the focus can go to it
             aria-invalid={error && index === 0 ? true : undefined}
-            aria-describedby={error && index === 0 ? errorId : undefined}
             checked={selected.includes(option.value)}
             onChange={(event) =>
               onChange(event.target.checked ? [...selected, option.value] : selected.filter((v) => v !== option.value))

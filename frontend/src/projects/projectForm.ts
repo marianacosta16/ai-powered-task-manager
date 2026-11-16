@@ -67,7 +67,10 @@ export function today(timezone?: string): string {
   const now = new Date()
   if (timezone) {
     try {
-      return new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
+        .formatToParts(now)
+        .reduce<Record<string, string>>((all, part) => ({ ...all, [part.type]: part.value }), {})
+      return `${parts.year}-${parts.month}-${parts.day}` // built from the parts: it does not depend on the pattern of a locale
     } catch {
       // not a zone this browser knows: falls to the browser's day
     }

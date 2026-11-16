@@ -1,7 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EMPTY_VALUES, today, validate } from './projectForm'
 
+afterEach(() => vi.useRealTimers())
+
 describe('today (R13, R29, P26)', () => {
+  it('writes yyyy-mm-dd with the zeros, in the zone asked', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-01-05T23:30:00Z'))
+
+    expect(today('UTC')).toBe('2026-01-05')
+    expect(today('Pacific/Kiritimati')).toBe('2026-01-06')
+  })
+
   it('is the browser day without a time zone, and also for one the browser does not know', () => {
     expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(today('Not/AZone')).toBe(today())

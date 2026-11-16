@@ -1,11 +1,10 @@
-import { Link, useLocation } from 'react-router-dom'
+import { TaskLink } from './TaskLink'
 import type { Task } from '../api/tasks'
 import { StatusBadge } from '../components/StatusBadge'
 import { levelLabel } from './taskView'
 
 /** The table of the main tasks (F05, wireframe 4). The text of a task is shown as it is, never as HTML (V6, NF09). */
 export function TaskList({ tasks }: { tasks: Task[] }) {
-  const here = useLocation()
   return (
     <table className="table">
       <thead>
@@ -23,7 +22,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
         {tasks.map((task) => (
           <tr key={task.id}>
             <td data-label="Title">
-              <Link to={`/tasks/${task.id}`} state={{ from: here.pathname + here.search }}>{task.title}</Link>
+              <TaskLink id={task.id} title={task.title} />
             </td>
             <td data-label="Subtasks">{task.subtasks?.length ?? 0}</td>
             <td data-label="Status">

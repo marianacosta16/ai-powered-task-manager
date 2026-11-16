@@ -12,7 +12,7 @@ import {
   summary,
   task,
 } from '../test/helpers'
-import { Link, MemoryRouter } from 'react-router-dom'
+import { Link, MemoryRouter, useLocation } from 'react-router-dom'
 import App from '../App'
 import { AuthProvider } from '../auth/AuthProvider'
 import { renderApp } from '../test/renderApp'
@@ -500,6 +500,33 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
     expect(api.callsTo(TASKS)).toHaveLength(2)
   })
 
+  it('takes the success message away when the view changes, as the list no longer is the one it described', async () => {
+    mockApi({
+      ...routes(ANA, { 'GET /projects/1/assignable-users': jsonResponse(200, PEOPLE), 'POST /projects/1/tasks': jsonResponse(201, task(20, 'Prepare the demo')) }),
+    })
+    renderApp('/projects/1?view=list')
+    await userEvent.click(await screen.findByRole('button', { name: '+ New task' }))
+    await screen.findByRole('heading', { name: 'New task' })
+    fillValid()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Ana' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+    expect(await screen.findByText('Task "Prepare the demo" created.')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('link', { name: 'Matrix' }))
+
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Matrix' })).toHaveAttribute('aria-current', 'page'))
+    expect(screen.queryByText('Task "Prepare the demo" created.')).not.toBeInTheDocument()
+  })
+
+  it('ties the error of the assignees to the whole group', async () => {
+    await openForm()
+    fillValid()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+
+    expect(screen.getByRole('group', { name: /Assignees/ })).toHaveAccessibleDescription('Choose at least one assignee.')
+  })
+
   it('keeps what was typed and shows the message of the API next to the field', async () => {
     await openForm({
       'POST /projects/1/tasks': jsonResponse(422, { code: 'DEADLINE_IN_PAST', message: 'The deadline cannot be in the past. Choose today or a later date.' }),
@@ -569,6 +596,28 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
 
     expect(screen.queryByRole('heading', { name: 'New task' })).not.toBeInTheDocument()
     expect(api.callsTo('POST /projects/1/tasks')).toHaveLength(0)
+  })
+})
+
+describe('the message after leaving the project', () => {
+  it('is shown once: it does not come back when the list is loaded again from the history', async () => {
+    mockApi(routes(MARTA, { 'DELETE /projects/1': jsonResponse(204), 'GET /projects': jsonResponse(200, []) }))
+    function State() {
+      return <output data-testid="state">{JSON.stringify(useLocation().state)}</output>
+    }
+    render(
+      <MemoryRouter initialEntries={['/projects/1']}>
+        <AuthProvider>
+          <App />
+          <State />
+        </AuthProvider>
+      </MemoryRouter>,
+    )
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete project' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText('"Website Redesign" is in the Recycle bin for 30 days.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('null')) // the history no longer carries it
   })
 })
 

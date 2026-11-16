@@ -24,6 +24,7 @@ export function DeleteProjectDialog({ project, onDeleted, onFailed, onCancel }: 
       await deleteProject(project.id)
       onDeleted()
     } catch (cause) {
+      setBusy(false) // the parent decides whether the dialog stays
       onFailed(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
     }
   }

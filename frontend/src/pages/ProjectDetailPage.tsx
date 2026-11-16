@@ -39,7 +39,9 @@ function ProjectDetail({ id }: { id: number }) {
   const [params, setParams] = useSearchParams()
   const query = parseQuery(params)
   const [panel, setPanel] = useState<Panel>('closed')
-  const [message, setMessage] = useState<string | null>(null)
+  // A success message describes the list as it was: it belongs to the view and the filters of that moment, and goes when they change
+  const [message, setMessage] = useState<{ text: string; search: string } | null>(null)
+  const search = params.toString()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const project = useLoad((signal) => getProject(id, signal), [id])
@@ -83,7 +85,7 @@ function ProjectDetail({ id }: { id: number }) {
       </p>
       <h1>{data.name}</h1>
       {project.state.refreshError ? <Notice kind="error">{project.state.refreshError}</Notice> : null}
-      {message ? <Notice kind="success">{message}</Notice> : null}
+      {message && message.search === search ? <Notice kind="success">{message.text}</Notice> : null}
       {deleteError ? <Notice kind="error">{deleteError}</Notice> : null}
       <p>
         {data.phase} · <StatusBadge value={data.status} /> · Manager: {data.manager.name}
@@ -181,7 +183,8 @@ function ProjectDetail({ id }: { id: number }) {
                       : 'This project has no tasks yet.'}
                 </EmptyState>
                 {query.view === 'list' && query.page > 1 ? (
-                  <Pagination page={query.page} size={LIST_SIZE} total={tasks.state.data.total} onPage={(page) => change({ page })} />
+                  <Pagination page={query.page} size={LIST_SIZE} total={tasks.state.data.total}
+                  noun="task" onPage={(page) => change({ page })} />
                 ) : null}
               </>
             ) : query.view === 'list' ? (
@@ -191,6 +194,7 @@ function ProjectDetail({ id }: { id: number }) {
                   page={query.page}
                   size={LIST_SIZE}
                   total={tasks.state.data.total}
+                  noun="task"
                   onPage={(page) => change({ page })}
                 />
               </>
@@ -213,7 +217,7 @@ function ProjectDetail({ id }: { id: number }) {
             timezone={data.timezone}
             onCreated={(task) => {
               setPanel('closed')
-              setMessage(`Task "${task.title}" created.`)
+              setMessage({ text: `Task "${task.title}" created.`, search })
               tasks.reload()
             }}
             onCancel={() => setPanel('closed')}
@@ -229,7 +233,7 @@ function ProjectDetail({ id }: { id: number }) {
                 return
               }
               setPanel('closed')
-              setMessage(`Project "${saved.name}" saved.`)
+              setMessage({ text: `Project "${saved.name}" saved.`, search })
               project.reload()
             }}
             onCancel={() => setPanel('closed')}
