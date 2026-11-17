@@ -134,13 +134,13 @@ public class RecycleUseCases {
         Instant now = clock.instant();
         List<Entry> entries = new ArrayList<>();
         for (DeletedProject p : bin.projectsOfManager(user.id(), now)) {
-            entries.add(new Entry(p.deletedAt(), p.id(), new RecycleItemView("Project", p.id(), p.name(), null, p.deletedAt(),
+            entries.add(new Entry(p.deletedAt(), p.id(), new RecycleItemView("Project", p.id(), p.name(), p.id(), null, p.deletedAt(),
                     daysLeft(p.deletedAt(), now), p.includedTasks(), true, null)));
         }
         for (DeletedTask t : bin.tasksVisibleTo(user.id(), now)) {
             Optional<NotRestorable> reason = whyNot(t);
             entries.add(new Entry(t.deletedAt(), t.id(), new RecycleItemView(t.isSubtask() ? "Subtask" : "Task", t.id(), t.title(),
-                    t.projectName(), t.deletedAt(), daysLeft(t.deletedAt(), now), null, reason.isEmpty(),
+                    t.projectId(), t.projectName(), t.deletedAt(), daysLeft(t.deletedAt(), now), null, reason.isEmpty(),
                     reason.map(Enum::name).orElse(null))));
         }
         return entries.stream().sorted(Comparator.comparing(Entry::deletedAt).reversed().thenComparing(Entry::id))

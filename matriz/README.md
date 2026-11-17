@@ -303,7 +303,7 @@ curl -s -b /tmp/ana.txt localhost:8081/recycle-bin
 
 ## Fecho do MVP (incremento 8)
 
-O MVP da API está completo: as 28 operações do contrato, a versão 1.0.0 do [openapi.yaml](openapi.yaml) e o cenário de aceitação do MVP.
+O MVP da API está completo: as 28 operações do contrato, a versão 1.1.0 do [openapi.yaml](openapi.yaml) e o cenário de aceitação do MVP.
 
 | O quê | Como se garante |
 |---|---|

@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: Matriz API (MVP contract)
-  version: 1.0.0
+  version: 1.1.0
   description: |
     REST contract for the MVP (v1) of Matriz: sign in and out, projects, team, tasks, assignees, comments, search and filters, dashboard and recycle bin.
 
@@ -1543,7 +1543,7 @@ components:
 
     RecycleItem:
       type: object
-      required: [itemType, id, name, deletedAt, daysLeft, restorable]
+      required: [itemType, id, name, projectId, deletedAt, daysLeft, restorable]
       properties:
         itemType:
           type: string
@@ -1552,6 +1552,9 @@ components:
           type: integer
         name:
           type: string
+        projectId:
+          type: integer
+          description: The project of the item; for a project, the project itself. The client needs it to offer the people of that project when a restore asks for who takes over (P36).
         projectName:
           type: [string, 'null']
           description: The project of a task or subtask; empty for a project.
