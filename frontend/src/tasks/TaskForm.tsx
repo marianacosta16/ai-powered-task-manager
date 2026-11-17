@@ -16,10 +16,14 @@ interface TaskFormProps {
   projectId: number
   /** The time zone of the project: "today" for the deadline is its day (P26). */
   timezone: string
+  /** Set to create a subtask of that main task (R2: its deadline cannot be later than the parent's). */
+  parent?: { id: number; deadline: string }
   /** The members of the project and its manager (R21). */
   people: User[]
   onCreated: (task: Task) => void
   onCancel: () => void
+  /** Whether there is text typed that is not saved: the page asks before leaving. */
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 /**
@@ -27,7 +31,7 @@ interface TaskFormProps {
  * what was typed stays, the message of the API is shown with the field it points to, and while the request is under
  * way the button waits.
  */
-export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: TaskFormProps) {
+export function TaskForm({ projectId, timezone, parent, people, onCreated, onCancel, onDirtyChange }: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(EMPTY_TASK)
   const [errors, setErrors] = useState<TaskFormErrors>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -36,6 +40,11 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
   const formRef = useRef<HTMLFormElement>(null)
   const [focusToken, setFocusToken] = useState(0)
 
+  const dirty = JSON.stringify(values) !== JSON.stringify(EMPTY_TASK)
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+    return () => onDirtyChange?.(false) // the form is gone (created or cancelled): nothing is left to lose
+  }, [dirty, onDirtyChange])
   useEffect(() => {
     if (focusToken > 0) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
@@ -53,7 +62,7 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
       return
     }
     setServerError(null)
-    const found = validateTask(values, timezone)
+    const found = validateTask(values, timezone, parent?.deadline)
     setErrors(found)
     if (Object.keys(found).length > 0) {
       setFocusToken((token) => token + 1)
@@ -62,7 +71,7 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
     submitting.current = true
     setPending(true)
     try {
-      onCreated(await createTask(projectId, toTaskCreate(values)))
+      onCreated(await createTask(projectId, toTaskCreate(values, parent?.id)))
     } catch (cause) {
       if (cause instanceof ApiError) {
         setServerError(cause.message)
@@ -84,8 +93,8 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
 
   const levels = [{ value: '', label: 'Choose...' }, ...LEVELS.map((l) => ({ value: String(l.value), label: l.label }))]
   return (
-    <section className="panel" aria-label="New task">
-      <h2>New task</h2>
+    <section className="panel" aria-label={parent ? 'New subtask' : 'New task'}>
+      <h2>{parent ? 'New subtask' : 'New task'}</h2>
       {serverError ? <Notice kind="error">{serverError}</Notice> : null}
       <form ref={formRef} onSubmit={handleSubmit} noValidate>
         <TextField
@@ -109,6 +118,7 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
           name="deadline"
           type="date"
           min={today(timezone)}
+          max={parent?.deadline}
           value={values.deadline}
           error={errors.deadline}
           onChange={(event) => set('deadline', event.target.value)}
@@ -140,7 +150,7 @@ export function TaskForm({ projectId, timezone, people, onCreated, onCancel }: T
         />
         <div className="actions">
           <Button type="submit" busy={pending}>
-            {pending ? 'Creating...' : 'Create task'}
+            {pending ? 'Creating...' : parent ? 'Create subtask' : 'Create task'}
           </Button>
           <Button variant="secondary" disabled={pending} onClick={onCancel}>
             Cancel

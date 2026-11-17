@@ -9,6 +9,8 @@ import {
   TASK_DESCRIPTION_MAX,
   TASK_TITLE_MAX,
   TASK_TITLE_MIN,
+  BLOCK_REASON_MAX,
+  COMMENT_MAX,
 } from './limits'
 
 const indentOf = (line: string) => line.length - line.trimStart().length
@@ -48,5 +50,10 @@ describe('the limits of a project in the interface', () => {
     expect(TASK_TITLE_MIN).toBe(limit(yaml, 'TaskCreate', 'title', 'minLength'))
     expect(TASK_TITLE_MAX).toBe(limit(yaml, 'TaskCreate', 'title', 'maxLength'))
     expect(TASK_DESCRIPTION_MAX).toBe(limit(yaml, 'TaskCreate', 'description', 'maxLength'))
+  })
+
+  it('are the ones of the contract for a block reason and a comment (R6, R24)', () => {
+    expect(BLOCK_REASON_MAX).toBe(limit(yaml, 'TaskUpdate', 'blockReason', 'maxLength'))
+    expect(COMMENT_MAX).toBe(limit(yaml, 'CommentWrite', 'content', 'maxLength'))
   })
 })

@@ -10,3 +10,7 @@ export const PROJECT_DESCRIPTION_MAX = 1000
 export const TASK_TITLE_MIN = 3
 export const TASK_TITLE_MAX = 150
 export const TASK_DESCRIPTION_MAX = 2000
+
+/** A block reason (R6, R14) and a comment (R24, NF09). */
+export const BLOCK_REASON_MAX = 100
+export const COMMENT_MAX = 2000

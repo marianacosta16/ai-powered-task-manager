@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import {
@@ -12,9 +12,6 @@ import {
   summary,
   task,
 } from '../test/helpers'
-import { Link, MemoryRouter, useLocation } from 'react-router-dom'
-import App from '../App'
-import { AuthProvider } from '../auth/AuthProvider'
 import { renderApp } from '../test/renderApp'
 import { today } from '../projects/projectForm'
 
@@ -602,22 +599,38 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
 describe('the message after leaving the project', () => {
   it('is shown once: it does not come back when the list is loaded again from the history', async () => {
     mockApi(routes(MARTA, { 'DELETE /projects/1': jsonResponse(204), 'GET /projects': jsonResponse(200, []) }))
-    function State() {
-      return <output data-testid="state">{JSON.stringify(useLocation().state)}</output>
-    }
-    render(
-      <MemoryRouter initialEntries={['/projects/1']}>
-        <AuthProvider>
-          <App />
-          <State />
-        </AuthProvider>
-      </MemoryRouter>,
-    )
+    const { router } = renderApp('/projects/1')
     await userEvent.click(await screen.findByRole('button', { name: 'Delete project' }))
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
     expect(await screen.findByText('"Website Redesign" is in the Recycle bin for 30 days.')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('null')) // the history no longer carries it
+    await waitFor(() => expect(router.state.location.state).toBeNull()) // the history no longer carries it
+  })
+})
+
+describe('going to a task', () => {
+  const taskRoutes = {
+    'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')),
+    'GET /projects/1/assignable-users': jsonResponse(200, [ANA]),
+    'GET /tasks/10/comments': pageResponse([]),
+  }
+
+  it('goes back to the Matrix with its filters when it was opened from the Matrix', async () => {
+    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), ...taskRoutes }))
+    renderApp('/projects/1?mine=true')
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
+
+    expect(await screen.findByRole('link', { name: 'Website Redesign' })).toHaveAttribute('href', '/projects/1?mine=true')
+  })
+
+  it('goes back to the List with its filters when it was opened from there', async () => {
+    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), ...taskRoutes }))
+    renderApp('/projects/1?view=list&status=To%20do')
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
+
+    expect(await screen.findByRole('link', { name: 'Website Redesign' })).toHaveAttribute('href', '/projects/1?view=list&status=To%20do')
   })
 })
 
@@ -632,53 +645,14 @@ describe('going between projects', () => {
       'GET /projects/1/assignable-users': jsonResponse(200, [ANA]),
       'GET /projects/2/assignable-users': () => new Promise<Response>(() => undefined), // never answers: the panel would stay loading
     })
-    render(
-      <MemoryRouter initialEntries={['/projects/1']}>
-        <AuthProvider>
-          <App />
-          <Link to="/projects/2">go to the other project</Link>
-        </AuthProvider>
-      </MemoryRouter>,
-    )
+    const { router } = renderApp('/projects/1')
     await userEvent.click(await screen.findByRole('button', { name: '+ New task' }))
     await screen.findByRole('heading', { name: 'New task' })
 
-    await userEvent.click(screen.getByRole('link', { name: 'go to the other project' })) // same component, other id
+    await act(() => router.navigate('/projects/2')) // same component, other id
 
     expect(await screen.findByRole('heading', { name: 'Other Project' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'New task' })).not.toBeInTheDocument()
     expect(screen.queryByText('Loading the project members...')).not.toBeInTheDocument() // the panel would start loading at once
-  })
-})
-
-describe('the task (provisional until the next increment)', () => {
-  it('goes back to the Matrix when it was opened from the Matrix', async () => {
-    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }))
-    renderApp('/projects/1?mine=true')
-
-    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
-
-    expect(await screen.findByRole('link', { name: '← Project' })).toHaveAttribute('href', '/projects/1?mine=true')
-  })
-
-  it('goes back to the List with its filters when it was opened from there', async () => {
-    mockApi(routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }))
-    renderApp('/projects/1?view=list&status=To%20do')
-
-    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
-
-    expect(await screen.findByRole('link', { name: '← Project' })).toHaveAttribute('href', '/projects/1?view=list&status=To%20do')
-  })
-
-  it('opens from the List and shows its title, with a way back to the project', async () => {
-    mockApi(
-      routes(ANA, { [TASKS]: pageResponse([task(10, 'Fix payment bug')]), 'GET /tasks/10': jsonResponse(200, task(10, 'Fix payment bug')) }),
-    )
-    renderApp('/projects/1?view=list')
-
-    await userEvent.click(await screen.findByRole('link', { name: 'Fix payment bug' }))
-
-    expect(await screen.findByRole('heading', { name: 'Fix payment bug' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '← Project' })).toHaveAttribute('href', '/projects/1?view=list')
   })
 })

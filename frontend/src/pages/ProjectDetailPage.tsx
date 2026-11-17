@@ -12,6 +12,7 @@ import { Select } from '../components/Select'
 import { Spinner } from '../components/Spinner'
 import { StatusBadge } from '../components/StatusBadge'
 import { useLoad } from '../hooks/useLoad'
+import { useNavigationMessage } from '../hooks/useNavigationMessage'
 import { DeleteProjectDialog } from '../projects/DeleteProjectDialog'
 import { deletedMessage } from '../projects/messages'
 import { ProjectEditor } from '../projects/ProjectEditor'
@@ -40,7 +41,10 @@ function ProjectDetail({ id }: { id: number }) {
   const query = parseQuery(params)
   const [panel, setPanel] = useState<Panel>('closed')
   // A success message describes the list as it was: it belongs to the view and the filters of that moment, and goes when they change
-  const [message, setMessage] = useState<{ text: string; search: string } | null>(null)
+  const sent = useNavigationMessage() // for example a task that was deleted
+  const [message, setMessage] = useState<{ text: string; search: string } | null>(() =>
+    sent === null ? null : { text: sent, search: params.toString() },
+  )
   const search = params.toString()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)

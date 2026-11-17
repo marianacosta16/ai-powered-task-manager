@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { listProjects, type ProjectSummary } from '../api/projects'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
@@ -9,6 +9,7 @@ import { Notice } from '../components/Notice'
 import { Spinner } from '../components/Spinner'
 import { StatusBadge } from '../components/StatusBadge'
 import { useLoad } from '../hooks/useLoad'
+import { useNavigationMessage } from '../hooks/useNavigationMessage'
 import { DeleteProjectDialog } from '../projects/DeleteProjectDialog'
 import { deletedMessage } from '../projects/messages'
 import { ProjectEditor } from '../projects/ProjectEditor'
@@ -28,19 +29,11 @@ export function ProjectsPage() {
   const [search, setSearch] = useState('')
   const [panel, setPanel] = useState<Panel>({ kind: 'closed' })
   const [toDelete, setToDelete] = useState<ProjectSummary | null>(null)
-  const location = useLocation()
-  const navigate = useNavigate()
   // The project page sends the message of a project it deleted
-  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(() => {
-    const text = (location.state as { message?: unknown } | null)?.message
-    return typeof text === 'string' ? { kind: 'success', text } : null
-  })
-  // The message came in the state of the navigation, which a reload or going back would bring again: it is used once
-  useEffect(() => {
-    if ((location.state as { message?: unknown } | null)?.message !== undefined) {
-      navigate(location.pathname + location.search, { replace: true, state: null })
-    }
-  }, [location, navigate])
+  const sent = useNavigationMessage()
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(
+    sent === null ? null : { kind: 'success', text: sent },
+  )
   const { state, reload, retry } = useLoad((signal) => listProjects(search, signal), [search])
 
   if (auth.status !== 'signedIn') {

@@ -139,6 +139,10 @@ Ficheiro: [task-detail-wireframe.svg](task-detail-wireframe.svg). Uma subtarefa 
 | 10 | *Edit* e *Delete* do comentário | Só o autor os vê no seu comentário. Apagar elimina-o de vez | R24, cenário 11.6 |
 | 11 | Novo comentário | Texto de até 2000 caracteres e *Add comment*. Os comentários funcionam também numa subtarefa | R24, cenários 11.1, 11.5 e 11.8 |
 
+**Conflito e saída.** Todos os campos do formulário gravam juntos com *Save changes*, com a `version` lida. Se alguém gravou a tarefa entretanto (409, R30), a mensagem da API aparece com *Reload latest*: a tarefa é lida de novo, os campos que a pessoa não alterou passam a ter os valores novos, os que alterou mantêm o seu texto e uma nota diz que campos a outra pessoa também mudou. Guardar de novo envia só o que a pessoa alterou. Sair com alterações por guardar (ligação, botão voltar, fechar ou recarregar o separador) pede confirmação primeiro. Os responsáveis, as subtarefas e os comentários gravam logo, cada um com o seu pedido.
+
+**Quem vê o quê.** Numa tarefa fechada (*Done*, *Cancelled* ou *Duplicate*) o membro só pode escolher estados finais; reabri-la é do gestor (P8). Os comentários não se escrevem numa tarefa fechada (P37). *+ Add subtask* só aparece numa tarefa principal aberta de um projeto que não esteja suspenso nem concluído.
+
 Num projeto **suspenso**, tudo isto é editável. Num projeto **concluído**, os dados e os comentários continuam visíveis, mas não há nenhum controlo para os alterar (R27, R28, cenários 2.13 e 11.10).
 
 | De | Ação | Para |

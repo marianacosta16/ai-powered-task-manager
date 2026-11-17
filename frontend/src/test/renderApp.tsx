@@ -1,15 +1,9 @@
 import { render } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import App from '../App'
-import { AuthProvider } from '../auth/AuthProvider'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { routes } from '../App'
 
-/** The whole application, as main.tsx builds it, starting at the given address. */
+/** The whole application, as main.tsx builds it, starting at the given address. It also gives the router, to navigate or to read the location. */
 export function renderApp(path = '/') {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </MemoryRouter>,
-  )
+  const router = createMemoryRouter(routes, { initialEntries: [path] })
+  return { router, ...render(<RouterProvider router={router} />) }
 }
