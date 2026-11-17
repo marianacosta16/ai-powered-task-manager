@@ -222,7 +222,7 @@ describe('the project and its tasks (F02, F04, F05, F22)', () => {
 })
 
 describe('the controls of the project (V2, V7, R22, R28)', () => {
-  it('gives the manager of an open project New task, Edit project and Delete project, and no Team yet', async () => {
+  it('gives the manager of an open project New task, Edit project, Team and Delete project', async () => {
     mockApi(routes(MARTA))
 
     renderApp('/projects/1')
@@ -230,7 +230,7 @@ describe('the controls of the project (V2, V7, R22, R28)', () => {
     expect(await screen.findByRole('button', { name: '+ New task' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Edit project' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete project' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Team' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Team' })).toHaveAttribute('href', '/projects/1/team')
   })
 
   it('gives a member New task but not the controls of the project', async () => {
@@ -241,6 +241,7 @@ describe('the controls of the project (V2, V7, R22, R28)', () => {
     expect(await screen.findByRole('button', { name: '+ New task' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Edit project' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete project' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument()
   })
 
   it('has no New task in a suspended project, where the manager can still edit it', async () => {
@@ -261,6 +262,7 @@ describe('the controls of the project (V2, V7, R22, R28)', () => {
     expect(screen.queryByRole('button', { name: '+ New task' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Edit project' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete project' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument()
   })
 
   it('edits the project in a panel and shows the new data', async () => {

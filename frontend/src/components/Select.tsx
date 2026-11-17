@@ -2,7 +2,7 @@ import { forwardRef, useId, type SelectHTMLAttributes } from 'react'
 
 interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
   label: string
-  options: ReadonlyArray<{ value: string; label: string }>
+  options: ReadonlyArray<{ value: string; label: string; disabled?: boolean }>
   error?: string
 }
 
@@ -27,7 +27,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         aria-describedby={error ? errorId : undefined}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} disabled={option.disabled}>
             {option.label}
           </option>
         ))}

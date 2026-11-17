@@ -31,3 +31,11 @@ export class ApiError extends Error {
     return this.details.find((d) => d.field === field)?.issue
   }
 }
+
+/** What the user is told when nothing more precise is known. */
+export const GENERIC_MESSAGE = 'Something went wrong. Try again in a moment.'
+
+/** What to tell the user about something that went wrong: the message of the API, or a generic one for anything else. */
+export function messageOf(cause: unknown): string {
+  return cause instanceof ApiError ? cause.message : GENERIC_MESSAGE
+}

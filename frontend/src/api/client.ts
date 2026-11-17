@@ -1,5 +1,5 @@
 import { API_URL } from '../config'
-import { ApiError, NETWORK_ERROR, UNEXPECTED_ERROR, type FieldIssue } from './errors'
+import { ApiError, NETWORK_ERROR, UNEXPECTED_ERROR, type FieldIssue, GENERIC_MESSAGE } from './errors'
 
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
@@ -108,7 +108,7 @@ async function readJson(response: Response): Promise<unknown> {
   try {
     return await response.json()
   } catch {
-    throw new ApiError(response.status, UNEXPECTED_ERROR, 'Something went wrong. Try again in a moment.')
+    throw new ApiError(response.status, UNEXPECTED_ERROR, GENERIC_MESSAGE)
   }
 }
 
@@ -121,7 +121,7 @@ async function toApiError(response: Response): Promise<ApiError> {
   } catch {
     // not JSON: falls to the generic error below
   }
-  return new ApiError(response.status, UNEXPECTED_ERROR, 'Something went wrong. Try again in a moment.')
+  return new ApiError(response.status, UNEXPECTED_ERROR, GENERIC_MESSAGE)
 }
 
 function toIssues(details: unknown): FieldIssue[] {

@@ -8,6 +8,8 @@ interface ConfirmDialogProps {
   variant?: 'primary' | 'danger'
   /** The request of the confirmed action is under way: both buttons wait. */
   busy?: boolean
+  /** The action cannot be confirmed yet (a choice is missing). */
+  confirmDisabled?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
@@ -23,6 +25,7 @@ export function ConfirmDialog({
   confirmLabel,
   variant = 'danger',
   busy = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -84,7 +87,7 @@ export function ConfirmDialog({
           <Button ref={cancelRef} variant="secondary" disabled={busy} onClick={onCancel}>
             Cancel
           </Button>
-          <Button variant={variant} busy={busy} onClick={onConfirm}>
+          <Button variant={variant} busy={busy} disabled={confirmDisabled} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

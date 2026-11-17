@@ -4,8 +4,10 @@ import { DashboardPage } from './pages/DashboardPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { ProjectsPage } from './pages/ProjectsPage'
+import { RecyclePage } from './pages/RecyclePage'
 import { SignInPage } from './pages/SignInPage'
 import { TaskPage } from './pages/TaskPage'
+import { TeamPage } from './pages/TeamPage'
 import { RequireAuth } from './routes/RequireAuth'
 import { Root } from './routes/Root'
 
@@ -28,7 +30,9 @@ export const routes: RouteObject[] = [
               { index: true, element: <DashboardPage /> },
               { path: 'projects', element: <ProjectsPage /> },
               { path: 'projects/:projectId', element: <ProjectDetailPage /> },
+              { path: 'projects/:projectId/team', element: <TeamPage /> },
               { path: 'tasks/:taskId', element: <TaskPage /> },
+              { path: 'recycle-bin', element: <RecyclePage /> },
               { path: '*', element: <NotFoundPage /> },
             ],
           },

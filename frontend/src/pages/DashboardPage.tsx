@@ -31,7 +31,12 @@ export function DashboardPage() {
 
   return (
     <>
-      <h1>Dashboard</h1>
+      <div className="toolbar">
+        <h1>Dashboard</h1>
+        <Link className="button button--secondary" to="/recycle-bin">
+          Recycle bin
+        </Link>
+      </div>
       {state.status === 'loading' ? <Spinner label="Loading your projects..." /> : null}
       {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
       {state.status === 'ready' ? (

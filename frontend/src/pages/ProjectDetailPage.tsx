@@ -26,7 +26,7 @@ type Panel = 'closed' | 'new-task' | 'edit-project'
 /**
  * The project (F01, F02, F04, F05, F22; wireframe 4 and the Matrix wireframe): its data, the Matrix and List tabs,
  * the filters and the new task form. The tab and the filters live in the address, so reloading or going back keeps
- * them. The manager of an open project can edit or delete it from here (the Team button comes with its own screen).
+ * them. The manager of an open project can edit or delete it from here.
  */
 export function ProjectDetailPage() {
   const id = Number(useParams().projectId)
@@ -111,6 +111,9 @@ function ProjectDetail({ id }: { id: number }) {
           >
             Edit project
           </Button>
+          <Link className="button button--secondary" to={`/projects/${id}/team`}>
+            Team
+          </Link>
           <Button variant="secondary" onClick={() => setConfirmDelete(true)}>
             Delete project
           </Button>

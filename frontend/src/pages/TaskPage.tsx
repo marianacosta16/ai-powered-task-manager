@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { getProject } from '../api/projects'
 import { FINAL_STATUSES, deleteTask, getTask, listAssignableUsers, type Task } from '../api/tasks'
 import { useAuth } from '../auth/useAuth'
@@ -96,7 +96,7 @@ function TaskScreen({ first }: { first: Task }) {
       leaving.current = true
       navigate(back, { state: { message: `${isSubtask ? 'Subtask' : 'Task'} "${task.title}" is in the Recycle bin for 30 days.` } })
     } catch (cause) {
-      setDeleteError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setDeleteError(messageOf(cause))
       setConfirmDelete(false)
       setDeleting(false)
     }

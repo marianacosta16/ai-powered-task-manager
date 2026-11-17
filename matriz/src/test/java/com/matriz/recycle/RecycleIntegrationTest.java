@@ -50,8 +50,23 @@ class RecycleIntegrationTest extends ApiIntegrationTest {
         List<Map<String, Object>> items = bin("marta");
         assertThat(items).hasSize(1); // the tasks go with the project: they are not listed on their own
         assertThat(items.get(0)).containsEntry("itemType", "Project").containsEntry("includedTasks", 5)
-                .containsEntry("restorable", true).containsEntry("daysLeft", 30);
+                .containsEntry("restorable", true).containsEntry("daysLeft", 30)
+                .containsEntry("projectId", (int) project); // a project says itself
         assertThat(bin("ana")).isEmpty(); // a member does not see the project (EC36)
+    }
+
+    @Test
+    void aDeletedTaskSaysTheProjectItBelongsTo() { // the interface needs it to offer the people of that project (P36)
+        long project = newProject("Web", "In progress", "marta", "ana");
+        long other = newProject("Other", "In progress", "pedro", "luis");
+        long task = newTask(project, "Doomed", "To do", null, "ana");
+        newTask(other, "Safe", "To do", null, "luis");
+        delete("/tasks/" + task, sessionOf("ana"));
+
+        List<Map<String, Object>> items = bin("ana");
+
+        assertThat(items).hasSize(1);
+        assertThat(items.get(0)).containsEntry("itemType", "Task").containsEntry("projectId", (int) project);
     }
 
     @Test

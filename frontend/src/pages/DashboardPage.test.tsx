@@ -60,13 +60,15 @@ describe('the dashboard (US13, F07)', () => {
     expect(await screen.findByText(/You have no open projects\. A manager adds you/)).toBeInTheDocument()
   })
 
-  it('does not offer the Recycle bin yet (it arrives with its own increment)', async () => {
+  it('has the way to the Recycle bin, for a manager and for a member', async () => {
     mockApi({ 'GET /auth/me': jsonResponse(200, MARTA), 'GET /dashboard': jsonResponse(200, []) })
+    const { unmount } = renderApp('/')
+    expect(await screen.findByRole('link', { name: 'Recycle bin' })).toHaveAttribute('href', '/recycle-bin')
+    unmount()
 
+    mockApi({ 'GET /auth/me': jsonResponse(200, ANA), 'GET /dashboard': jsonResponse(200, []) })
     renderApp('/')
-
-    await screen.findByText(/You have no open projects/)
-    expect(screen.queryByText(/Recycle bin/i)).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Recycle bin' })).toBeInTheDocument()
   })
 
   it('shows the loading state, then the error of the API with a way to try again', async () => {

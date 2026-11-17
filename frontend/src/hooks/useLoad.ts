@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList } from 'react'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 
 export type LoadState<T> =
   | { status: 'loading' }
@@ -41,7 +41,7 @@ export function useLoad<T>(load: (signal: AbortSignal) => Promise<T>, inputs: De
         if (controller.signal.aborted) {
           return
         }
-        const message = cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.'
+        const message = messageOf(cause)
         // A refresh that fails keeps what is on screen and says so; only a first load becomes an error screen
         setState((current) => (wasSilent && current.status === 'ready' ? { ...current, refreshError: message } : { status: 'error', message }))
       })

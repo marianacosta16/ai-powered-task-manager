@@ -138,3 +138,23 @@ export function pageResponse(items: unknown[], total = items.length): Response {
 export function comment(id: number, content: string, author: { id: number; name: string; role: string } = ANA, createdAt = '2026-11-16T10:00:00Z') {
   return { id, taskId: 10, author, content, createdAt }
 }
+
+/** A Member of the contract for the tests. */
+export function member(id: number, name: string, overrides: Record<string, unknown> = {}) {
+  return { id, name, role: 'Team member', openTaskCount: 0, inOtherOpenProject: false, ...overrides }
+}
+
+/** A RecycleItem of the contract for the tests; a task of project 1 unless said otherwise. */
+export function binItem(id: number, name: string, overrides: Record<string, unknown> = {}) {
+  return {
+    itemType: 'Task',
+    id,
+    name,
+    projectId: 1,
+    projectName: 'Website Redesign',
+    deletedAt: '2026-11-10T10:00:00Z',
+    daysLeft: 23,
+    restorable: true,
+    ...overrides,
+  }
+}

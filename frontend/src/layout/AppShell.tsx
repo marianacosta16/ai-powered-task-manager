@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
 import { Notice } from '../components/Notice'
@@ -26,7 +26,7 @@ export function AppShell() {
     try {
       await signOut()
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setError(messageOf(cause))
       setPending(false)
     }
   }

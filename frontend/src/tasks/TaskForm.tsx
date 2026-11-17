@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ApiError } from '../api/errors'
+import { ApiError, GENERIC_MESSAGE } from '../api/errors'
 import { LEVELS, createTask, type Task } from '../api/tasks'
 import type { User } from '../api/auth'
 import { Button } from '../components/Button'
@@ -83,7 +83,7 @@ export function TaskForm({ projectId, timezone, parent, people, onCreated, onCan
         })
         setFocusToken((token) => token + 1)
       } else {
-        setServerError('Something went wrong. Try again in a moment.')
+        setServerError(GENERIC_MESSAGE)
       }
     } finally {
       submitting.current = false

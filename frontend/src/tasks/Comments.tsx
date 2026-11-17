@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { User } from '../api/auth'
 import { addComment, deleteComment, editComment, listComments, type Comment } from '../api/comments'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
@@ -57,7 +57,7 @@ export function Comments({ taskId, me, writable, onDirtyChange }: CommentsProps)
   }, [dirty, onDirtyChange])
 
   function failed(cause: unknown) {
-    setServerError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+    setServerError(messageOf(cause))
   }
 
   async function handleAdd(event: FormEvent) {

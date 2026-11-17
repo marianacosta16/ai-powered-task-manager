@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { User } from '../api/auth'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { addAssignee, getTask, removeAssignee } from '../api/tasks'
 import { Button } from '../components/Button'
 import { Notice } from '../components/Notice'
@@ -32,7 +32,7 @@ export function AssigneeList({ taskId, assignees, people, canEdit, onChange }: A
     try {
       await action()
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setError(messageOf(cause))
       try {
         onChange((await getTask(taskId)).assignees) // show who is assigned now, as the answer may mean the list was old
       } catch {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ApiError } from '../api/errors'
+import { ApiError, messageOf, GENERIC_MESSAGE } from '../api/errors'
 import { LEVELS, TASK_CHANGED, getTask, updateTask, type Task } from '../api/tasks'
 import { Button } from '../components/Button'
 import { Notice } from '../components/Notice'
@@ -107,7 +107,7 @@ export function TaskEditForm({ task, timezone, isManager, readOnly, onTaskChange
         })
         setFocusToken((token) => token + 1)
       } else {
-        setServerError('Something went wrong. Try again in a moment.')
+        setServerError(GENERIC_MESSAGE)
       }
     } finally {
       submitting.current = false
@@ -129,7 +129,7 @@ export function TaskEditForm({ task, timezone, isManager, readOnly, onTaskChange
           : 'The task was reloaded. What you typed was kept and the rest is up to date.',
       )
     } catch (cause) {
-      setServerError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setServerError(messageOf(cause))
     } finally {
       setPending(false)
     }

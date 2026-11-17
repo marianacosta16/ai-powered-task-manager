@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { deleteProject } from '../api/projects'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 
@@ -25,7 +25,7 @@ export function DeleteProjectDialog({ project, onDeleted, onFailed, onCancel }: 
       onDeleted()
     } catch (cause) {
       setBusy(false) // the parent decides whether the dialog stays
-      onFailed(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      onFailed(messageOf(cause))
     }
   }
 
