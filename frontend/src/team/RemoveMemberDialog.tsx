@@ -20,6 +20,8 @@ interface RemoveMemberDialogProps {
   candidates: Candidate[]
   /** The member was removed. */
   onRemoved: () => void
+  /** Reads the team and the people who can be added again: the open tasks of the substitutes may have changed. */
+  onReload: () => void
   onCancel: () => void
 }
 
@@ -29,7 +31,7 @@ interface RemoveMemberDialogProps {
  * the number of their open tasks, or free people who join the project; nobody is offered who would pass 5 open tasks or
  * who is already assigned to that task. The server checks it all again, and the choices stay if it refuses.
  */
-export function RemoveMemberDialog({ projectId, member, members, candidates, onRemoved, onCancel }: RemoveMemberDialogProps) {
+export function RemoveMemberDialog({ projectId, member, members, candidates, onRemoved, onReload, onCancel }: RemoveMemberDialogProps) {
   const tasks = useLoad((signal) => listAllProjectTasks(projectId, signal), [projectId])
   const [chosen, setChosen] = useState<Record<number, number>>({})
   const [pending, setPending] = useState(false)
@@ -42,7 +44,9 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
     ...members.map((m) => ({ id: m.id, name: m.name, openTasks: m.openTaskCount, isNew: false })),
     ...candidates.filter((c) => c.available).map((c) => ({ id: c.user.id, name: c.user.name, openTasks: 0, isNew: true })),
   ]
-  const complete = ready && open.every((task) => chosen[task.id] !== undefined)
+  // Only the choices for tasks that are still open count: after a reload some may be gone
+  const current = Object.fromEntries(Object.entries(chosen).filter(([id]) => open.some((task) => task.id === Number(id)))) as Record<number, number>
+  const complete = ready && open.every((task) => current[task.id] !== undefined)
 
   async function confirm() {
     setPending(true)
@@ -51,7 +55,7 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
       await removeMember(
         projectId,
         member.id,
-        open.map((task) => ({ taskId: task.id, newAssigneeId: chosen[task.id] })),
+        open.map((task) => ({ taskId: task.id, newAssigneeId: current[task.id] })),
       )
       onRemoved()
     } catch (cause) {
@@ -62,7 +66,8 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
 
   return (
     <ConfirmDialog
-      title={open.length > 0 ? `Remove ${member.name} and reassign their tasks` : `Remove ${member.name}?`}
+      // neutral while the tasks are being read: the dialog does not change meaning under the user
+      title={!ready ? `Remove ${member.name}` : open.length > 0 ? `Remove ${member.name} and reassign their tasks` : `Remove ${member.name}?`}
       confirmLabel={open.length > 0 ? 'Remove and reassign' : 'Remove'}
       confirmDisabled={!complete}
       busy={pending}
@@ -81,6 +86,7 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
               onClick={() => {
                 setError(null)
                 tasks.reload() // the tasks may have changed since the dialog was opened; the choices that still apply stay
+                onReload() // and so may the open tasks of the substitutes
               }}
             >
               Reload tasks
@@ -97,12 +103,12 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
           </p>
           <ul className="reassign">
             {open.map((task) => {
-              const options = substitutesFor(task, everyone, chosen, MAX_OPEN_TASKS_PER_PERSON)
+              const options = substitutesFor(task, everyone, current, MAX_OPEN_TASKS_PER_PERSON)
               return (
                 <li key={task.id} className="reassign__row">
                   <Select
                     label={task.parentTitle ? `Subtask: ${task.title} (of ${task.parentTitle})` : `Task: ${task.title}`}
-                    value={chosen[task.id] === undefined ? '' : String(chosen[task.id])}
+                    value={current[task.id] === undefined ? '' : String(current[task.id])}
                     options={[
                       { value: '', label: options.length === 0 ? 'Nobody can take it' : 'Choose...' },
                       ...options.map((o) => ({ value: String(o.id), label: o.isNew ? `${o.name} (new member)` : `${o.name} (${o.openTasks} open)` })),

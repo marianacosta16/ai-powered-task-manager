@@ -330,6 +330,70 @@ describe('removing a member (R17, P24)', () => {
     })
   })
 
+  const bothTasks = pageResponse([task(10, 'Task A', { assignees: [RUI] }), task(11, 'Task B', { assignees: [RUI] })])
+  const onlyB = pageResponse([task(11, 'Task B', { assignees: [RUI] })])
+
+  /** Opens the dialog with two tasks, chooses Ana for A and Luís (new member) for B, and gets the refusal. */
+  async function refuseOnce(extra: Parameters<typeof mockApi>[0]) {
+    const api = await open({
+      'GET /projects/1/candidate-members': jsonResponse(200, [{ user: LUIS, available: true }]),
+      [REMOVE(4)]: jsonResponse(422, { code: 'REPLACEMENT_REQUIRED', message: 'Something changed.' }),
+      ...extra,
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rui' }))
+    const dialog = await screen.findByRole('dialog', { name: /Remove Rui and reassign/ })
+    fireEvent.change(within(dialog).getByLabelText('Task: Task A'), { target: { value: '3' } })
+    fireEvent.change(within(dialog).getByLabelText('Task: Task B'), { target: { value: '5' } })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove and reassign' }))
+    await within(dialog).findByText('Something changed.')
+    return { api, dialog }
+  }
+
+  const optionsOf = (dialog: HTMLElement, label: string) =>
+    Array.from((within(dialog).getByLabelText(label) as HTMLSelectElement).options).map((o) => o.text)
+
+  it('drops the choice for a task that is no longer open, so the substitute is offered again', async () => {
+    const { dialog } = await refuseOnce({
+      'GET /projects/1/members': jsonResponse(200, [member(3, 'Ana', { openTaskCount: 4 }), member(4, 'Rui', { openTaskCount: 2 })]),
+      [TASKS]: [bothTasks, onlyB],
+    })
+    expect(optionsOf(dialog, 'Task: Task B')).not.toContain('Ana (4 open)') // Ana is full with the choice for Task A
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reload tasks' }))
+
+    await waitFor(() => expect(within(dialog).queryByLabelText('Task: Task A')).not.toBeInTheDocument())
+    expect(optionsOf(dialog, 'Task: Task B')).toContain('Ana (4 open)') // the choice for the task that left no longer counts
+    expect(within(dialog).getByLabelText('Task: Task B')).toHaveValue('5') // the one for Task B stays
+  })
+
+  it('reads the team and the people who can be added again, as their open tasks may have changed', async () => {
+    const { api, dialog } = await refuseOnce({
+      'GET /projects/1/members': [
+        jsonResponse(200, [member(3, 'Ana', { openTaskCount: 1 }), member(4, 'Rui', { openTaskCount: 2 })]),
+        jsonResponse(200, [member(3, 'Ana', { openTaskCount: 3 }), member(4, 'Rui', { openTaskCount: 2 })]),
+      ],
+      [TASKS]: [bothTasks, bothTasks],
+    })
+    expect(optionsOf(dialog, 'Task: Task B')).toContain('Ana (1 open)')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reload tasks' }))
+
+    await waitFor(() => expect(optionsOf(dialog, 'Task: Task B')).toContain('Ana (3 open)'))
+    expect(api.callsTo('GET /projects/1/members')).toHaveLength(2)
+    expect(api.callsTo('GET /projects/1/candidate-members')).toHaveLength(2)
+  })
+
+  it('is named neutrally while the tasks are read, and for what it does once they are known', async () => {
+    const pending = deferredResponse()
+    await open({ [TASKS]: pending.fetch })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rui' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Remove Rui' })
+    pending.respond(bothTasks)
+
+    expect(await screen.findByRole('dialog', { name: 'Remove Rui and reassign their tasks' })).toBe(dialog)
+  })
+
   it('shows the error when the tasks cannot be read again', async () => {
     await open({
       [TASKS]: [pageResponse([task(10, 'Fix bug', { assignees: [RUI] })]), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'Could not read them again.' })],

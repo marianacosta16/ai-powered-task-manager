@@ -174,6 +174,7 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
           member={leaving}
           members={team}
           candidates={people}
+          onReload={refresh}
           onRemoved={() => {
             setMessage({ kind: 'success', text: `${leaving.name} was removed from "${projectName}".` })
             setLeaving(null)
