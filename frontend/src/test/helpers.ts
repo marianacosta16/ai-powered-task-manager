@@ -133,3 +133,8 @@ export function pageResponse(items: unknown[], total = items.length): Response {
     headers: { 'Content-Type': 'application/json', 'X-Total-Count': String(total) },
   })
 }
+
+/** A Comment of the contract for the tests. */
+export function comment(id: number, content: string, author: { id: number; name: string; role: string } = ANA, createdAt = '2026-11-16T10:00:00Z') {
+  return { id, taskId: 10, author, content, createdAt }
+}

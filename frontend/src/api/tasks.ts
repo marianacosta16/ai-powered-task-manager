@@ -33,11 +33,16 @@ export interface Task {
   importance: Level
   quadrant?: Quadrant
   blockReason?: string | null
+  originalTaskId?: number | null
+  originalEliminated?: boolean
+  originalInRecycleBin?: boolean
   assignees: User[]
   subtasks?: Task[]
 }
 
 export interface TaskCreate {
+  /** Set to create a subtask of that main task. */
+  parentTaskId?: number
   title: string
   description?: string
   deadline: string
@@ -78,3 +83,36 @@ export function listAssignableUsers(projectId: number, signal?: AbortSignal): Pr
 export function getTask(id: number, signal?: AbortSignal): Promise<Task> {
   return request<Task>(`/tasks/${id}`, { signal })
 }
+
+/** TaskUpdate: the `version` read and only the fields that change; null clears the description. */
+export interface TaskUpdate {
+  version: number
+  title?: string
+  description?: string | null
+  status?: TaskStatus
+  deadline?: string
+  urgency?: Level
+  importance?: Level
+  blockReason?: string | null
+  originalTaskId?: number | null
+}
+
+export function updateTask(id: number, body: TaskUpdate): Promise<Task> {
+  return request<Task>(`/tasks/${id}`, { method: 'PATCH', body })
+}
+
+export function deleteTask(id: number): Promise<void> {
+  return request<void>(`/tasks/${id}`, { method: 'DELETE' })
+}
+
+/** addAssignee: gives back the assignees after the change. */
+export function addAssignee(taskId: number, userId: number): Promise<User[]> {
+  return request<User[]>(`/tasks/${taskId}/assignees`, { method: 'POST', body: { userId } })
+}
+
+export function removeAssignee(taskId: number, userId: number): Promise<void> {
+  return request<void>(`/tasks/${taskId}/assignees/${userId}`, { method: 'DELETE' })
+}
+
+/** The code of the 409 that says the task was changed by someone else after it was read (R30). */
+export const TASK_CHANGED = 'TASK_CHANGED'

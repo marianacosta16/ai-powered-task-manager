@@ -24,7 +24,7 @@ export const EMPTY_TASK: TaskFormValues = {
 }
 
 /** What can be warned about before the request (the server checks everything again, W13). The deadline is read in the time zone of the project. */
-export function validateTask(values: TaskFormValues, timezone: string): TaskFormErrors {
+export function validateTask(values: TaskFormValues, timezone: string, maxDeadline?: string): TaskFormErrors {
   const errors: TaskFormErrors = {}
   const title = values.title.trim()
   if (title.length < TASK_TITLE_MIN || title.length > TASK_TITLE_MAX) {
@@ -37,6 +37,8 @@ export function validateTask(values: TaskFormValues, timezone: string): TaskForm
     errors.deadline = 'Choose the deadline.'
   } else if (values.deadline < today(timezone)) {
     errors.deadline = 'The deadline cannot be in the past. Choose today or a later date.'
+  } else if (maxDeadline !== undefined && values.deadline > maxDeadline) {
+    errors.deadline = 'The subtask deadline cannot be later than the parent task deadline. Choose an earlier date.' // R2
   }
   if (values.urgency === '') errors.urgency = 'Choose the urgency.'
   if (values.importance === '') errors.importance = 'Choose the importance.'
@@ -44,9 +46,10 @@ export function validateTask(values: TaskFormValues, timezone: string): TaskForm
   return errors
 }
 
-export function toTaskCreate(values: TaskFormValues): TaskCreate {
+export function toTaskCreate(values: TaskFormValues, parentTaskId?: number): TaskCreate {
   const description = values.description.trim()
   return {
+    ...(parentTaskId !== undefined ? { parentTaskId } : {}),
     title: values.title.trim(),
     ...(description !== '' ? { description } : {}),
     deadline: values.deadline,
