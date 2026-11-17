@@ -14,3 +14,6 @@ export const TASK_DESCRIPTION_MAX = 2000
 /** A block reason (R6, R14) and a comment (R24, NF09). */
 export const BLOCK_REASON_MAX = 100
 export const COMMENT_MAX = 2000
+
+/** Nobody has more than this many open tasks and subtasks (R17, P24). */
+export const MAX_OPEN_TASKS_PER_PERSON = 5

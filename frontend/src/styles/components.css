@@ -501,3 +501,18 @@
 .subtask__who {
   color: var(--color-muted);
 }
+
+/* ---- team and recycle bin ---- */
+.actions--end {
+  align-items: flex-end;
+}
+
+.reassign {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reassign__row {
+  margin-bottom: var(--space-2);
+}

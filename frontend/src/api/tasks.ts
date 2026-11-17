@@ -116,3 +116,16 @@ export function removeAssignee(taskId: number, userId: number): Promise<void> {
 
 /** The code of the 409 that says the task was changed by someone else after it was read (R30). */
 export const TASK_CHANGED = 'TASK_CHANGED'
+
+/** Every main task of a project: the pages of the server one after the other, until the total is reached. */
+export async function listAllProjectTasks(projectId: number, signal?: AbortSignal): Promise<Task[]> {
+  const size = 200
+  const all: Task[] = []
+  for (let page = 1; ; page += 1) {
+    const result = await listProjectTasks(projectId, { page, size }, signal)
+    all.push(...result.items)
+    if (result.items.length === 0 || all.length >= result.total) {
+      return all
+    }
+  }
+}

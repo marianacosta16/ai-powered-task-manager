@@ -34,13 +34,15 @@ O endereço do backend está num só sítio, `src/config.ts`, e vem da variável
 src/
   config.ts          endereço do backend
   limits.ts          limites dos textos de um projeto (o servidor decide; aqui só avisam)
-  api/               cliente da API, erros do contrato e as operações (auth, dashboard, projects, members, tasks, comments)
+  api/               cliente da API, erros do contrato e as operações (auth, dashboard, projects, members, tasks, comments, recycle)
   hooks/             `useLoad`: carregar dados com os estados de carregamento, erro e dados
   auth/              a sessão do utilizador (contexto, hook)
   components/        componentes comuns: botão, campos, lista de escolha, aviso, carregamento, confirmação, barra de progresso
   layout/            a barra superior das páginas depois de iniciar sessão
-  pages/             os ecrãs (início de sessão, painel, projetos, detalhe do projeto, página provisória da tarefa)
+  pages/             os ecrãs (início de sessão, painel, projetos, detalhe do projeto, tarefa, equipa, reciclagem)
   tasks/             a Matriz, a Lista, os formulários de tarefa (criar e editar, com o conflito 409), responsáveis, subtarefas, comentários e a leitura do endereço
+  team/              o diálogo de remoção de um membro, com os substitutos
+  recycle/           o diálogo de substitutos ao restaurar uma tarefa
   projects/          o formulário de projeto (criar e editar) e as regras de validação
   routes/            a sessão acima dos ecrãs e a proteção das rotas que precisam dela (as rotas estão em `App.tsx`, num router com dados)
   styles/            variáveis, estilos base, dos componentes e do layout (três larguras)
