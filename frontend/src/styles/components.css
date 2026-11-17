@@ -516,3 +516,8 @@
 .reassign__row {
   margin-bottom: var(--space-2);
 }
+
+/* the button to delete a task is set apart from the subtask section above it */
+.task-delete {
+  margin-top: var(--space-3);
+}

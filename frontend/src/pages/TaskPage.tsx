@@ -144,7 +144,7 @@ function TaskScreen({ first }: { first: Task }) {
         />
       ) : null}
       {!completed ? (
-        <p>
+        <p className="task-delete">
           <Button variant="secondary" onClick={() => setConfirmDelete(true)}>
             Delete {isSubtask ? 'subtask' : 'task'}
           </Button>
