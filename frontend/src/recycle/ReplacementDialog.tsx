@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import type { RecycleItem } from '../api/recycle'
 import { restoreTask } from '../api/recycle'
 import { listAssignableUsers } from '../api/tasks'
@@ -35,7 +35,7 @@ export function ReplacementDialog({ item, reason, onRestored, onCancel }: Replac
       await restoreTask(item.id, chosen.map(Number))
       onRestored()
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setError(messageOf(cause))
       setPending(false)
     }
   }

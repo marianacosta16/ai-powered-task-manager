@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { useAuth } from '../auth/useAuth'
 import { Button } from '../components/Button'
 import { Notice } from '../components/Notice'
@@ -65,7 +65,7 @@ export function SignInPage() {
     try {
       await signIn(username.trim(), password) // on success the state changes and this screen redirects
     } catch (cause) {
-      setServerError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setServerError(messageOf(cause))
     } finally {
       submitting.current = false
       setPending(false)

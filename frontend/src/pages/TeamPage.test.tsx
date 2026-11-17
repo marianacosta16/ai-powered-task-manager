@@ -124,6 +124,50 @@ describe('adding a member (R11, cenário 1.4)', () => {
   })
 })
 
+describe('after a change the team is read again', () => {
+  it('says so when it cannot be refreshed, instead of keeping the old table in silence', async () => {
+    await open({
+      'POST /projects/1/members': jsonResponse(201, member(5, 'Luís')),
+      'GET /projects/1/members': [jsonResponse(200, [member(3, 'Ana')]), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'The team could not be refreshed.' })],
+    })
+    fireEvent.change(screen.getByLabelText('Person'), { target: { value: '5' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add member' }))
+
+    expect(await screen.findByText('The team could not be refreshed.')).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'Ana' })).toBeInTheDocument() // what was there stays
+  })
+
+  it('says so when only the people who can be added cannot be refreshed', async () => {
+    await open({
+      'POST /projects/1/members': jsonResponse(201, member(5, 'Luís')),
+      'GET /projects/1/candidate-members': [jsonResponse(200, [{ user: LUIS, available: true }]), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'The people could not be refreshed.' })],
+    })
+    fireEvent.change(screen.getByLabelText('Person'), { target: { value: '5' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add member' }))
+
+    expect(await screen.findByText('The people could not be refreshed.')).toBeInTheDocument()
+  })
+
+  it('forgets the person chosen when they are no longer available', async () => {
+    await open({
+      'POST /projects/1/members': jsonResponse(422, { code: 'MEMBER_IN_OTHER_OPEN_PROJECT', message: 'Luís is in another open project.' }),
+      'GET /projects/1/candidate-members': [
+        jsonResponse(200, [{ user: LUIS, available: true }]),
+        jsonResponse(200, [{ user: LUIS, available: false, unavailableReason: 'IN_OTHER_OPEN_PROJECT' }]),
+      ],
+    })
+    fireEvent.change(screen.getByLabelText('Person'), { target: { value: '5' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add member' }))
+
+    expect(await screen.findByText('Luís is in another open project.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText('Person')).toHaveValue(''))
+    expect(screen.getByRole('button', { name: 'Add member' })).toBeDisabled()
+  })
+})
+
 describe('removing a member (R17, P24)', () => {
   it('removes a member without open tasks after asking, with no reassignments', async () => {
     const api = await open({ [REMOVE(4)]: jsonResponse(204) })
@@ -237,6 +281,70 @@ describe('removing a member (R17, P24)', () => {
     expect(api.callsTo(REMOVE(4))).toHaveLength(0)
     pending.respond(pageResponse([]))
     expect(await within(dialog).findByRole('button', { name: 'Remove' })).toBeEnabled()
+  })
+
+  it('is the same dialog while the tasks are read and after, so the focus does not jump', async () => {
+    const pending = deferredResponse()
+    await open({ [TASKS]: pending.fetch })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rui' }))
+    const dialog = await screen.findByRole('dialog')
+    pending.respond(pageResponse([task(10, 'Fix bug', { assignees: [RUI] })]))
+    await within(dialog).findByLabelText('Task: Fix bug')
+
+    expect(screen.getByRole('dialog')).toBe(dialog)
+  })
+
+  it('reads the tasks again after a refusal, keeps the choices that still apply and lists a new task', async () => {
+    const api = await open({
+      [TASKS]: [
+        pageResponse([task(10, 'Fix bug', { assignees: [RUI] })]),
+        pageResponse([task(10, 'Fix bug', { assignees: [RUI] }), task(11, 'New one', { assignees: [RUI] })]),
+      ],
+      [REMOVE(4)]: [
+        jsonResponse(422, { code: 'REPLACEMENT_REQUIRED', message: 'Rui has another open task: choose a substitute.' }),
+        jsonResponse(204),
+      ],
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rui' }))
+    const dialog = await screen.findByRole('dialog', { name: /Remove Rui and reassign/ })
+    fireEvent.change(within(dialog).getByLabelText('Task: Fix bug'), { target: { value: '5' } })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove and reassign' }))
+    expect(await within(dialog).findByText('Rui has another open task: choose a substitute.')).toBeInTheDocument()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reload tasks' }))
+
+    expect(await within(dialog).findByLabelText('Task: New one')).toBeInTheDocument()
+    expect(within(dialog).queryByText('Rui has another open task: choose a substitute.')).not.toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Task: Fix bug')).toHaveValue('5') // the choice stays
+    expect(within(dialog).getByRole('button', { name: 'Remove and reassign' })).toBeDisabled() // the new task is missing
+    fireEvent.change(within(dialog).getByLabelText('Task: New one'), { target: { value: '3' } })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove and reassign' }))
+
+    expect(await screen.findByText('Rui was removed from "Website Redesign".')).toBeInTheDocument()
+    expect(api.callsTo(REMOVE(4))[1].body).toEqual({
+      reassignments: [
+        { taskId: 10, newAssigneeId: 5 },
+        { taskId: 11, newAssigneeId: 3 },
+      ],
+    })
+  })
+
+  it('shows the error when the tasks cannot be read again', async () => {
+    await open({
+      [TASKS]: [pageResponse([task(10, 'Fix bug', { assignees: [RUI] })]), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'Could not read them again.' })],
+      [REMOVE(4)]: jsonResponse(422, { code: 'REPLACEMENT_REQUIRED', message: 'Choose a substitute.' }),
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Rui' }))
+    const dialog = await screen.findByRole('dialog', { name: /Remove Rui and reassign/ })
+    fireEvent.change(within(dialog).getByLabelText('Task: Fix bug'), { target: { value: '5' } })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove and reassign' }))
+    await within(dialog).findByText('Choose a substitute.')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reload tasks' }))
+
+    expect(await within(dialog).findByText('Could not read them again.')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Task: Fix bug')).toBeInTheDocument() // the list that was there stays
   })
 
   it('shows the error when the tasks of the project cannot be read, instead of removing blindly', async () => {

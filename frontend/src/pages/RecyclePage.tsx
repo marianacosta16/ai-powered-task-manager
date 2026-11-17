@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ApiError } from '../api/errors'
+import { ApiError, messageOf } from '../api/errors'
 import {
   ASSIGNEE_REQUIRED,
   listRecycleBin,
@@ -49,7 +49,7 @@ export function RecyclePage() {
       if (cause instanceof ApiError && cause.code === ASSIGNEE_REQUIRED) {
         setNeedsReplacement({ item, reason: cause.message })
       } else {
-        setMessage({ kind: 'error', text: cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.' })
+        setMessage({ kind: 'error', text: messageOf(cause) })
       }
     } finally {
       setBusyKey(null)

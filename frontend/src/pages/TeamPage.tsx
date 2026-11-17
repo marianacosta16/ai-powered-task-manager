@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { addMember, listCandidateMembers, listMembers, type Member } from '../api/members'
 import { getProject } from '../api/projects'
 import { useAuth } from '../auth/useAuth'
@@ -87,18 +87,21 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
   }
   const team = members.state.data
   const people = candidates.state.data
+  // The person chosen is only valid while they are still available: after a refresh they may not be
+  const selected = people.some((candidate) => String(candidate.user.id) === choice && candidate.available) ? choice : ''
+  const refreshError = members.state.refreshError ?? candidates.state.refreshError
   const shared = team.filter((member) => member.inOtherOpenProject)
 
   async function handleAdd() {
-    if (choice === '') return
+    if (selected === '') return
     setPending(true)
     setMessage(null)
     try {
-      const added = await addMember(projectId, Number(choice))
+      const added = await addMember(projectId, Number(selected))
       setChoice('')
       setMessage({ kind: 'success', text: `${added.name} joined "${projectName}".` })
     } catch (cause) {
-      setMessage({ kind: 'error', text: cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.' })
+      setMessage({ kind: 'error', text: messageOf(cause) })
     } finally {
       setPending(false)
       refresh() // who is available may have changed
@@ -108,6 +111,7 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
   return (
     <>
       {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
+      {refreshError ? <Notice kind="error">{refreshError}</Notice> : null}
       {shared.length > 0 ? (
         <Notice kind="error">
           The project was resumed and {shared.map((member) => member.name).join(', ')} {shared.length === 1 ? 'is' : 'are'} also in another
@@ -149,7 +153,7 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
       <div className="actions actions--end">
         <Select
           label="Person"
-          value={choice}
+          value={selected}
           options={[
             { value: '', label: 'Choose...' },
             ...people.map((candidate) => ({
@@ -160,7 +164,7 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
           ]}
           onChange={(event) => setChoice(event.target.value)}
         />
-        <Button busy={pending} disabled={choice === ''} onClick={() => void handleAdd()}>
+        <Button busy={pending} disabled={selected === ''} onClick={() => void handleAdd()}>
           Add member
         </Button>
       </div>

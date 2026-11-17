@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ApiError } from '../api/errors'
+import { messageOf } from '../api/errors'
 import { removeMember, type Candidate, type Member } from '../api/members'
 import { listAllProjectTasks } from '../api/tasks'
+import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { LoadError } from '../components/LoadError'
 import { Notice } from '../components/Notice'
@@ -34,28 +35,14 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (tasks.state.status === 'loading') {
-    return (
-      <ConfirmDialog title={`Remove ${member.name}?`} confirmLabel="Remove" confirmDisabled onConfirm={() => undefined} onCancel={onCancel}>
-        <Spinner label="Reading the tasks of the member..." />
-      </ConfirmDialog>
-    )
-  }
-  if (tasks.state.status === 'error') {
-    return (
-      <ConfirmDialog title={`Remove ${member.name}?`} confirmLabel="Remove" confirmDisabled onConfirm={() => undefined} onCancel={onCancel}>
-        <LoadError message={tasks.state.message} onRetry={tasks.retry} />
-      </ConfirmDialog>
-    )
-  }
-
-  const open: OpenTask[] = openTasksOf(member.id, tasks.state.data)
+  const ready = tasks.state.status === 'ready'
+  const open: OpenTask[] = tasks.state.status === 'ready' ? openTasksOf(member.id, tasks.state.data) : []
   const everyone: Substitute[] = [
     // The member who leaves is in `members` too, but they are assigned to each of these tasks, so they are never offered
     ...members.map((m) => ({ id: m.id, name: m.name, openTasks: m.openTaskCount, isNew: false })),
     ...candidates.filter((c) => c.available).map((c) => ({ id: c.user.id, name: c.user.name, openTasks: 0, isNew: true })),
   ]
-  const complete = open.every((task) => chosen[task.id] !== undefined)
+  const complete = ready && open.every((task) => chosen[task.id] !== undefined)
 
   async function confirm() {
     setPending(true)
@@ -68,24 +55,41 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
       )
       onRemoved()
     } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
+      setError(messageOf(cause))
       setPending(false)
     }
   }
 
   return (
     <ConfirmDialog
-      title={open.length === 0 ? `Remove ${member.name}?` : `Remove ${member.name} and reassign their tasks`}
-      confirmLabel={open.length === 0 ? 'Remove' : 'Remove and reassign'}
+      title={open.length > 0 ? `Remove ${member.name} and reassign their tasks` : `Remove ${member.name}?`}
+      confirmLabel={open.length > 0 ? 'Remove and reassign' : 'Remove'}
       confirmDisabled={!complete}
       busy={pending}
       onConfirm={() => void confirm()}
       onCancel={onCancel}
     >
-      {error ? <Notice kind="error">{error}</Notice> : null}
-      {open.length === 0 ? (
-        <p>{member.name} has no open tasks. They leave the project and can join another open one.</p>
-      ) : (
+      {tasks.state.status === 'loading' ? <Spinner label="Reading the tasks of the member..." /> : null}
+      {tasks.state.status === 'error' ? <LoadError message={tasks.state.message} onRetry={tasks.retry} /> : null}
+      {tasks.state.status === 'ready' && tasks.state.refreshError ? <Notice kind="error">{tasks.state.refreshError}</Notice> : null}
+      {error ? (
+        <>
+          <Notice kind="error">{error}</Notice>
+          <p>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setError(null)
+                tasks.reload() // the tasks may have changed since the dialog was opened; the choices that still apply stay
+              }}
+            >
+              Reload tasks
+            </Button>
+          </p>
+        </>
+      ) : null}
+      {ready && open.length === 0 ? <p>{member.name} has no open tasks. They leave the project and can join another open one.</p> : null}
+      {ready && open.length > 0 ? (
         <>
           <p>
             {member.name} has {open.length} open {open.length === 1 ? 'task or subtask' : 'tasks and subtasks'}. Choose who takes
@@ -118,7 +122,7 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
             })}
           </ul>
         </>
-      )}
+      ) : null}
     </ConfirmDialog>
   )
 }

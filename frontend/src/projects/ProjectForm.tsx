@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ApiError } from '../api/errors'
+import { ApiError, GENERIC_MESSAGE } from '../api/errors'
 import {
   PHASES,
   STATUSES,
@@ -112,7 +112,7 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
         })
         setFocusToken((token) => token + 1)
       } else {
-        setServerError('Something went wrong. Try again in a moment.')
+        setServerError(GENERIC_MESSAGE)
       }
     } finally {
       submitting.current = false
