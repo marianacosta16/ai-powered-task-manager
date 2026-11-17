@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { inDays, signIn, signOut } from './support'
 
 /**
@@ -51,10 +51,10 @@ test('MVP-1: from the project to the progress', async ({ page }) => {
   await page.getByRole('link', { name: 'Rever texto' }).click()
   await page.getByRole('textbox', { name: 'New comment' }).fill('Falta o capítulo 2')
   await page.getByRole('button', { name: 'Add comment' }).click()
-  const comment = page.locator('.comment', { hasText: 'Falta o capítulo 2' })
+  const comment = page.getByRole('listitem').filter({ hasText: 'Falta o capítulo 2' })
   await expect(comment).toBeVisible()
   await expect(comment.getByText('Ana')).toBeVisible() // the author
-  await expect(comment.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/) // and the date of creation
+  await expect(comment.getByRole('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/) // and the date of creation
   await page.getByRole('link', { name: 'Website', exact: true }).click()
 
   // The Matrix shows "Rever texto" in Schedule and not "Escrever relatório" (it is done)
@@ -77,21 +77,26 @@ test('MVP-1: from the project to the progress', async ({ page }) => {
 
   // Ana sees the counts by status on the dashboard: to do 1, done 1 and the rest 0
   await page.getByRole('link', { name: 'Dashboard' }).click()
-  const card = page.locator('.card', { has: page.getByRole('link', { name: 'Website' }) })
+  const card = projectCard(page)
   const counts: Record<string, string> = { 'To do': '1', 'In progress': '0', 'In review': '0', Blocked: '0', Done: '1', Cancelled: '0', Duplicate: '0' }
   for (const [label, value] of Object.entries(counts)) {
-    await expect(card.locator('.counts__item', { has: page.getByText(label, { exact: true }) }).locator('dd')).toHaveText(value)
+    await expect(card).toContainText(new RegExp(`${label}\\s*${value}(?!\\d)`))
   }
   await signOut(page)
 
   // Marta sees the project on the dashboard with 50% of progress and the status "In progress"
   await signIn(page, 'marta')
-  const martaCard = page.locator('.card', { has: page.getByRole('link', { name: 'Website' }) })
+  const martaCard = projectCard(page)
   await expect(martaCard.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
-  await expect(martaCard.locator('.badge', { hasText: 'In progress' })).toBeVisible() // the badge, not the label of the counter
+  await expect(martaCard).toContainText('Initiation · In progress') // the phase and the status of the project, not the counter
 })
 
-async function createTask(page: import('@playwright/test').Page, task: { title: string; deadline: string; urgency: string; importance: string }) {
+/** The card of the project "Website" on the dashboard: a list item with its link. */
+function projectCard(page: Page) {
+  return page.getByRole('listitem').filter({ has: page.getByRole('link', { name: 'Website' }) })
+}
+
+async function createTask(page: Page, task: { title: string; deadline: string; urgency: string; importance: string }) {
   await page.getByRole('button', { name: '+ New task' }).click()
   const form = page.getByRole('region', { name: 'New task' })
   await form.getByLabel('Title *').fill(task.title)

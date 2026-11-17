@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from '@playwright/test'
 
 /**
@@ -12,6 +13,8 @@ import { defineConfig } from '@playwright/test'
 // The password of the demo accounts of this run: made here, only for this run, and never written down or printed.
 process.env.E2E_PASSWORD ??= `E2e-${randomBytes(9).toString('base64url')}9x`
 
+// The scripts are found from the place of this file, so the tests can be started from any folder
+const script = (name: string) => fileURLToPath(new URL(`./e2e/${name}`, import.meta.url))
 const API = 'http://localhost:8081'
 const WEB = 'http://localhost:5173'
 
@@ -24,8 +27,9 @@ export default defineConfig({
   timeout: 120_000,
   reporter: [['list']],
   use: { baseURL: WEB, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  // stdout and stderr of the servers are shown, so a backend that does not start says why instead of timing out in silence
   webServer: [
-    { command: 'bash e2e/backend.sh', url: `${API}/actuator/health`, timeout: 240_000, reuseExistingServer: false },
-    { command: `VITE_API_URL=${API} npx vite --port 5173 --strictPort`, url: WEB, timeout: 60_000, reuseExistingServer: false },
+    { command: `bash ${script('backend.sh')}`, url: `${API}/actuator/health`, timeout: 240_000, reuseExistingServer: false, stdout: 'pipe', stderr: 'pipe' },
+    { command: `VITE_API_URL=${API} npx vite --port 5173 --strictPort`, url: WEB, timeout: 60_000, reuseExistingServer: false, stdout: 'pipe', stderr: 'pipe' },
   ],
 })
