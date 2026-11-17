@@ -234,15 +234,15 @@ O código **W** é local aos wireframes e continua a numeração de [matrix-wire
 
 ## 10. Larguras de ecrã
 
-Os wireframes mostram o computador. Desde 2026-11-14 o layout adapta-se também a tablet e a telemóvel (NF02, Exercício 7), com larguras fluidas e três pontos de quebra a rever no incremento 9 (por exemplo, abaixo de 1024 e de 640 píxeis). Não há wireframes novos: as regras são estas.
+Os wireframes mostram o computador. Desde 2026-11-14 o layout adapta-se também a tablet e a telemóvel (NF02, Exercício 7), com larguras fluidas e dois pontos de quebra (1024 e 640 píxeis, em `styles/layout.css`). Não há wireframes novos: as regras são estas, revistas no incremento 13b com o que ficou implementado.
 
 | Elemento | Computador | Tablet | Telemóvel |
 |---|---|---|---|
 | Barra superior | Completa, com o caminho e o utilizador | Completa, com o caminho mais curto | Recolhida num botão de menu; o caminho passa a ser só o ecrã atual |
-| Tabelas (projetos, tarefas, equipa, reciclagem) | Tabela | Tabela com menos colunas (as outras vão para o detalhe) | Uma lista de cartões, um por linha, com os dados principais e as ações |
-| Formulário ao lado da lista (W8, W9) | Painel ao lado | Painel por baixo da lista | Ecrã próprio, que se abre e se fecha |
+| Tabelas (projetos, tarefas, equipa, reciclagem) | Tabela | Tabela com todas as colunas (cabem) | Uma lista de cartões, um por linha, com os dados e as ações; os botões têm o tamanho de toque |
+| Formulário ao lado da lista (W8, W9) | Painel ao lado | Painel por baixo da lista | Painel por baixo da lista, que ao abrir recebe o foco no primeiro campo (e por isso aparece à vista) |
 | Painel inicial (W7) | Cartões em grelha | Cartões em duas colunas | Cartões numa coluna; os 7 mosaicos de contagem em duas colunas |
 | Matriz | Os 4 quadrantes lado a lado, 2 por 2 | 2 por 2, mais estreitos | Os 4 quadrantes empilhados, por ordem: Do first, Schedule, Delegate, Later |
-| Caixas de confirmação | Ao centro | Ao centro | Ocupam a largura do ecrã |
+| Caixas de confirmação | Ao centro | Ao centro | Ocupam a largura do ecrã, junto ao fundo |
 
-Os botões e os campos têm uma área de toque suficiente nas larguras estreitas, e nenhum ecrã precisa de deslocação horizontal.
+Os botões e os campos têm uma área de toque suficiente nas larguras estreitas, e nenhum ecrã precisa de deslocação horizontal (medido no incremento 13b, em 375, 800 e 1280 píxeis, nos sete ecrãs principais). O detalhe da tarefa é uma coluna de largura limitada.
