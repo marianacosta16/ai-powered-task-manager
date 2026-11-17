@@ -25,8 +25,19 @@ O endereço do backend está num só sítio, `src/config.ts`, e vem da variável
 |---|---|
 | `npm run dev` | Servidor de desenvolvimento, em `http://localhost:5173` |
 | `npm test` | Testes dos componentes (Vitest e Testing Library) |
+| `npm run e2e` | Teste de ponta a ponta do cenário MVP-1 (Playwright), num navegador a sério contra o backend e a base de teste. Ver abaixo |
 | `npm run lint` | Verificação do código (oxlint) |
 | `npm run build` | Verifica os tipos e gera `dist/`. Precisa de `VITE_API_URL` (o *build* falha sem ela, para a página nunca apontar por engano para `localhost`): `VITE_API_URL=https://... npm run build` |
+
+## Teste de ponta a ponta
+
+`npm run e2e` arranca o backend (`e2e/backend.sh`) e a interface, corre o cenário MVP-1 pelo navegador e pára os dois. Precisa de:
+
+- PostgreSQL com a base `matriz_test` e o `matriz/.env` com os valores `TEST_DB_*` (ver o [README do backend](../matriz/README.md)); a base é **esvaziada** no início, por isso o script recusa-se a correr numa base cujo nome não acabe em `_test`;
+- Java e Maven (o backend), o cliente `psql` e o Chromium do Playwright (`npx playwright install chromium`, uma vez);
+- as portas 8081 (backend) e 5173 (interface) livres.
+
+A palavra-passe das contas de demonstração é feita para cada corrida e nunca é escrita nem impressa. As datas do cenário são relativas a hoje, porque o backend usa o relógio do sistema. Corre só localmente; não está no CI.
 
 ## Organização
 
@@ -46,7 +57,8 @@ src/
   projects/          o formulário de projeto (criar e editar) e as regras de validação
   routes/            a sessão acima dos ecrãs e a proteção das rotas que precisam dela (as rotas estão em `App.tsx`, num router com dados)
   styles/            variáveis, estilos base, dos componentes e do layout (três larguras)
-  test/              preparação e auxiliares dos testes
+  test/              preparação e auxiliares dos testes de componentes
+  (fora de src) e2e/ o teste de ponta a ponta, os scripts do backend e a configuração em `playwright.config.ts`
 ```
 
 ## Regras que valem para todos os ecrãs

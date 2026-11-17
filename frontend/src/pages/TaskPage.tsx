@@ -103,7 +103,7 @@ function TaskScreen({ first }: { first: Task }) {
   }
 
   return (
-    <>
+    <div className="narrow">
       <p>
         <Link to="/projects">Projects</Link> / <Link to={typeof from === 'string' && from.split('?')[0] === `/projects/${task.projectId}` ? from : `/projects/${task.projectId}`}>{data.name}</Link>
         {isSubtask ? (
@@ -175,6 +175,6 @@ function TaskScreen({ first }: { first: Task }) {
           <p>There is text that is not saved. If you leave now it is lost.</p>
         </ConfirmDialog>
       ) : null}
-    </>
+    </div>
   )
 }
