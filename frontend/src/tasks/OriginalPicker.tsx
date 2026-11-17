@@ -1,5 +1,6 @@
 import { listProjectTasks } from '../api/tasks'
 import { LoadError } from '../components/LoadError'
+import { Notice } from '../components/Notice'
 import { Select } from '../components/Select'
 import { Spinner } from '../components/Spinner'
 import { useLoad } from '../hooks/useLoad'
@@ -32,5 +33,14 @@ export function OriginalPicker({ projectId, taskId, value, error, disabled, onCh
   if (value !== '' && !options.some((option) => option.value === value)) {
     options.push({ value, label: `Task ${value}` }) // the original is not in the list (a duplicate, or past the page): it is kept as it is
   }
-  return <Select label="Original task *" name="originalTaskId" value={value} options={options} error={error} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
+  return (
+    <>
+      {state.data.total > state.data.items.length ? (
+        <Notice kind="info">
+          Only the first {state.data.items.length} of {state.data.total} tasks are offered as the original.
+        </Notice>
+      ) : null}
+      <Select label="Original task *" name="originalTaskId" value={value} options={options} error={error} disabled={disabled} onChange={(event) => onChange(event.target.value)} />
+    </>
+  )
 }

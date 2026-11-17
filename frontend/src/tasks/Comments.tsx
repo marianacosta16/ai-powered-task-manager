@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { User } from '../api/auth'
 import { addComment, deleteComment, editComment, listComments, type Comment } from '../api/comments'
 import { ApiError } from '../api/errors'
@@ -22,6 +22,8 @@ interface CommentsProps {
   me: User
   /** Comments can be added, edited and deleted: not in a completed project (R28) nor on a closed task (P37). */
   writable: boolean
+  /** Whether there is text typed that is not saved (a new comment or an edit): the page asks before leaving. */
+  onDirtyChange: (dirty: boolean) => void
 }
 
 /** What can be said about a text before the request (A25: not only spaces). */
@@ -36,7 +38,7 @@ function check(text: string): string | undefined {
  * pages. Only the author sees Edit and Delete on a comment, and deleting removes it for good. The text is shown as
  * text, never as HTML (NF09).
  */
-export function Comments({ taskId, me, writable }: CommentsProps) {
+export function Comments({ taskId, me, writable, onDirtyChange }: CommentsProps) {
   const [page, setPage] = useState(1)
   const { state, reload, retry } = useLoad((signal) => listComments(taskId, page, COMMENT_PAGE_SIZE, signal), [taskId, page])
   const [draft, setDraft] = useState('')
@@ -44,9 +46,15 @@ export function Comments({ taskId, me, writable }: CommentsProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const submitting = useRef(false)
-  const [editing, setEditing] = useState<{ id: number; text: string; error?: string } | null>(null)
+  const [started, setEditing] = useState<{ id: number; text: string; error?: string } | null>(null)
+  // An edit belongs to the comment on the page where it was started: it is not there once that comment is not listed
+  const editing = started && state.status === 'ready' && state.data.items.some((c) => c.id === started.id) ? started : null
   const [toDelete, setToDelete] = useState<Comment | null>(null)
   const total = state.status === 'ready' ? state.data.total : 0
+  const dirty = draft.trim() !== '' || editing !== null
+  useEffect(() => {
+    onDirtyChange(dirty)
+  }, [dirty, onDirtyChange])
 
   function failed(cause: unknown) {
     setServerError(cause instanceof ApiError ? cause.message : 'Something went wrong. Try again in a moment.')
@@ -150,7 +158,10 @@ export function Comments({ taskId, me, writable }: CommentsProps) {
               ))}
             </ul>
             {state.data.items.length === 0 ? <EmptyState>There are no comments on this page.</EmptyState> : null}
-            <Pagination page={page} size={COMMENT_PAGE_SIZE} total={state.data.total} noun="comment" onPage={setPage} />
+            <Pagination page={page} size={COMMENT_PAGE_SIZE} total={state.data.total} noun="comment" onPage={(next) => {
+                setEditing(null)
+                setPage(next)
+              }} />
           </>
         )
       ) : null}

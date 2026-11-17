@@ -54,7 +54,7 @@ async function open(user: typeof MARTA | typeof ANA, extra: Parameters<typeof mo
   const api = mockApi(routes(user, extra, taskData, project))
   const rendered = renderApp('/tasks/10')
   await screen.findByRole('heading', { name: (taskData as { title: string }).title })
-  await screen.findByRole('button', { name: /Add comment|Delete (task|subtask)/ }).catch(() => undefined)
+  await screen.findByRole('heading', { name: 'Comments' }) // the last part of the screen: everything is there
   return { api, ...rendered }
 }
 
@@ -215,6 +215,13 @@ describe('the task (F02, F03)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
     await waitFor(() => expect(api.callsTo('PATCH /tasks/10')).toHaveLength(1))
     expect(api.callsTo('PATCH /tasks/10')[0].body).toEqual({ version: 1, status: 'Duplicate', originalTaskId: 12 })
+  })
+
+  it('warns when the project has more tasks than the list of originals can offer', async () => {
+    await open(ANA, { 'GET /projects/1/tasks': pageResponse([task(12, 'Original one')], 250) })
+    change('Status', 'Duplicate')
+
+    expect(await screen.findByText(/Only the first 1 of 250 tasks are offered as the original/)).toBeInTheDocument()
   })
 
   it('says when the original of a duplicate was eliminated or is in the recycle bin (A41)', async () => {
@@ -480,6 +487,19 @@ describe('the subtasks (F08, R2)', () => {
     })
   })
 
+  it('says so when the list of subtasks cannot be refreshed after creating one', async () => {
+    await openSubtaskForm({
+      'POST /projects/1/tasks': jsonResponse(201, task(12, 'Write docs', { parentTaskId: 10 })),
+      'GET /tasks/10': [jsonResponse(200, T), jsonResponse(500, { code: 'INTERNAL_ERROR', message: 'x' })],
+    })
+    fill()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create subtask' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/was created, but the list could not be refreshed/)
+    expect(screen.queryByText('Subtask "Write docs" created.')).not.toBeInTheDocument()
+  })
+
   it('refuses a deadline later than the one of the task before the request, and limits the date field (R2)', async () => {
     const { api } = await openSubtaskForm()
     expect(panel().getByLabelText('Deadline *')).toHaveAttribute('max', '2099-03-01')
@@ -516,6 +536,16 @@ describe('the subtasks (F08, R2)', () => {
     expect(screen.getByText(/Subtask: Write the test/)).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Subtasks' })).not.toBeInTheDocument()
     expect(crumb('Website Redesign')).toHaveAttribute('href', '/projects/1') // not the task page it came from
+  })
+})
+
+describe('the way back to the project', () => {
+  it('ignores a place that is another project whose number starts with the same digits', async () => {
+    mockApi(routes(ANA))
+    const { router } = renderApp('/')
+    await act(() => router.navigate('/tasks/10', { state: { from: '/projects/12?view=list' } }))
+
+    expect(await screen.findByRole('link', { name: 'Website Redesign' })).toHaveAttribute('href', '/projects/1')
   })
 })
 
@@ -631,6 +661,37 @@ describe('leaving with changes that are not saved', () => {
     expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument()
   })
 
+  it('also asks when there is a comment or a subtask typed and not saved, and not once it is saved or cancelled', async () => {
+    await open(ANA, { 'GET /projects': jsonResponse(200, []), 'POST /tasks/10/comments': jsonResponse(201, comment(3, 'Sent')) })
+    await screen.findByText('No comments yet.')
+
+    changeBox('New comment', 'A long comment that is not sent')
+    await userEvent.click(crumb('Projects'))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Discard your changes?' })).getByRole('button', { name: 'Cancel' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Add comment' })) // sent: nothing left to lose
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'New comment' })).toHaveValue(''))
+
+    await userEvent.click(screen.getByRole('button', { name: '+ Add subtask' }))
+    fireEvent.change(await screen.findByLabelText('Title *'), { target: { value: 'Half a subtask' } })
+    await userEvent.click(crumb('Projects'))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Discard your changes?' })).getByRole('button', { name: 'Cancel' }))
+    await userEvent.click(within(screen.getByRole('region', { name: 'New subtask' })).getByRole('button', { name: 'Cancel' })) // cancelled: gone
+
+    await userEvent.click(crumb('Projects'))
+    expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument()
+  })
+
+  it('names each dialog by its own title even when two are open', async () => {
+    await open(ANA, { [COMMENTS]: pageResponse([comment(1, 'Mine')]), 'GET /projects': jsonResponse(200, []) })
+    await userEvent.click(await screen.findByRole('button', { name: /^Delete.*comment/ }))
+    change('Task title *', 'Changed title')
+
+    await userEvent.click(crumb('Projects')) // the router asks while the comment dialog is open
+
+    expect(await screen.findByRole('dialog', { name: 'Delete comment?' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Discard your changes?' })).toBeInTheDocument()
+  })
+
   it('asks the browser before closing or reloading the tab, only while there are changes', async () => {
     await open(ANA)
     const closing = () => {
@@ -647,7 +708,7 @@ describe('leaving with changes that are not saved', () => {
     await waitFor(() => expect(closing()).toBe(false))
   })
 
-  it('goes to another task without asking when the path is the same screen only after the changes are gone', async () => {
+  it('goes to another task without asking when only the query of the same path changes', async () => {
     const { router } = await open(ANA)
     change('Task title *', 'Changed title')
 
@@ -771,6 +832,46 @@ describe('the comments (F17, R24)', () => {
 
     expect(await screen.findByText('Better text')).toBeInTheDocument()
     expect(api.callsTo('PATCH /comments/1')[0].body).toEqual({ content: 'Better text' })
+  })
+
+  it('drops an edit that was started when the page of comments changes', async () => {
+    await open(ANA, { [COMMENTS]: [pageResponse([MINE], 120), pageResponse([THEIRS], 120), pageResponse([MINE], 120)] })
+    await userEvent.click(await screen.findByRole('button', { name: /^Edit/ }))
+    expect(screen.getByRole('textbox', { name: 'Edit comment' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByText(/Their/)
+    await userEvent.click(screen.getByRole('button', { name: 'Previous' }))
+
+    expect(await screen.findByText('My comment')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Edit comment' })).not.toBeInTheDocument()
+  })
+
+  it('drops an edit whose comment is no longer listed after the comments are read again', async () => {
+    await open(ANA, {
+      [COMMENTS]: [pageResponse([MINE]), pageResponse([THEIRS])],
+      'POST /tasks/10/comments': jsonResponse(201, comment(3, 'New one')),
+      'GET /projects': jsonResponse(200, []),
+    })
+    await userEvent.click(await screen.findByRole('button', { name: /^Edit/ }))
+    expect(screen.getByRole('textbox', { name: 'Edit comment' })).toBeInTheDocument()
+
+    changeBox('New comment', 'New one')
+    await userEvent.click(screen.getByRole('button', { name: 'Add comment' }))
+
+    expect(await screen.findByText(/Their/)).toBeInTheDocument() // the second read does not have the comment that was being edited
+    expect(screen.queryByRole('textbox', { name: 'Edit comment' })).not.toBeInTheDocument()
+    await userEvent.click(crumb('Projects')) // nothing is left to lose: no question
+    expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument()
+  })
+
+  it('asks before leaving while a comment is being edited', async () => {
+    await open(ANA, { [COMMENTS]: pageResponse([MINE]), 'GET /projects': jsonResponse(200, []) })
+    await userEvent.click(await screen.findByRole('button', { name: /^Edit/ }))
+
+    await userEvent.click(crumb('Projects'))
+
+    expect(await screen.findByRole('dialog', { name: 'Discard your changes?' })).toBeInTheDocument()
   })
 
   it('warns when an edited comment is empty, and Cancel leaves the comment as it was', async () => {

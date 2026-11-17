@@ -13,18 +13,20 @@ interface SubtaskSectionProps {
   people: User[]
   /** The task is open and the project is not suspended or completed (R22, A14). */
   canAdd: boolean
-  onCreated: () => void
+  /** Reads the subtasks again; it rejects when that fails. */
+  onCreated: () => Promise<void>
+  onDirtyChange: (dirty: boolean) => void
 }
 
 /** The subtasks of a main task (F08, R2 to R5): each one opens in this same screen, and a new one is added here. */
-export function SubtaskSection({ task, timezone, people, canAdd, onCreated }: SubtaskSectionProps) {
+export function SubtaskSection({ task, timezone, people, canAdd, onCreated, onDirtyChange }: SubtaskSectionProps) {
   const [adding, setAdding] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const subtasks = task.subtasks ?? []
   return (
     <section aria-labelledby="subtasks-title">
       <h2 id="subtasks-title">Subtasks</h2>
-      {message ? <Notice kind="success">{message}</Notice> : null}
+      {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
       {subtasks.length === 0 ? (
         <p className="empty">This task has no subtasks.</p>
       ) : (
@@ -54,10 +56,17 @@ export function SubtaskSection({ task, timezone, people, canAdd, onCreated }: Su
           timezone={timezone}
           parent={{ id: task.id, deadline: task.deadline }}
           people={people}
+          onDirtyChange={onDirtyChange}
           onCreated={(created) => {
             setAdding(false)
-            setMessage(`Subtask "${created.title}" created.`)
-            onCreated()
+            onCreated().then(
+              () => setMessage({ kind: 'success', text: `Subtask "${created.title}" created.` }),
+              () =>
+                setMessage({
+                  kind: 'error',
+                  text: `Subtask "${created.title}" was created, but the list could not be refreshed. Reload the page to see it.`,
+                }),
+            )
           }}
           onCancel={() => setAdding(false)}
         />

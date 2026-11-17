@@ -22,6 +22,8 @@ interface TaskFormProps {
   people: User[]
   onCreated: (task: Task) => void
   onCancel: () => void
+  /** Whether there is text typed that is not saved: the page asks before leaving. */
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 /**
@@ -29,7 +31,7 @@ interface TaskFormProps {
  * what was typed stays, the message of the API is shown with the field it points to, and while the request is under
  * way the button waits.
  */
-export function TaskForm({ projectId, timezone, parent, people, onCreated, onCancel }: TaskFormProps) {
+export function TaskForm({ projectId, timezone, parent, people, onCreated, onCancel, onDirtyChange }: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(EMPTY_TASK)
   const [errors, setErrors] = useState<TaskFormErrors>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -38,6 +40,11 @@ export function TaskForm({ projectId, timezone, parent, people, onCreated, onCan
   const formRef = useRef<HTMLFormElement>(null)
   const [focusToken, setFocusToken] = useState(0)
 
+  const dirty = JSON.stringify(values) !== JSON.stringify(EMPTY_TASK)
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+    return () => onDirtyChange?.(false) // the form is gone (created or cancelled): nothing is left to lose
+  }, [dirty, onDirtyChange])
   useEffect(() => {
     if (focusToken > 0) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()

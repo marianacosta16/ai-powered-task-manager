@@ -40,7 +40,12 @@ function TaskScreen({ first }: { first: Task }) {
   const project = useLoad((signal) => getProject(first.projectId, signal), [first.projectId])
   const people = useLoad((signal) => listAssignableUsers(first.projectId, signal), [first.projectId])
   const parent = useLoad((signal) => (first.parentTaskId === null ? Promise.resolve(null) : getTask(first.parentTaskId, signal)), [first.parentTaskId])
-  const [dirty, setDirty] = useState(false)
+  // Text typed and not saved, in each of the three places that have a form: the page asks before leaving
+  const [unsaved, setUnsaved] = useState({ task: false, subtask: false, comment: false })
+  const dirty = unsaved.task || unsaved.subtask || unsaved.comment
+  const setTaskDirty = useCallback((value: boolean) => setUnsaved((u) => ({ ...u, task: value })), [])
+  const setSubtaskDirty = useCallback((value: boolean) => setUnsaved((u) => ({ ...u, subtask: value })), [])
+  const setCommentDirty = useCallback((value: boolean) => setUnsaved((u) => ({ ...u, comment: value })), [])
   const leaving = useRef(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -58,13 +63,10 @@ function TaskScreen({ first }: { first: Task }) {
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
 
+  // Rejects when the task cannot be read: the section says so instead of showing a list that is not up to date
   const refreshSubtasks = useCallback(async () => {
-    try {
-      const fresh = await getTask(first.id)
-      setTask((current) => ({ ...current, subtasks: fresh.subtasks }))
-    } catch {
-      // the list will be right the next time the task is read
-    }
+    const fresh = await getTask(first.id)
+    setTask((current) => ({ ...current, subtasks: fresh.subtasks }))
   }, [first.id])
 
   if (auth.status !== 'signedIn') {
@@ -103,7 +105,7 @@ function TaskScreen({ first }: { first: Task }) {
   return (
     <>
       <p>
-        <Link to="/projects">Projects</Link> / <Link to={typeof from === 'string' && from.startsWith(`/projects/${task.projectId}`) ? from : `/projects/${task.projectId}`}>{data.name}</Link>
+        <Link to="/projects">Projects</Link> / <Link to={typeof from === 'string' && from.split('?')[0] === `/projects/${task.projectId}` ? from : `/projects/${task.projectId}`}>{data.name}</Link>
         {isSubtask ? (
           <>
             {' '}
@@ -122,7 +124,7 @@ function TaskScreen({ first }: { first: Task }) {
         isManager={data.manager.id === me.id}
         readOnly={completed}
         onTaskChange={setTask}
-        onDirtyChange={setDirty}
+        onDirtyChange={setTaskDirty}
       />
       <AssigneeList
         taskId={task.id}
@@ -137,7 +139,8 @@ function TaskScreen({ first }: { first: Task }) {
           timezone={data.timezone}
           people={people.state.data}
           canAdd={!closed && data.status !== 'Completed' && data.status !== 'Suspended'}
-          onCreated={() => void refreshSubtasks()}
+          onCreated={refreshSubtasks}
+          onDirtyChange={setSubtaskDirty}
         />
       ) : null}
       {!completed ? (
@@ -147,7 +150,7 @@ function TaskScreen({ first }: { first: Task }) {
           </Button>
         </p>
       ) : null}
-      <Comments taskId={task.id} me={me} writable={!completed && !closed} />
+      <Comments taskId={task.id} me={me} writable={!completed && !closed} onDirtyChange={setCommentDirty} />
 
       {confirmDelete ? (
         <ConfirmDialog
@@ -169,7 +172,7 @@ function TaskScreen({ first }: { first: Task }) {
           onConfirm={() => blocker.proceed()}
           onCancel={() => blocker.reset()}
         >
-          <p>The task has changes that are not saved. If you leave now they are lost.</p>
+          <p>There is text that is not saved. If you leave now it is lost.</p>
         </ConfirmDialog>
       ) : null}
     </>

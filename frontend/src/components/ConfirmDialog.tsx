@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { Button } from './Button'
 
 interface ConfirmDialogProps {
@@ -26,6 +26,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const titleId = useId() // one per dialog: two can be open at once (a confirmation and the one of the router)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const latest = useRef({ busy, onCancel })
@@ -76,8 +77,8 @@ export function ConfirmDialog({
 
   return (
     <div className="overlay" onKeyDown={keepFocusInside}>
-      <div ref={dialogRef} className="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-        <h2 id="dialog-title">{title}</h2>
+      <div ref={dialogRef} className="dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <h2 id={titleId}>{title}</h2>
         <div className="dialog__body">{children}</div>
         <div className="dialog__actions">
           <Button ref={cancelRef} variant="secondary" disabled={busy} onClick={onCancel}>

@@ -14,10 +14,11 @@ interface TaskCreatorProps {
   people?: User[]
   onCreated: (task: Task) => void
   onCancel: () => void
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 /** Loads who can be assigned (listAssignableUsers) and then shows the form of a new task. */
-export function TaskCreator({ projectId, timezone, parent, people, onCreated, onCancel }: TaskCreatorProps) {
+export function TaskCreator({ projectId, timezone, parent, people, onCreated, onCancel, onDirtyChange }: TaskCreatorProps) {
   const { state, retry } = useLoad((signal) => (people ? Promise.resolve(people) : listAssignableUsers(projectId, signal)), [projectId, people])
   if (state.status === 'loading') {
     return <Spinner label="Loading the project members..." />
@@ -25,5 +26,5 @@ export function TaskCreator({ projectId, timezone, parent, people, onCreated, on
   if (state.status === 'error') {
     return <LoadError message={state.message} onRetry={retry} />
   }
-  return <TaskForm projectId={projectId} timezone={timezone} parent={parent} people={state.data} onCreated={onCreated} onCancel={onCancel} />
+  return <TaskForm projectId={projectId} timezone={timezone} parent={parent} people={state.data} onCreated={onCreated} onCancel={onCancel} onDirtyChange={onDirtyChange} />
 }
