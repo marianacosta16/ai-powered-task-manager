@@ -378,6 +378,12 @@ describe('creating a task (F02, F03, R1, R13, R21)', () => {
     fireEvent.change(screen.getByLabelText('Importance *'), { target: { value: '4' } })
   }
 
+  it('takes the focus to the title when the form opens', async () => {
+    await openForm()
+
+    expect(screen.getByLabelText('Title *')).toHaveFocus()
+  })
+
   it('lists the members and the manager to choose from, and asks for everything that is required (no request)', async () => {
     const api = await openForm()
     expect(screen.getAllByRole('checkbox', { name: /^(Marta|Ana|Rui)$/ })).toHaveLength(3)

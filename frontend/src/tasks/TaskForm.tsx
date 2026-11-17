@@ -45,6 +45,10 @@ export function TaskForm({ projectId, timezone, parent, people, onCreated, onCan
     onDirtyChange?.(dirty)
     return () => onDirtyChange?.(false) // the form is gone (created or cancelled): nothing is left to lose
   }, [dirty, onDirtyChange])
+  // A form that opens takes the focus, which also brings it into view: on a phone it opens below a long list
+  useEffect(() => {
+    formRef.current?.querySelector<HTMLElement>('input, textarea, select')?.focus()
+  }, [])
   useEffect(() => {
     if (focusToken > 0) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()

@@ -180,3 +180,25 @@
     display: none;
   }
 }
+
+/* phone: touch targets of the size of the rest, and the dialogs take the width of the screen */
+@media (max-width: 640px) {
+  .table__actions .button {
+    min-height: var(--touch-target);
+  }
+
+  .overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .dialog {
+    max-width: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+/* the detail of a task reads better in a column than across the whole width */
+.narrow {
+  max-width: 52rem;
+}

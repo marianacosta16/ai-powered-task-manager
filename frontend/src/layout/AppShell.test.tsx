@@ -27,6 +27,26 @@ describe('the top bar', () => {
     expect(api.callsTo('POST /auth/logout')).toHaveLength(1)
   })
 
+  it('does not take whoever signs in next to the screen where the previous person signed out', async () => {
+    mockApi({
+      'GET /auth/me': [jsonResponse(200, ANA), jsonResponse(401, { code: 'UNAUTHENTICATED', message: 'Sign in to continue.' })],
+      'GET /dashboard': jsonResponse(200, []),
+      'GET /projects': jsonResponse(200, []),
+      'POST /auth/logout': jsonResponse(204),
+      'POST /auth/login': jsonResponse(200, MARTA),
+    })
+    renderApp('/projects')
+    await screen.findByText('Ana')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    await screen.findByRole('heading', { name: 'Sign in to Matriz' })
+
+    await userEvent.type(screen.getByLabelText('Username'), 'marta')
+    await userEvent.type(screen.getByLabelText('Password'), 'secret')
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument() // not Projects, where Ana was
+  })
+
   it('stays signed in and says so when the sign out fails', async () => {
     mockApi({ 'GET /auth/me': jsonResponse(200, ANA), 'GET /dashboard': jsonResponse(200, []), 'POST /auth/logout': new TypeError('Failed to fetch') })
     renderApp('/')

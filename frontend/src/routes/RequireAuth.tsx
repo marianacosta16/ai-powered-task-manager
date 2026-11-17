@@ -13,7 +13,9 @@ export function RequireAuth() {
     return <Spinner label="Checking your session..." />
   }
   if (state.status === 'signedOut') {
-    return <Navigate to="/sign-in" replace state={{ from: location }} />
+    // A session that ended (or was never there) brings the user back to this screen after signing in. A sign out on purpose
+    // has no message and does not: whoever signs in next, maybe someone else, starts at the dashboard.
+    return <Navigate to="/sign-in" replace state={state.message ? { from: location } : null} />
   }
   return <Outlet />
 }

@@ -19,3 +19,7 @@ coverage
 .DS_Store
 *.suo
 *.sw?
+
+# Playwright
+test-results
+playwright-report

@@ -53,6 +53,10 @@ export function ProjectForm({ project, managers, onSaved, onCancel }: ProjectFor
   const [focusToken, setFocusToken] = useState(0)
 
   // After a refused submit the focus goes to the first field with an error, as in the sign in form
+  // A form that opens takes the focus, which also brings it into view: on a phone it opens below a long list
+  useEffect(() => {
+    formRef.current?.querySelector<HTMLElement>('input, textarea, select')?.focus()
+  }, [])
   useEffect(() => {
     if (focusToken > 0) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()

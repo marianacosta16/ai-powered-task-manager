@@ -166,6 +166,12 @@ describe('the list of projects (F01, F22)', () => {
 })
 
 describe('creating a project (F01, A44)', () => {
+  it('takes the focus to the first field when the form opens, which brings it into view on a phone', async () => {
+    await openCreateForm()
+
+    expect(screen.getByLabelText('Name *')).toHaveFocus()
+  })
+
   it('has no manager field: the creator is the manager', async () => {
     await openCreateForm()
 
