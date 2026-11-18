@@ -3,6 +3,10 @@
 # Needs in the environment: DB_PASSWORD, DEMO_PASSWORD (fake values in the CI), and optionally WEB_HTTP_PORT and WEB_HTTPS_PORT.
 set -euo pipefail
 
+# Its own project name: `docker compose down -v` below must never touch the stack (and the data) of someone's real .env
+export COMPOSE_PROJECT_NAME=matriz-smoke
+command -v jq >/dev/null || { echo "jq is needed" >&2; exit 1; }
+
 : "${DB_PASSWORD:?}" "${DEMO_PASSWORD:?}"
 http_port="${WEB_HTTP_PORT:-8080}"
 https_port="${WEB_HTTPS_PORT:-8443}"
@@ -31,13 +35,13 @@ check "no session" "$(curl -ks -o /dev/null -w '%{http_code}' "$base/api/project
 check "wrong password" "$(curl -ks -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"username":"ana","password":"wrong-password"}' "$base/api/auth/login")" 401
 
 headers="$(curl -ks -c "$jar" -D - -o /dev/null -H 'Content-Type: application/json' \
-  -d "{\"username\":\"ana\",\"password\":\"${DEMO_PASSWORD}\"}" "$base/api/auth/login")"
+  -d "$(jq -n --arg p "$DEMO_PASSWORD" '{username: "ana", password: $p}')" "$base/api/auth/login")"
 check "sign in" "$(printf '%s' "$headers" | head -1 | tr -d '\r' | cut -d' ' -f2)" 200
 printf '%s' "$headers" | grep -i '^set-cookie: SESSION=' | grep -qi 'secure' || fail "the session cookie is not Secure"
 
-deadline="$(date -d '+7 days' +%F)"
+deadline="$(date -d '+7 days' +%F 2>/dev/null || date -v+7d +%F)" # GNU date, or the one of macOS
 created="$(curl -ks -b "$jar" -H 'Content-Type: application/json' -w '\n%{http_code}' \
-  -d "{\"title\":\"Docker smoke task\",\"deadline\":\"${deadline}\",\"urgency\":3,\"importance\":4,\"assigneeIds\":[1]}" "$base/api/projects/1/tasks")"
+  -d "$(jq -n --arg d "$deadline" '{title: "Docker smoke task", deadline: $d, urgency: 3, importance: 4, assigneeIds: [1]}')" "$base/api/projects/1/tasks")"
 check "create a task" "$(printf '%s' "$created" | tail -1)" 201
 id="$(printf '%s' "$created" | head -1 | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)"
 [ -n "$id" ] || fail "no id in the created task"

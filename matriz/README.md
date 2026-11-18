@@ -324,7 +324,7 @@ O que falta é a interface: os itens V1 a V12 do [plano](docs/implementation-pla
 A base de dados, a API e a interface arrancam com um só comando, sem instalar Java, Node nem PostgreSQL. Precisa do Docker e do Docker Compose.
 
 ```bash
-cp .env.example .env     # na raiz do projeto; escolha a palavra-passe da base de dados e a das contas de demonstração
+cp .env.example .env     # na raiz do projeto; preencha DB_PASSWORD e DEMO_PASSWORD (a palavra-passe das contas de demonstração), sem eles o Compose não arranca
 docker compose up --build --wait
 ```
 
