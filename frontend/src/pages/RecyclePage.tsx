@@ -63,7 +63,7 @@ export function RecyclePage() {
       <p className="hint">Deleted items are removed for good 30 days after they were deleted. You only see the items of the projects you can access.</p>
       {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
       {state.status === 'loading' ? <Spinner label="Loading the recycle bin..." /> : null}
-      {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
+      {state.status === 'error' ? <LoadError message={state.message} retryable={state.retryable} onRetry={retry} /> : null}
       {state.status === 'ready' && state.refreshError ? <Notice kind="error">{state.refreshError}</Notice> : null}
       {state.status === 'ready' ? (
         state.data.length === 0 ? (

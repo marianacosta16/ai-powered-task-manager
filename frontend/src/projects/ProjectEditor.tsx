@@ -41,7 +41,7 @@ export function ProjectEditor({ projectId, onSaved, onCancel }: ProjectEditorPro
     return <Spinner label="Loading the project..." />
   }
   if (state.status === 'error') {
-    return <LoadError message={state.message} onRetry={retry} />
+    return <LoadError message={state.message} retryable={state.retryable} onRetry={retry} />
   }
   return (
     <ProjectForm

@@ -39,3 +39,12 @@ export const GENERIC_MESSAGE = 'Something went wrong. Try again in a moment.'
 export function messageOf(cause: unknown): string {
   return cause instanceof ApiError ? cause.message : GENERIC_MESSAGE
 }
+
+/**
+ * Whether asking again can give another answer: the server could not be reached or failed (0 and 5xx) or it was not an
+ * error of the API at all. A refusal for lack of permission (403), a missing resource (404) or an invalid request (4xx)
+ * gets the same answer every time, so retrying is no help.
+ */
+export function isRetryable(cause: unknown): boolean {
+  return !(cause instanceof ApiError) || cause.status === 0 || cause.status >= 500
+}

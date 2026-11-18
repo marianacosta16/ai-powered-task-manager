@@ -74,7 +74,7 @@ function ProjectDetail({ id }: { id: number }) {
     return <Spinner label="Loading the project..." />
   }
   if (project.state.status === 'error') {
-    return <LoadError message={project.state.message} onRetry={project.retry} />
+    return <LoadError message={project.state.message} retryable={project.state.retryable} onRetry={project.retry} />
   }
   const data = project.state.data
   const completed = data.status === 'Completed'
@@ -175,7 +175,7 @@ function ProjectDetail({ id }: { id: number }) {
       <div className="split">
         <div className="split__list">
           {tasks.state.status === 'loading' ? <Spinner label="Loading the tasks..." /> : null}
-          {tasks.state.status === 'error' ? <LoadError message={tasks.state.message} onRetry={tasks.retry} /> : null}
+          {tasks.state.status === 'error' ? <LoadError message={tasks.state.message} retryable={tasks.state.retryable} onRetry={tasks.retry} /> : null}
           {tasks.state.status === 'ready' && tasks.state.refreshError ? (
             <Notice kind="error">{tasks.state.refreshError}</Notice>
           ) : null}

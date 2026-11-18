@@ -53,7 +53,7 @@ export function ReplacementDialog({ item, reason, onRestored, onCancel }: Replac
       <Notice kind="info">{reason}</Notice>
       {error ? <Notice kind="error">{error}</Notice> : null}
       {people.state.status === 'loading' ? <Spinner label="Loading the people of the project..." /> : null}
-      {people.state.status === 'error' ? <LoadError message={people.state.message} onRetry={people.retry} /> : null}
+      {people.state.status === 'error' ? <LoadError message={people.state.message} retryable={people.state.retryable} onRetry={people.retry} /> : null}
       {people.state.status === 'ready' ? (
         <CheckboxGroup
           legend="Who takes over"

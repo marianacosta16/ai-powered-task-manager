@@ -38,7 +38,7 @@ export function DashboardPage() {
         </Link>
       </div>
       {state.status === 'loading' ? <Spinner label="Loading your projects..." /> : null}
-      {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
+      {state.status === 'error' ? <LoadError message={state.message} retryable={state.retryable} onRetry={retry} /> : null}
       {state.status === 'ready' ? (
         state.data.length === 0 ? (
           <EmptyState>

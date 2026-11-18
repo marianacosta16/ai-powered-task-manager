@@ -89,7 +89,7 @@ export function ProjectsPage() {
       <div className="split">
         <div className="split__list">
           {state.status === 'loading' ? <Spinner label="Loading the projects..." /> : null}
-          {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
+          {state.status === 'error' ? <LoadError message={state.message} retryable={state.retryable} onRetry={retry} /> : null}
           {state.status === 'ready' && state.refreshError ? <Notice kind="error">{state.refreshError}</Notice> : null}
           {state.status === 'ready' ? (
             state.data.length === 0 ? (
