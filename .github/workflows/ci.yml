@@ -1,6 +1,6 @@
 name: CI
 
-# Runs the tests of the Matriz backend and of the web interface on every pull request and on every push to main.
+# Runs the tests of the Matriz backend and of the web interface, and a smoke test of the Docker stack, on every pull request and on every push to main.
 # The database below only exists while the job runs, so its credentials are fake values
 # (AGENTS.md, section 7): nothing here is a real secret.
 
@@ -94,3 +94,18 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: https://matriz.invalid # a production build needs an address; this one is never called
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Fake values, only for this job (AGENTS.md, section 7): the stack below only exists while the job runs.
+    env:
+      DB_PASSWORD: ci-only-fake-database-password
+      DEMO_PASSWORD: Ci-only-fake-1234
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the images, start the stack and run the smoke test
+        run: .github/scripts/docker-smoke.sh
