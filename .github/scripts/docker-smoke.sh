@@ -25,6 +25,7 @@ trap cleanup EXIT
 fail() { echo "FAILED: $*" >&2; exit 1; }
 check() { [ "$2" = "$3" ] || fail "$1: expected '$3', got '$2'"; }
 
+# --wait returns only when db, api and web are healthy (each has a healthcheck) and fails otherwise
 docker compose up -d --build --wait --wait-timeout 300
 
 # -k: the certificate of the stack is self-signed

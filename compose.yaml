@@ -51,6 +51,12 @@ services:
     volumes:
       - matriz-certs:/etc/nginx/certs # the same certificate after the container is recreated
 
+# One private network for the project, the default one of Compose, declared here: the services reach each other by name
+# (db, api) and only web publishes ports to the host. Every service joins it, so a new one needs no extra line.
+networks:
+  default:
+    driver: bridge
+
 volumes:
   matriz-db:
   matriz-certs:
