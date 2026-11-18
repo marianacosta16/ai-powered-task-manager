@@ -6,11 +6,12 @@ FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /build
 # The dependencies first, so that they stay in the cache until pom.xml changes
 COPY pom.xml .
-# -Dmaven.wagon.http.retryHandler.count: a download that fails once is tried again (Maven Central fails now and then)
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q -Dmaven.wagon.http.retryHandler.count=3 dependency:go-offline
+# Maven Central fails now and then: docker/mvn-retry.sh runs Maven again when it does
+COPY --chmod=755 docker/mvn-retry.sh /usr/local/bin/mvn-retry
+RUN --mount=type=cache,target=/root/.m2 mvn-retry dependency:go-offline
 COPY src ./src
 # The tests run in the CI (they need a database), not while the image is built
-RUN --mount=type=cache,target=/root/.m2 mvn -B -q -Dmaven.wagon.http.retryHandler.count=3 -DskipTests package && cp target/*.jar /build/matriz.jar
+RUN --mount=type=cache,target=/root/.m2 mvn-retry -DskipTests package && cp target/*.jar /build/matriz.jar
 
 # ---- run ----
 FROM eclipse-temurin:21-jre
