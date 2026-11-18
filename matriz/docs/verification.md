@@ -8,7 +8,7 @@
 |---|---|
 | **Ambiente** | Linux, Java 21 e Maven, PostgreSQL 16 local com a base `matriz_test`, Node 24, Chromium do Playwright. O backend usa a base de teste, com as contas de demonstração (`marta` e `pedro`, gestores; `ana`, `rui`, `luis`, `sofia`, `carla`, `ines`, `tiago` e `diana`, membros), e uma palavra-passe feita para a ocasião (nunca escrita nos ficheiros) |
 | **Testes automáticos** | O backend (Spring Boot, JUnit, pedidos HTTP reais contra a base de dados) e o frontend (Vitest e Testing Library) e um teste de ponta a ponta (Playwright). Os resultados estão na secção 2 |
-| **Verificações manuais** | Conduzidas por mim (um agente) com um navegador Chromium e pedidos à API, por um *script* pontual que **não está no repositório nem na bateria** e que foi apagado depois de usado. Cada passo e o que se observou estão descritos abaixo, e as capturas de ecrã estão em [`evidence/`](evidence/). Podem repetir-se à mão com os passos indicados |
+| **Verificações manuais** | Conduzidas por mim (um agente) com um navegador Chromium e pedidos à API, por um *script* pontual que **não está no repositório nem na bateria** e que foi apagado depois de usado. Cada passo e o que se observou estão descritos abaixo, e as capturas de ecrã estão em [`evidence/`](evidence/); **as 22 imagens foram abertas uma a uma e conferidas com a legenda** (as primeiras versões das três do caso 09 eram cortes do ecrã sem a mensagem, e foram repetidas em página inteira). Podem repetir-se à mão com os passos indicados |
 | **Dados** | As verificações manuais usaram os dados de demonstração e os que elas próprias criaram. Entre elas a base não foi reposta, por isso alguns números (por exemplo o `id` 16 de uma tarefa) dependem da ordem |
 | **O que não foi possível executar** | Ver a secção 4 |
 
@@ -16,22 +16,22 @@
 
 | Comando | Onde | Resultado |
 |---|---|---|
-| `mvn -B verify` (com o `.env` carregado) | `matriz/` | **352 testes, 0 falhas, 0 erros**, `BUILD SUCCESS`, 2 min 9 s. Inclui os 3 testes novos deste exercício e as verificações do contrato (`openapi.yaml` 1.1.0, 28 operações), da arquitetura (ArchUnit) e da documentação (códigos únicos, cenários nomeados por testes) |
+| `mvn -B verify` (com o `.env` carregado) | `matriz/` | **352 testes, 0 falhas, 0 erros**, `BUILD SUCCESS`, 2 min 14 s. Inclui os 3 testes novos deste exercício e as verificações do contrato (`openapi.yaml` 1.1.0, 28 operações), da arquitetura (ArchUnit) e da documentação (códigos únicos, cenários nomeados por testes) |
 | `mvn -q -Dtest='ValidationRulesIntegrationTest,AuthorizationByIdentifierIntegrationTest,PersistenceAfterRestartIntegrationTest' test` | `matriz/` | **49 testes, 0 falhas** (43 de validação, 5 de autorização, 1 de persistência) |
-| `npm test` | `frontend/` | **268 testes de componentes, 0 falhas** (20 ficheiros), 10,8 s |
+| `npm test` | `frontend/` | **272 testes de componentes, 0 falhas** (21 ficheiros) |
 | `npm run lint` | `frontend/` | Sem avisos nem erros |
 | `VITE_API_URL=http://localhost:8081 npm run build` | `frontend/` | Compila (`tsc` e Vite) sem erros |
-| `npm run e2e` | `frontend/` | **1 teste de ponta a ponta passa** (o cenário MVP-1), num navegador a sério, 15,7 s |
+| `npm run e2e` | `frontend/` | **1 teste de ponta a ponta passa** (o cenário MVP-1, que também mede que o botão *Add* dos responsáveis tem a altura do campo ao lado), num navegador a sério, 16,2 s |
 
 ### Os três testes automáticos novos (pedidos pelo exercício)
 
-Foram escritos de propósito para os casos que a bateria existente cobria pouco. Cada um foi posto à prova com mutantes (alterar o backend para ver se o teste o apanha).
+Foram escritos de propósito para os casos que a bateria existente cobria pouco. Cada um foi posto à prova com mutantes (alterar o backend para ver se o teste o apanha); os resultados estão na tabela, e todos os mutantes morreram.
 
 | Teste | Cobre | O que verifica |
 |---|---|---|
-| `ValidationRulesIntegrationTest` (43) | Caso 04, uma regra de validação | O nome de um projeto, o título de uma tarefa e um comentário vazios, só com espaços, com espaços de largura zero ou com o espaço sem quebra são recusados (400 ou 422, com o corpo de erro do contrato) e **não ficam guardados** (o número de linhas na base não muda); campos obrigatórios em falta; 13 valores inválidos (datas, limites de tamanho, urgência 0 e importância 5, fase inexistente, estado calculado, sem responsável); os limites exatos (3 e 100 caracteres, 2000 num comentário) são aceites |
-| `AuthorizationByIdentifierIntegrationTest` (5) | Caso 08, um cenário de autorização | Quem está fora do projeto (um membro de outro projeto e um gestor de outro projeto) tenta, com os identificadores reais do projeto alheio, **25 operações cada** (ler, alterar e apagar o projeto, a equipa, as tarefas, os responsáveis, os comentários e o restauro) e recebe sempre 403 ou 404; **a base fica exatamente igual** (uma impressão digital das cinco tabelas antes e depois). Um membro não faz o que é só do gestor nem mexe no comentário de outro (nem o gestor, A26); ninguém restaura um projeto apagado sem ser o gestor; não se mete uma tarefa ou uma pessoa de outro projeto pelo corpo do pedido. O controlo: os utilizadores legítimos fazem o mesmo com sucesso. Mutantes mortos: um de fora tratado como membro, a verificação do gestor, a do autor e a do restauro (esta última só morreu depois de acrescentar o caso do projeto já apagado) |
-| `PersistenceAfterRestartIntegrationTest` (1) | Caso 03, criação com consulta posterior | Cria uma tarefa e um comentário pela API e consulta-os; depois arranca **uma segunda aplicação sobre a mesma base**, com a memória vazia: o cookie da sessão antiga já não vale (as sessões estão em memória, P32), a pessoa inicia sessão de novo e a tarefa e o comentário estão lá, com os mesmos dados |
+| `ValidationRulesIntegrationTest` (43) | Caso 04, uma regra de validação | O nome de um projeto, o título de uma tarefa e um comentário vazios, só com espaços, com espaços de largura zero ou com o espaço sem quebra são recusados (400 ou 422, com o corpo de erro do contrato) e **não ficam guardados** (o número de linhas na base não muda); campos obrigatórios em falta; 13 valores inválidos (datas, limites de tamanho, urgência 0 e importância 5, fase inexistente, estado calculado, sem responsável); os limites exatos (3 e 100 caracteres, 2000 num comentário) são aceites. **Cada caso verifica o código de erro que lhe corresponde** (400 `VALIDATION_ERROR`, ou 422 `END_BEFORE_START`, `START_DATE_IN_PAST` e `DEADLINE_IN_PAST`), e não só que foi recusado. **Mutantes mortos (6):** a verificação de só espaços desligada, o mínimo do nome do projeto a 2, o máximo do título a 151, o máximo do comentário a 2001, a verificação do fim antes do início removida e a do início no passado removida |
+| `AuthorizationByIdentifierIntegrationTest` (5) | Caso 08, um cenário de autorização | Quem está fora do projeto (um membro de outro projeto e um gestor de outro projeto) tenta, com os identificadores reais do projeto alheio, **25 operações cada** (ler, alterar e apagar o projeto, a equipa, as tarefas, os responsáveis, os comentários e o restauro) e recebe sempre 403 ou 404; **a base fica exatamente igual** (uma impressão digital das cinco tabelas antes e depois). Um membro não faz o que é só do gestor nem mexe no comentário de outro (nem o gestor, A26); ninguém restaura um projeto apagado sem ser o gestor; não se mete uma tarefa ou uma pessoa de outro projeto pelo corpo do pedido. O controlo: os utilizadores legítimos fazem o mesmo com sucesso. **Mutantes mortos (4):** um de fora tratado como membro, a verificação do gestor, a do autor e a do restauro (esta última só morreu depois de acrescentar o caso do projeto já apagado) |
+| `PersistenceAfterRestartIntegrationTest` (1) | Caso 03, criação com consulta posterior | Cria uma tarefa e um comentário pela API e consulta-os; depois arranca **uma segunda aplicação sobre a mesma base**, com a memória vazia: o cookie da sessão antiga já não vale (as sessões estão em memória, P32), a pessoa inicia sessão de novo e a tarefa e o comentário estão lá, com os mesmos dados. **Mutante morto (1):** a descrição deixa de ser guardada |
 
 ## 3. Os nove cenários
 
@@ -134,11 +134,18 @@ Seguiu-se o mesmo percurso em cada um: reproduzir, recolher evidência, investig
 - **Correção:** a linha passa a ter `actions actions--end`, e o botão de apagar a tarefa ganhou uma margem para não colar ao de juntar subtarefa (visível nas mesmas capturas). Medido no navegador depois: botão e lista com 44 px.
 - **Regressão:** o teste `aligns the Add button with the bottom of the list it belongs to` (`TaskPage.test.tsx`); com a marcação antiga falha. É um teste da classe, não do desenho: o aspeto só se confirma olhando (as capturas 06, 07 e 09 já são as de depois).
 
+### D3 — Um erro 403 ou 404 oferecia "Try again", que não pode ajudar (encontrado ao rever a captura 08)
+- **Reprodução:** a Sofia abre `/projects/1`, que não é do projeto dela. **Esperado:** a mensagem e uma saída. **Observado:** "You do not have access to this project." com um botão *Try again* (captura 08, na primeira versão do relatório).
+- **Causa:** o componente do erro de carregamento (`LoadError`) oferecia sempre tentar de novo, mesmo quando o pedido foi recusado por falta de permissão, e repetir dá a mesma resposta.
+- **Correção:** os carregamentos passam a dizer se tentar de novo pode ajudar (`isRetryable`: falha de rede, erro 5xx ou algo que não é um erro da API); nos outros casos o ecrã oferece "Go to the dashboard".
+- **Regressão:** testes de `isRetryable` (0, 500 e 503 sim; 400, 401, 403, 404, 409 e 422 não), do componente nas duas formas, e o do detalhe do projeto com 403 (sem *Try again* e com a ligação); 6 mutantes mortos. A captura 08 ainda mostra o botão antigo: foi tirada antes da correção.
+
 Não se encontrou nenhum outro defeito nesta verificação.
 
 ## 6. Problemas conhecidos
 
 - A diferença entre 403 e 404 permite saber que ids existem (secção 3, caso 08).
+- A captura 08 mostra ainda o botão *Try again* de antes da correção D3.
 - As 3 horas de sessão só se confirmam pela configuração (secção 4).
 - O teste de ponta a ponta não está no CI (decisão da autora: fica para depois deste exercício).
 - Vulnerabilidades de desenvolvimento sem correção disponível (`picomatch`).
