@@ -27,7 +27,7 @@ jobs:
         working-directory: matriz
 
     services:
-      postgres:
+      postgres: &postgres # the same service is used by the e2e job below
         image: postgres:16
         env:
           POSTGRES_USER: matriz_ci
@@ -115,19 +115,7 @@ jobs:
     timeout-minutes: 25
 
     services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: matriz_ci
-          POSTGRES_PASSWORD: ci-only-fake-password
-          POSTGRES_DB: matriz_test # the end-to-end scripts only empty a database whose name ends with _test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U matriz_ci -d matriz_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+      postgres: *postgres
 
     # Fake values, only for this job (AGENTS.md, section 7). There is no .env here: e2e/test-db.sh reads them from the environment.
     env:
@@ -157,6 +145,12 @@ jobs:
         run: npm ci
         working-directory: frontend
 
+      - name: Cache the browser of the tests
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
       - name: Install the browser of the tests
         run: npx playwright install --with-deps chromium
         working-directory: frontend
@@ -165,8 +159,8 @@ jobs:
         run: npm run e2e
         working-directory: frontend
 
-      # Screenshots and traces exist only to diagnose a failure
-      - name: Keep the traces of a failed run
+      # Screenshots exist only to diagnose a failure (no traces here: they would contain the password of the run)
+      - name: Keep the screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v4
         with:

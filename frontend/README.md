@@ -37,7 +37,7 @@ O endereço do backend está num só sítio, `src/config.ts`, e vem da variável
 - Java e Maven (o backend), o cliente `psql` e o Chromium do Playwright (`npx playwright install chromium`, uma vez);
 - as portas 8081 (backend) e 5173 (interface) livres.
 
-A palavra-passe das contas de demonstração é feita para cada corrida e nunca é escrita nem impressa. As datas do cenário são relativas a hoje, porque o backend usa o relógio do sistema. Corre também no CI (job `e2e`), onde não há `matriz/.env`: os valores `TEST_DB_*` vêm do ambiente do job (valores falsos, numa base que só existe durante a corrida) e os rastos de uma corrida falhada ficam guardados 7 dias como artefacto, só para diagnóstico.
+A palavra-passe das contas de demonstração é feita para cada corrida e nunca é escrita nem impressa. As datas do cenário são relativas a hoje, porque o backend usa o relógio do sistema. Corre também no CI (job `e2e`), onde não há `matriz/.env`: os valores `TEST_DB_*` vêm do ambiente do job (valores falsos, numa base que só existe durante a corrida) e as capturas de ecrã de uma corrida falhada ficam guardadas 7 dias como artefacto, só para diagnóstico (no CI não há rastos do Playwright, porque registariam a palavra-passe da corrida; localmente continuam a existir).
 
 ## Organização
 
