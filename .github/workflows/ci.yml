@@ -96,6 +96,8 @@ jobs:
           VITE_API_URL: https://matriz.invalid # a production build needs an address; this one is never called
 
   docker:
+    # The images are only built when the backend, the interface and the end-to-end checks have all passed
+    needs: [test, frontend, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
