@@ -46,6 +46,17 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         assertThat(json(created, "$.version")).isEqualTo(1);
         assertThat(JsonPath.<List<String>>read(created.getBody(), "$.assignees[*].name")).containsExactly("Ana");
         assertThat(JsonPath.<List<Object>>read(created.getBody(), "$.subtasks")).isEmpty();
+
+        // ...and it is found afterwards, with the same data, by its own address and in the list of the project
+        long id = ((Number) json(created, "$.id")).longValue();
+        ResponseEntity<String> found = get("/tasks/" + id, sessionOf("ana"));
+        assertThat(found.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(json(found, "$.title")).isEqualTo("Write report");
+        assertThat(json(found, "$.status")).isEqualTo("To do");
+        assertThat(json(found, "$.version")).isEqualTo(1);
+        assertThat(JsonPath.<List<String>>read(found.getBody(), "$.assignees[*].name")).containsExactly("Ana");
+        ResponseEntity<String> list = get("/projects/" + website + "/tasks", sessionOf("ana"));
+        assertThat(JsonPath.<List<String>>read(list.getBody(), "$..title")).contains("Write report");
     }
 
     @Test
