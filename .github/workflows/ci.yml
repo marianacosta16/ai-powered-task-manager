@@ -1,6 +1,6 @@
 name: CI
 
-# Runs the tests of the Matriz backend and of the web interface, and a smoke test of the Docker stack, on every pull request and on every push to main.
+# Runs the tests of the Matriz backend and of the web interface, and a smoke test of the Docker stack and the end-to-end test (Playwright), on every pull request and on every push to main.
 # The database below only exists while the job runs, so its credentials are fake values
 # (AGENTS.md, section 7): nothing here is a real secret.
 
@@ -27,7 +27,7 @@ jobs:
         working-directory: matriz
 
     services:
-      postgres:
+      postgres: &postgres # the same service is used by the e2e job below
         image: postgres:16
         env:
           POSTGRES_USER: matriz_ci
@@ -109,3 +109,62 @@ jobs:
 
       - name: Build the images, start the stack and run the smoke test
         run: .github/scripts/docker-smoke.sh
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres: *postgres
+
+    # Fake values, only for this job (AGENTS.md, section 7). There is no .env here: e2e/test-db.sh reads them from the environment.
+    env:
+      TEST_DB_URL: jdbc:postgresql://localhost:5432/matriz_test
+      TEST_DB_USER: matriz_ci
+      TEST_DB_PASSWORD: ci-only-fake-password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: matriz/pom.xml
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install the dependencies of package-lock.json
+        run: npm ci
+        working-directory: frontend
+
+      - name: Cache the browser of the tests
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install the browser of the tests
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: End-to-end test
+        run: npm run e2e
+        working-directory: frontend
+
+      # Screenshots exist only to diagnose a failure (no traces here: they would contain the password of the run)
+      - name: Keep the screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: frontend/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

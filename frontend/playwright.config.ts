@@ -26,7 +26,9 @@ export default defineConfig({
   retries: 0,
   timeout: 120_000,
   reporter: [['list']],
-  use: { baseURL: WEB, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  // A trace records what is typed, including the password of this run, so in the CI (where the files are uploaded and the
+  // repository is public) there is none: only screenshots, taken of the page and not of the requests
+  use: { baseURL: WEB, trace: process.env.CI ? 'off' : 'retain-on-failure', screenshot: 'only-on-failure' },
   // stdout and stderr of the servers are shown, so a backend that does not start says why instead of timing out in silence
   webServer: [
     { command: `bash ${script('backend.sh')}`, url: `${API}/actuator/health`, timeout: 240_000, reuseExistingServer: false, stdout: 'pipe', stderr: 'pipe' },
