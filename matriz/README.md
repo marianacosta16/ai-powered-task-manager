@@ -319,6 +319,22 @@ cd matriz && set -a && . ./.env && set +a && mvn -B verify
 
 O que falta é a interface: os itens V1 a V12 do [plano](docs/implementation-plan.md#8-verificações-adiadas-para-a-fase-da-interface) são o que a API não consegue verificar sozinha.
 
+## Executar com Docker
+
+A base de dados, a API e a interface arrancam com um só comando, sem instalar Java, Node nem PostgreSQL. Precisa do Docker e do Docker Compose.
+
+```bash
+cp .env.example .env     # na raiz do projeto; escolha a palavra-passe da base de dados e a das contas de demonstração
+docker compose up --build --wait
+```
+
+Abra `https://localhost:8443`. O certificado é autoassinado, por isso o navegador avisa; para usar um certificado a sério, monte `tls.crt` e `tls.key` em `/etc/nginx/certs` do serviço `web`. As portas mudam-se no `.env` (`WEB_HTTP_PORT` e `WEB_HTTPS_PORT`, por exemplo 80 e 443 onde estiverem livres).
+
+- A interface e a API estão no mesmo endereço (a API em `/api`), e a base de dados não é acessível de fora.
+- Os dados ficam num volume (`docker compose down` mantém-nos, `docker compose down -v` apaga-os).
+- As sessões estão em memória: reiniciar a API termina-as, e só pode haver uma instância da API.
+- Sem `DEMO_PASSWORD` não existem contas (não há registo de utilizadores).
+
 ## Verificação automática (CI)
 
 O GitHub Actions corre `mvn verify` (testes, contrato OpenAPI e fronteiras entre módulos) em cada pull request e em cada push à `main`, com um PostgreSQL de teste criado pelo próprio workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)). As credenciais dessa base são valores fictícios.

@@ -20,5 +20,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # The official image fills ${API_UPSTREAM} in the templates when it starts
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --chmod=755 docker/make-certificate.sh /docker-entrypoint.d/40-make-certificate.sh
-ENV API_UPSTREAM=http://api:8080
+ENV API_UPSTREAM=http://api:8080 \
+    PUBLIC_HTTPS_PORT=443
 EXPOSE 80 443
