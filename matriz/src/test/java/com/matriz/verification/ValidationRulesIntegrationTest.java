@@ -39,7 +39,7 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
 
         ResponseEntity<String> response = post("/projects", sessionOf("marta"), project(name, "2026-06-10", "2026-07-10"));
 
-        assertRefused(response);
+        assertInvalid(response);
         assertThat(count("project")).isEqualTo(projects);
     }
 
@@ -51,7 +51,7 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
 
         ResponseEntity<String> response = post("/projects/" + project + "/tasks", sessionOf("ana"), task(title, "2026-12-15"));
 
-        assertRefused(response);
+        assertInvalid(response);
         assertThat(count("task")).isEqualTo(tasks);
     }
 
@@ -64,7 +64,7 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
 
         ResponseEntity<String> response = post("/tasks/" + task + "/comments", sessionOf("ana"), Map.of("content", content));
 
-        assertRefused(response);
+        assertInvalid(response);
         assertThat(count("task_comment")).isEqualTo(comments);
     }
 
@@ -85,17 +85,17 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
         Map<String, Object> taskWithoutDeadline = task("Valid title", "2026-12-15");
         taskWithoutDeadline.remove("deadline");
 
-        assertRefused(post("/projects", sessionOf("marta"), projectWithoutName));
-        assertRefused(post("/projects", sessionOf("marta"), projectWithoutEnd));
-        assertRefused(post("/projects/" + project + "/tasks", sessionOf("ana"), taskWithoutTitle));
-        assertRefused(post("/projects/" + project + "/tasks", sessionOf("ana"), taskWithoutDeadline));
-        assertRefused(post("/tasks/" + task + "/comments", sessionOf("ana"), Map.of()));
+        assertInvalid(post("/projects", sessionOf("marta"), projectWithoutName));
+        assertInvalid(post("/projects", sessionOf("marta"), projectWithoutEnd));
+        assertInvalid(post("/projects/" + project + "/tasks", sessionOf("ana"), taskWithoutTitle));
+        assertInvalid(post("/projects/" + project + "/tasks", sessionOf("ana"), taskWithoutDeadline));
+        assertInvalid(post("/tasks/" + task + "/comments", sessionOf("ana"), Map.of()));
         assertThat(List.of(count("project"), count("task"), count("task_comment"))).containsExactly(projects, tasks, comments);
     }
 
     @ParameterizedTest(name = "{0} is refused")
     @MethodSource("invalidValues")
-    void anInvalidValueIsRefusedAndNothingIsStored(String description, String path, LongFunction<Map<String, Object>> body) {
+    void anInvalidValueIsRefusedAndNothingIsStored(String description, String code, String path, LongFunction<Map<String, Object>> body) {
         long project = newProject();
         int projects = count("project");
         int tasks = count("task");
@@ -103,38 +103,38 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
         ResponseEntity<String> response = post(path.replace("{project}", String.valueOf(project)), sessionOf("marta"),
                 body.apply(userId("ana")));
 
-        assertRefused(response);
+        assertRefused(response, code);
         assertThat(count("project")).isEqualTo(projects);
         assertThat(count("task")).isEqualTo(tasks);
     }
 
-    /** Description, path and the body (which needs the id of the assignee, known only when the test runs). */
+    /** Description, the code of the refusal, path and the body (which needs the id of the assignee, known only when the test runs). */
     static Stream<Arguments> invalidValues() {
         return Stream.of(
-                bad("a project ending before it starts", "/projects", ana -> project("Valid name", "2026-07-10", "2026-06-10")),
-                bad("a project starting in the past", "/projects", ana -> project("Valid name", "2025-01-01", "2026-07-10")),
-                bad("a project name of 2 characters", "/projects", ana -> project("ab", "2026-06-10", "2026-07-10")),
-                bad("a project name of 101 characters", "/projects", ana -> project("n".repeat(101), "2026-06-10", "2026-07-10")),
-                bad("a project phase that does not exist", "/projects",
+                bad("a project ending before it starts", "END_BEFORE_START", "/projects", ana -> project("Valid name", "2026-07-10", "2026-06-10")),
+                bad("a project starting in the past", "START_DATE_IN_PAST", "/projects", ana -> project("Valid name", "2025-01-01", "2026-07-10")),
+                bad("a project name of 2 characters", "VALIDATION_ERROR", "/projects", ana -> project("ab", "2026-06-10", "2026-07-10")),
+                bad("a project name of 101 characters", "VALIDATION_ERROR", "/projects", ana -> project("n".repeat(101), "2026-06-10", "2026-07-10")),
+                bad("a project phase that does not exist", "VALIDATION_ERROR", "/projects",
                         ana -> with(project("Valid name", "2026-06-10", "2026-07-10"), "phase", "Retirement")),
-                bad("a project status that is calculated, not chosen", "/projects",
+                bad("a project status that is calculated, not chosen", "VALIDATION_ERROR", "/projects",
                         ana -> with(project("Valid name", "2026-06-10", "2026-07-10"), "status", "Late")),
-                bad("a task with a deadline in the past", "/projects/{project}/tasks", ana -> taskBody("Valid title", "2026-05-01", ana)),
-                bad("a task with urgency 0", "/projects/{project}/tasks",
+                bad("a task with a deadline in the past", "DEADLINE_IN_PAST", "/projects/{project}/tasks", ana -> taskBody("Valid title", "2026-05-01", ana)),
+                bad("a task with urgency 0", "VALIDATION_ERROR", "/projects/{project}/tasks",
                         ana -> with(taskBody("Valid title", "2026-12-15", ana), "urgency", 0)),
-                bad("a task with importance 5", "/projects/{project}/tasks",
+                bad("a task with importance 5", "VALIDATION_ERROR", "/projects/{project}/tasks",
                         ana -> with(taskBody("Valid title", "2026-12-15", ana), "importance", 5)),
-                bad("a task with a title of 2 characters", "/projects/{project}/tasks", ana -> taskBody("ab", "2026-12-15", ana)),
-                bad("a task with a title of 151 characters", "/projects/{project}/tasks",
+                bad("a task with a title of 2 characters", "VALIDATION_ERROR", "/projects/{project}/tasks", ana -> taskBody("ab", "2026-12-15", ana)),
+                bad("a task with a title of 151 characters", "VALIDATION_ERROR", "/projects/{project}/tasks",
                         ana -> taskBody("t".repeat(151), "2026-12-15", ana)),
-                bad("a task with no assignee", "/projects/{project}/tasks",
+                bad("a task with no assignee", "VALIDATION_ERROR", "/projects/{project}/tasks",
                         ana -> with(taskBody("Valid title", "2026-12-15", ana), "assigneeIds", List.of())),
-                bad("a task with a description of 2001 characters", "/projects/{project}/tasks",
+                bad("a task with a description of 2001 characters", "VALIDATION_ERROR", "/projects/{project}/tasks",
                         ana -> with(taskBody("Valid title", "2026-12-15", ana), "description", "d".repeat(2001))));
     }
 
-    private static Arguments bad(String description, String path, LongFunction<Map<String, Object>> body) {
-        return Arguments.of(description, path, body);
+    private static Arguments bad(String description, String code, String path, LongFunction<Map<String, Object>> body) {
+        return Arguments.of(description, code, path, body);
     }
 
     @Test
@@ -146,7 +146,7 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
         ResponseEntity<String> tooLong = post("/tasks/" + task + "/comments", sessionOf("ana"), Map.of("content", "c".repeat(2001)));
         ResponseEntity<String> longest = post("/tasks/" + task + "/comments", sessionOf("ana"), Map.of("content", "c".repeat(2000)));
 
-        assertRefused(tooLong);
+        assertInvalid(tooLong);
         assertThat(longest.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(count("task_comment")).isEqualTo(comments + 1); // only the one of 2000
     }
@@ -164,11 +164,20 @@ class ValidationRulesIntegrationTest extends ApiIntegrationTest {
 
     // ---- helpers ----
 
-    /** The API answers a refusal with 400 (the request is not valid) or 422 (it breaks a rule), and the error body of the contract. */
-    private void assertRefused(ResponseEntity<String> response) {
-        assertThat(response.getStatusCode()).isIn(HttpStatus.BAD_REQUEST, HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(json(response, "$.code")).isInstanceOf(String.class);
+    /**
+     * The API answers a refusal with the error body of the contract and <b>the code this case is about</b>: 400 for a
+     * request that is not valid (VALIDATION_ERROR) and 422 for one that breaks a rule of the business (END_BEFORE_START,
+     * DEADLINE_IN_PAST...). Asking for the code means a case cannot pass because it was refused for another reason.
+     */
+    private void assertRefused(ResponseEntity<String> response, String code) {
+        assertThat(response.getStatusCode())
+                .isEqualTo("VALIDATION_ERROR".equals(code) ? HttpStatus.BAD_REQUEST : HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(json(response, "$.code")).isEqualTo(code);
         assertThat((String) json(response, "$.message")).isNotBlank();
+    }
+
+    private void assertInvalid(ResponseEntity<String> response) {
+        assertRefused(response, "VALIDATION_ERROR");
     }
 
     private long newProject() {
