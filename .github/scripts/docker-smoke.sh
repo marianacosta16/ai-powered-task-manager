@@ -27,6 +27,11 @@ check() { [ "$2" = "$3" ] || fail "$1: expected '$3', got '$2'"; }
 
 docker compose up -d --build --wait --wait-timeout 300
 
+# The three services report healthy (up --wait already waits for it; this says so in the output)
+for service in db api web; do
+  check "$service is healthy" "$(docker compose ps "$service" --format '{{.Health}}')" healthy
+done
+
 # -k: the certificate of the stack is self-signed
 check "health through /api" "$(curl -ksf "$base/api/actuator/health" | grep -o '"status":"UP"' | head -1)" '"status":"UP"'
 check "HTTP redirects to HTTPS, keeping the port" "$(curl -s -o /dev/null -w '%{redirect_url}' "http://localhost:${http_port}/projects/1")" "$base/projects/1"

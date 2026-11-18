@@ -24,3 +24,7 @@ ENV API_UPSTREAM=http://api:8080 \
     PUBLIC_HTTPS_PORT=443 \
     DNS_RESOLVER=127.0.0.11
 EXPOSE 80 443
+# The page itself, over HTTPS (the certificate may be self-signed). 127.0.0.1 and not localhost: localhost is ::1 first
+# in this image and nginx listens on IPv4 only. It only answers once nginx and its certificate are ready
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=6 \
+  CMD wget -q --no-check-certificate -O /dev/null https://127.0.0.1/ || exit 1
