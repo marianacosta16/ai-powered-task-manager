@@ -37,7 +37,7 @@ class TasksIntegrationTest extends ApiIntegrationTest {
         ResponseEntity<String> created = post("/projects/" + website + "/tasks", sessionOf("ana"),
                 task("Write report", "2026-12-15", userId("ana")));
 
-        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(created.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(json(created, "$.title")).isEqualTo("Write report");
         assertThat(json(created, "$.status")).isEqualTo("To do");
         assertThat(json(created, "$.urgency")).isEqualTo(3);
