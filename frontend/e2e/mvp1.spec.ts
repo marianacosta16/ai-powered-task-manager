@@ -43,6 +43,10 @@ test('MVP-1: from the project to the progress', async ({ page }) => {
   await createTask(page, { title: 'Rever texto', deadline: inDays(25), urgency: '1 - Low', importance: '3 - High' })
 
   await page.getByRole('link', { name: 'Escrever relatório' }).click()
+  // The Add button of the assignees is as tall as the list beside it (Exercise 8, defect D2: it was stretched and looked disabled)
+  const add = (await page.getByRole('button', { name: 'Add', exact: true }).boundingBox())!
+  const people = (await page.getByLabel('Add assignee').boundingBox())!
+  expect(Math.abs(add.height - people.height)).toBeLessThanOrEqual(2)
   await page.getByLabel('Status').selectOption('Done')
   await page.getByRole('button', { name: 'Save changes' }).click()
   await expect(page.getByText('Changes saved.')).toBeVisible()

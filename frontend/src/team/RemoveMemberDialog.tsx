@@ -75,7 +75,7 @@ export function RemoveMemberDialog({ projectId, member, members, candidates, onR
       onCancel={onCancel}
     >
       {tasks.state.status === 'loading' ? <Spinner label="Reading the tasks of the member..." /> : null}
-      {tasks.state.status === 'error' ? <LoadError message={tasks.state.message} onRetry={tasks.retry} /> : null}
+      {tasks.state.status === 'error' ? <LoadError message={tasks.state.message} retryable={tasks.state.retryable} onRetry={tasks.retry} /> : null}
       {tasks.state.status === 'ready' && tasks.state.refreshError ? <Notice kind="error">{tasks.state.refreshError}</Notice> : null}
       {error ? (
         <>

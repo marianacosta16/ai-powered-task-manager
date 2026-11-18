@@ -421,6 +421,13 @@ describe('the assignees (R21, R26, A16)', () => {
     expect(api.callsTo('POST /tasks/10/assignees')[0].body).toEqual({ userId: 4 })
   })
 
+  it('puts the Add button on the row that aligns it with the list (the height itself is checked in the end-to-end test)', async () => {
+    await open(ANA) // regression (Exercise 8): the button was as tall as the label plus the list and looked disabled
+
+    const row = within(screen.getByRole('group', { name: /Assignees/ })).getByRole('button', { name: 'Add' }).parentElement
+    expect(row).toHaveClass('actions', 'actions--end')
+  })
+
   it('does not offer to remove the last assignee, and removes another one (R26)', async () => {
     const two = { ...T, assignees: [ANA, RUI] }
     const { api } = await open(ANA, { 'DELETE /tasks/10/assignees/4': jsonResponse(204) }, two)

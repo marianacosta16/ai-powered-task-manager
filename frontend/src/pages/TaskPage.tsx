@@ -24,7 +24,7 @@ export function TaskPage() {
     return <Spinner label="Loading the task..." />
   }
   if (state.status === 'error') {
-    return <LoadError message={state.message} onRetry={retry} />
+    return <LoadError message={state.message} retryable={state.retryable} onRetry={retry} />
   }
   // A key by the task that was read (not by the address, which changes one render before the data): another task starts from a clean screen
   return <TaskScreen key={state.data.id} first={state.data} />
@@ -76,10 +76,10 @@ function TaskScreen({ first }: { first: Task }) {
     return <Spinner label="Loading the task..." />
   }
   if (project.state.status === 'error') {
-    return <LoadError message={project.state.message} onRetry={project.retry} />
+    return <LoadError message={project.state.message} retryable={project.state.retryable} onRetry={project.retry} />
   }
   if (people.state.status === 'error') {
-    return <LoadError message={people.state.message} onRetry={people.retry} />
+    return <LoadError message={people.state.message} retryable={people.state.retryable} onRetry={people.retry} />
   }
   const me = auth.user
   const data = project.state.data
@@ -144,7 +144,7 @@ function TaskScreen({ first }: { first: Task }) {
         />
       ) : null}
       {!completed ? (
-        <p>
+        <p className="task-delete">
           <Button variant="secondary" onClick={() => setConfirmDelete(true)}>
             Delete {isSubtask ? 'subtask' : 'task'}
           </Button>

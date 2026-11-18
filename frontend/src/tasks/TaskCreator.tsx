@@ -24,7 +24,7 @@ export function TaskCreator({ projectId, timezone, parent, people, onCreated, on
     return <Spinner label="Loading the project members..." />
   }
   if (state.status === 'error') {
-    return <LoadError message={state.message} onRetry={retry} />
+    return <LoadError message={state.message} retryable={state.retryable} onRetry={retry} />
   }
   return <TaskForm projectId={projectId} timezone={timezone} parent={parent} people={state.data} onCreated={onCreated} onCancel={onCancel} onDirtyChange={onDirtyChange} />
 }

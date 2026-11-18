@@ -71,7 +71,7 @@ export function AssigneeList({ taskId, assignees, people, canEdit, onChange }: A
         ))}
       </ul>
       {canEdit && available.length > 0 ? (
-        <div className="actions">
+        <div className="actions actions--end">
           <Select
             label="Add assignee"
             value={choice}

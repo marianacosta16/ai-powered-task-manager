@@ -30,7 +30,7 @@ function Team({ id }: { id: number }) {
     return <Spinner label="Loading the project..." />
   }
   if (project.state.status === 'error') {
-    return <LoadError message={project.state.message} onRetry={project.retry} />
+    return <LoadError message={project.state.message} retryable={project.state.retryable} onRetry={project.retry} />
   }
   const data = project.state.data
   const back = (
@@ -80,10 +80,10 @@ function TeamManager({ projectId, projectName }: { projectId: number; projectNam
     return <Spinner label="Loading the team..." />
   }
   if (members.state.status === 'error') {
-    return <LoadError message={members.state.message} onRetry={members.retry} />
+    return <LoadError message={members.state.message} retryable={members.state.retryable} onRetry={members.retry} />
   }
   if (candidates.state.status === 'error') {
-    return <LoadError message={candidates.state.message} onRetry={candidates.retry} />
+    return <LoadError message={candidates.state.message} retryable={candidates.state.retryable} onRetry={candidates.retry} />
   }
   const team = members.state.data
   const people = candidates.state.data

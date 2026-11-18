@@ -218,6 +218,8 @@ describe('the project and its tasks (F02, F04, F05, F22)', () => {
     renderApp('/projects/1')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('You do not have access to this project.')
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument() // the same request gets the same refusal
+    expect(screen.getByRole('link', { name: 'Go to the dashboard' })).toBeInTheDocument()
   })
 })
 

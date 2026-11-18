@@ -111,7 +111,7 @@ export function Comments({ taskId, me, writable, onDirtyChange }: CommentsProps)
       <h2 id="comments-title">Comments</h2>
       {serverError ? <Notice kind="error">{serverError}</Notice> : null}
       {state.status === 'loading' ? <Spinner label="Loading the comments..." /> : null}
-      {state.status === 'error' ? <LoadError message={state.message} onRetry={retry} /> : null}
+      {state.status === 'error' ? <LoadError message={state.message} retryable={state.retryable} onRetry={retry} /> : null}
       {state.status === 'ready' && state.refreshError ? <Notice kind="error">{state.refreshError}</Notice> : null}
       {state.status === 'ready' ? (
         state.data.items.length === 0 && page === 1 ? (

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList } from 'react'
-import { messageOf } from '../api/errors'
+import { isRetryable, messageOf } from '../api/errors'
 
 export type LoadState<T> =
   | { status: 'loading' }
   | { status: 'ready'; data: T; refreshError?: string }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; retryable: boolean }
 
 /**
  * Loads data from the API for a screen, with the four states every list has (loading, error, and the data, which the
@@ -43,7 +43,7 @@ export function useLoad<T>(load: (signal: AbortSignal) => Promise<T>, inputs: De
         }
         const message = messageOf(cause)
         // A refresh that fails keeps what is on screen and says so; only a first load becomes an error screen
-        setState((current) => (wasSilent && current.status === 'ready' ? { ...current, refreshError: message } : { status: 'error', message }))
+        setState((current) => (wasSilent && current.status === 'ready' ? { ...current, refreshError: message } : { status: 'error', message, retryable: isRetryable(cause) }))
       })
     return () => controller.abort()
     // `inputs` is the dependency list the caller chose (a spread, which the rule cannot check); `load` is read through loadRef

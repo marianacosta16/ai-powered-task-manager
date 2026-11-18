@@ -26,7 +26,7 @@ export function OriginalPicker({ projectId, taskId, value, error, disabled, onCh
     return <Spinner label="Loading the tasks of the project..." />
   }
   if (state.status === 'error') {
-    return <LoadError message={state.message} onRetry={retry} />
+    return <LoadError message={state.message} retryable={state.retryable} onRetry={retry} />
   }
   const candidates = state.data.items.filter((task) => task.id !== taskId && task.status !== 'Duplicate')
   const options = [{ value: '', label: 'Choose...' }, ...candidates.map((task) => ({ value: String(task.id), label: task.title }))]
