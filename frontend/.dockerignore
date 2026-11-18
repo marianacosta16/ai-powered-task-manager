@@ -1,0 +1,10 @@
+# Nothing of the local machine goes into the image
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+test-results/
+playwright-report/
+.git/
+*.md

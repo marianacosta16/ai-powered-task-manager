@@ -1,0 +1,9 @@
+# Nothing of the local machine goes into the image: no secrets, no build output, no documents
+.env
+.env.*
+!.env.example
+target/
+docs/
+.git/
+.idea/
+*.md
