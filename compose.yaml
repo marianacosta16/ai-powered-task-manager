@@ -1,0 +1,61 @@
+# Matriz: database, API and web interface, with one command:  docker compose up --build --wait
+# Everything that is a secret or depends on the machine is read from the .env file of this folder (copy .env.example).
+# Open https://localhost:8443 (the certificate is self-signed, the browser warns about it).
+name: matriz
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-matriz}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (see .env.example)}
+      POSTGRES_DB: ${DB_NAME:-matriz}
+    volumes:
+      - matriz-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No published port: only the API reaches the database
+
+  api:
+    build: ./matriz
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-matriz}
+      DB_USER: ${DB_USER:-matriz}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?Set DEMO_PASSWORD in .env (see .env.example)}
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true" # the page is served over HTTPS
+      CORS_ALLOWED_ORIGINS: https://localhost:${WEB_HTTPS_PORT:-8443}
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # No published port: the browser reaches the API through /api of the web interface
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: http://api:8080
+      PUBLIC_HTTPS_PORT: ${WEB_HTTPS_PORT:-8443}
+    ports:
+      - "${WEB_HTTP_PORT:-8080}:80"
+      - "${WEB_HTTPS_PORT:-8443}:443"
+    volumes:
+      - matriz-certs:/etc/nginx/certs # the same certificate after the container is recreated
+
+volumes:
+  matriz-db:
+  matriz-certs:
