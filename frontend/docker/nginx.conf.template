@@ -1,8 +1,9 @@
-# Port 80 only sends the visitor to HTTPS
+# Port 80 only sends the visitor to HTTPS. ${PUBLIC_HTTPS_PORT} is the port the visitor reaches HTTPS on (443 unless
+# the container is published on another one), so that the redirect keeps the port.
 server {
     listen 80;
     server_name _;
-    return 301 https://$host$request_uri;
+    return 301 https://$host:${PUBLIC_HTTPS_PORT}$request_uri;
 }
 
 server {
