@@ -333,6 +333,7 @@ Abra `https://localhost:8443`. O certificado é autoassinado, por isso o navegad
 - A interface e a API estão no mesmo endereço (a API em `/api`), e a base de dados não é acessível de fora.
 - Os dados ficam num volume (`docker compose down` mantém-nos, `docker compose down -v` apaga-os).
 - As sessões estão em memória: reiniciar a API termina-as, e só pode haver uma instância da API.
+- O estado `unhealthy` de `docker compose ps` é informativo: o Docker não reinicia um contentor só por isso (reinicia se o processo terminar). Veja `docker compose logs` e reinicie o serviço com `docker compose restart <serviço>`.
 - Sem `DEMO_PASSWORD` não existem contas (não há registo de utilizadores).
 - A `DB_PASSWORD` só é usada quando a base de dados é criada pela primeira vez. Se a mudar no `.env` depois disso, a API deixa de entrar na base e reinicia em ciclo; para recomeçar com outra, `docker compose down -v` (apaga os dados) e volte a arrancar. Os comandos `docker compose` precisam do `.env` (ou das variáveis) também para parar.
 

@@ -7,7 +7,6 @@ services:
   db:
     image: postgres:16
     restart: unless-stopped
-    networks: [matriz]
     environment:
       POSTGRES_USER: ${DB_USER:-matriz}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (see .env.example)}
@@ -24,7 +23,6 @@ services:
   api:
     build: ./matriz
     restart: unless-stopped
-    networks: [matriz]
     depends_on:
       db:
         condition: service_healthy
@@ -41,7 +39,6 @@ services:
   web:
     build: ./frontend
     restart: unless-stopped
-    networks: [matriz]
     depends_on:
       api:
         condition: service_healthy
@@ -54,9 +51,11 @@ services:
     volumes:
       - matriz-certs:/etc/nginx/certs # the same certificate after the container is recreated
 
-# One private network: the services reach each other by name (db, api); only web publishes ports to the host
+# One private network for the project, the default one of Compose, declared here: the services reach each other by name
+# (db, api) and only web publishes ports to the host. Every service joins it, so a new one needs no extra line.
 networks:
-  matriz:
+  default:
+    driver: bridge
 
 volumes:
   matriz-db:

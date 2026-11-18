@@ -25,12 +25,8 @@ trap cleanup EXIT
 fail() { echo "FAILED: $*" >&2; exit 1; }
 check() { [ "$2" = "$3" ] || fail "$1: expected '$3', got '$2'"; }
 
+# --wait returns only when db, api and web are healthy (each has a healthcheck) and fails otherwise
 docker compose up -d --build --wait --wait-timeout 300
-
-# The three services report healthy (up --wait already waits for it; this says so in the output)
-for service in db api web; do
-  check "$service is healthy" "$(docker compose ps "$service" --format '{{.Health}}')" healthy
-done
 
 # -k: the certificate of the stack is self-signed
 check "health through /api" "$(curl -ksf "$base/api/actuator/health" | grep -o '"status":"UP"' | head -1)" '"status":"UP"'

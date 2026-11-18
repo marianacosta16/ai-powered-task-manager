@@ -2,12 +2,14 @@
 # the container is published on another one), so that the redirect keeps the port.
 server {
     listen 80;
+    listen [::]:80;
     server_name _;
     return 301 https://$host:${PUBLIC_HTTPS_PORT}$request_uri;
 }
 
 server {
     listen 443 ssl;
+    listen [::]:443 ssl; # localhost may be ::1 (the healthcheck, some clients)
     server_name _;
 
     ssl_certificate     /etc/nginx/certs/tls.crt;
