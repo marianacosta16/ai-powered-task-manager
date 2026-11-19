@@ -1,6 +1,8 @@
 name: CI
 
-# Runs the tests of the Matriz backend and of the web interface, and a smoke test of the Docker stack and the end-to-end test (Playwright), on every pull request and on every push to main.
+# Runs the tests of the Matriz backend and of the web interface, the end-to-end test (Playwright) and a smoke test of the Docker stack,
+# on every pull request and on every push to main. The jobs test, frontend and e2e run side by side; the docker job starts only
+# when test and frontend have passed (if one of them fails, docker shows as skipped, which is on purpose).
 # The database below only exists while the job runs, so its credentials are fake values
 # (AGENTS.md, section 7): nothing here is a real secret.
 
@@ -96,6 +98,9 @@ jobs:
           VITE_API_URL: https://matriz.invalid # a production build needs an address; this one is never called
 
   docker:
+    # The images are only built when the backend and the interface checks have passed. The end-to-end test is not a gate: it
+    # needs a browser and can fail for reasons that have nothing to do with the images, and it must not hide a broken Dockerfile.
+    needs: [test, frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
