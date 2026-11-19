@@ -76,20 +76,49 @@ Estas regras mantêm o monólito modular e não um monólito comum.
 
 ### Dependências entre componentes
 
-```
-Interface
-   │
-   ▼
-Casos de uso ──► Acesso e Visibilidade
-   │
-   ├──► Projetos e Equipas
-   ├──► Tarefas
-   ├──► Reciclagem
-   └──► Vistas e Progresso ──(só leitura)──► Projetos e Equipas, Tarefas
+Cada módulo é um pacote Java de `com.matriz` (`access`, `projects`, `tasks`, `recycle`, `views`, `usecases`, `shared` e `api`, a interface REST). As setas são as dependências permitidas; o teste `ModuleBoundariesTest` (ArchUnit) falha se um módulo de negócio depender de outro, dos casos de uso ou da API, se `views` depender de `recycle`, se `shared` depender de um módulo, se os casos de uso dependerem da API ou se houver ciclos.
 
-Todos os módulos ──► Núcleo partilhado
-Todos os módulos ──► Persistência (cada um só aos seus dados)
+```mermaid
+flowchart TD
+    UI["Interface web (React)<br/>frontend/"] -->|"HTTP + cookie SESSION"| API["api<br/>controladores REST, erros, segurança, CORS"]
+    API --> UC["usecases<br/>operações que atravessam módulos<br/>(uma transação cada, com Locks)"]
+    API -->|"consultas de leitura"| V["views<br/>Matriz, Lista, Painel, pesquisa"]
+    UC --> A["access<br/>sessão, papéis, permissões"]
+    UC --> P["projects<br/>projetos e equipas"]
+    UC --> T["tasks<br/>tarefas, subtarefas, comentários"]
+    UC --> R["recycle<br/>reciclagem"]
+    V -. "só leitura" .-> P
+    V -. "só leitura" .-> T
+    A --> S["shared<br/>datas, texto, mensagens de recusa"]
+    P --> S
+    T --> S
+    R --> S
+    V --> S
+    UC --> S
+    P --> DB[("PostgreSQL")]
+    T --> DB
+    R --> DB
+    A --> DB
 ```
+
+> Os módulos de negócio (`access`, `projects`, `tasks`, `recycle`) nunca dependem uns dos outros: quando uma regra atravessa módulos, o caso de uso coordena. A persistência é uma só base de dados; cada módulo só acede às suas tabelas ([database.md](database.md)).
+
+### Execução: como os componentes correm
+
+Com o Docker Compose ([compose.yaml](../../compose.yaml)) correm três serviços numa rede privada; só o `web` publica portas. O navegador fala com um só endereço: o nginx serve a interface e encaminha `/api` para a API, por isso o cookie de sessão nunca atravessa sites diferentes e não há CORS entre a página e a API.
+
+```mermaid
+flowchart LR
+    B["Navegador"] -->|"HTTPS 8443 (por omissão)<br/>HTTP 8080 redireciona"| W
+    subgraph rede ["Rede privada do Compose"]
+        W["web: nginx<br/>serve o frontend e encaminha /api"] -->|"/api/* para http://api:8080/*"| A["api: Spring Boot (Java 21)<br/>porta 8080, não publicada"]
+        A -->|"JDBC"| D[("db: PostgreSQL 16<br/>porta 5432, não publicada")]
+    end
+    D --- V1[("volume matriz-db")]
+    W --- V2[("volume matriz-certs<br/>certificado")]
+```
+
+Em desenvolvimento, sem Docker, a interface (Vite, porta 5173) chama a API (porta 8080 ou 8081) de outra origem, com CORS e credenciais para as origens de `CORS_ALLOWED_ORIGINS`. Os pormenores de execução estão no [README](../README.md#execução-com-docker-compose).
 
 ## 6. Evolução prevista
 
@@ -126,8 +155,9 @@ Escolhida em 2026-11-12 com a autora do projeto, por ser a mais simples que serv
 | Segurança | Spring Security, com um serviço de utilizadores sobre `app_user`, hash BCrypt e filtros que devolvem 401 e 403 em JSON | Adotado (incremento 1) | Entrou só no incremento 1, para não gerar uma palavra-passe aleatória nos registos do incremento 0 |
 | Proteção CSRF e sessões | CSRF desligado (API só JSON e cookie `SameSite=Lax`); sessões em memória | Pressuposto (P31, revisto no incremento 9; P32) | Simples para a v1; com a interface passa a haver CORS com credenciais para as origens permitidas (incremento 9) |
 | Ligação da interface ao backend | **CORS com credenciais** para as origens indicadas na configuração; o endereço do backend está numa só variável de ambiente da interface; o cabeçalho `X-Total-Count` fica exposto | Decidido (2026-11-14) | O cookie de sessão é `SameSite=Lax` e `localhost` com portas diferentes conta como o mesmo *site*; em vez de um *proxy* de desenvolvimento, que não existiria em produção |
-| Testes da interface | Vitest e Testing Library para os componentes (adotado no incremento 9); os percursos completos verificam-se contra o backend real e a base de dados de teste, num navegador; o **Playwright** fica para quando for preciso, com nova aprovação | Adotado em parte (2026-11-15) | O enunciado pede verificar o percurso completo com a API e a base de dados |
-| Verificação automática | GitHub Actions: `mvn verify` com um PostgreSQL de teste (`.github/workflows/ci.yml`) | Adotado | Corre os testes em cada pull request e em cada push à `main`, sem depender da máquina de quem desenvolve (T9) |
+| Testes da interface | Vitest e Testing Library para os componentes (incremento 9); **Playwright** para o percurso completo MVP-1, num navegador a sério contra o backend e a base de teste (incremento 13b) | Adotado (2026-11-17) | O enunciado pede verificar o percurso completo com a API e a base de dados |
+| Verificação automática | GitHub Actions (`.github/workflows/ci.yml`): `test` (`mvn verify` com um PostgreSQL de teste), `frontend` (lint, testes e build), `e2e` (Playwright) e `docker` (constrói as imagens e faz um teste de fumo do Compose, só depois de `test` e `frontend`) | Adotado | Corre os testes em cada pull request e em cada push à `main`, sem depender da máquina de quem desenvolve (T9) |
+| Execução e entrega | **Docker Compose** (`compose.yaml`): `db` (PostgreSQL 16), `api` (imagem de `matriz/Dockerfile`) e `web` (nginx, imagem de `frontend/Dockerfile`) com HTTPS e `/api` no mesmo endereço | Adotado (2026-11-18) | Um só comando para arrancar tudo, sem instalar Java, Node nem PostgreSQL; a interface e a API na mesma origem, sem CORS entre elas |
 
 **Como a stack respeita a arquitetura**
 - Cada módulo da secção 4 é um pacote da aplicação, e os casos de uso são serviços que coordenam os módulos numa só transação.
