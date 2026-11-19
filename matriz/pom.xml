@@ -13,7 +13,7 @@
 
     <groupId>com.matriz</groupId>
     <artifactId>matriz</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>matriz</name>
     <description>Matriz: project and task management with an urgent/important matrix</description>
 
